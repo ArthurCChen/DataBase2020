@@ -1,21 +1,0 @@
-
-†
-java:S1319"pThe type of the "rows" object should be an interface such as "List" rather than the implementation "LinkedList".(´•–´
-M
-java:S1172"2Remove this unused method parameter "queryTables".(È¥•èüÿÿÿÿ
-H
-java:S1135"2Complete the task associated to this TODO comment.(…ïœ†
-A
-java:S1172"+Remove this unused method parameter "rows".(´•–´
-H
-java:S1135"2Complete the task associated to this TODO comment.(…ïœ†
-E
-java:S1172"*Remove this unused method parameter "row".(¨·¸øÿÿÿÿ
-H
-java:S1135"2Complete the task associated to this TODO comment.(…ïœ†
-L
-java:S1068"1Remove this unused "metaInfoInfos" private field.(ì¦ìÊûÿÿÿÿ
-D
-java:S1068")Remove this unused "index" private field.(ş’³Ïÿÿÿÿÿ
-D
-java:S1068")Remove this unused "attrs" private field.(¶¤•øşÿÿÿÿ

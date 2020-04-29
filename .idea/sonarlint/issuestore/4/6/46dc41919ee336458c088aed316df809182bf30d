@@ -1,8 +1,0 @@
-
-
-java:S1319"pThe return type of this method should be an interface such as "List" rather than the implementation "ArrayList".(²ñ–8¹»Ò¡’.
-F
-java:S1948
-"$Make "entries" private or transient.(ıúÜ¹ùÿÿÿÿ8¹»Ò¡’.
-”
-java:S1319"rThe type of the "entries" object should be an interface such as "List" rather than the implementation "ArrayList".(Ëö‘šøÿÿÿÿ8¹»Ò¡’.
