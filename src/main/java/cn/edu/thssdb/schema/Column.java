@@ -9,6 +9,9 @@ public class Column implements Comparable<Column> {
   private boolean notNull;
   private int maxLength;
 
+  static public int PRIMARY = 1;
+  static public int NOT_PRIMARY = 0;
+
   public Column(String name, ColumnType type, int primary, boolean notNull, int maxLength) {
     this.name = name;
     this.type = type;
@@ -24,5 +27,17 @@ public class Column implements Comparable<Column> {
 
   public String toString() {
     return name + ',' + type + ',' + primary + ',' + notNull + ',' + maxLength;
+  }
+
+  public int getPrimary() {
+    return primary;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public ColumnType getType() {
+    return type;
   }
 }

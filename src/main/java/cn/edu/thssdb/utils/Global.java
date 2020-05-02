@@ -1,5 +1,8 @@
 package cn.edu.thssdb.utils;
 
+import cn.edu.thssdb.type.ColumnType;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +20,8 @@ public class Global {
   public static final String QUIT = "quit;";
 
   public static final String S_URL_INTERNAL = "jdbc:default:connection";
+  public static final String FILE_SEPARATOR = File.separator;
+  public static final String FILE_SUFFIX = ".data";
 
   //用于转换Object为数组类型
   //https://www.cnblogs.com/xingmangdieyi110/p/11676553.html
@@ -32,5 +37,24 @@ public class Global {
       return result;
     }
     return null;
+  }
+
+  public static Comparable castValue(Comparable value, ColumnType type){
+    if(value == null)
+      return null;
+
+    switch(type){
+      case STRING:
+        return value;
+      case LONG:
+        return ((Number) value).longValue();
+      case FLOAT:
+        return ((Number)value).floatValue();
+      case DOUBLE:
+        return ((Number)value).doubleValue();
+      case INT:
+        return ((Number)value).intValue();
+    }
+    throw new InternalError("unvalid type");
   }
 }
