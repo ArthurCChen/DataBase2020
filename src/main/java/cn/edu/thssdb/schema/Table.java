@@ -96,17 +96,21 @@ public class Table implements Iterable<Row> {
     this.lock.writeLock().unlock();
   }
 
-  public void delete() {
+  public void delete(Row row) {
     // TODO
+    Entry entry = row.getEntries().get(primaryIndex);
     this.lock.writeLock().lock();
-
+    index.remove(entry);
     this.lock.writeLock().unlock();
     //TODO 写日记
-
   }
 
-  public void update() {
+  public void update(Row row) {
     // TODO
+    Entry entry = row.getEntries().get(primaryIndex);
+    this.lock.writeLock().lock();
+    index.update(entry, row);
+    this.lock.writeLock().unlock();
   }
 
   private void serialize(String filename) throws IOException {
