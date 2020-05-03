@@ -40,6 +40,9 @@ public class BPTFileHandler extends BPlusTree implements FileHandler{
     }
 
     @Override
+    public ArrayList<Page> updateRow(Row row) {return null;}
+
+    @Override
     public String getId() {
         return this.id;
     }

@@ -18,5 +18,5 @@ public interface FileHandler {
 
     String getId();
 
-
+    FileIterator iterator();
 }
