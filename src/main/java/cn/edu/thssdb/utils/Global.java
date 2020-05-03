@@ -1,5 +1,7 @@
 package cn.edu.thssdb.utils;
 
+import cn.edu.thssdb.schema.Table;
+import cn.edu.thssdb.storage.FileHandler;
 import cn.edu.thssdb.type.ColumnType;
 
 import java.io.File;
@@ -22,6 +24,12 @@ public class Global {
   public static final String S_URL_INTERNAL = "jdbc:default:connection";
   public static final String FILE_SEPARATOR = File.separator;
   public static final String FILE_SUFFIX = ".data";
+
+  //--------------------------------------------------------
+  //--------For Storage usage-------------------------------
+  //--------------------------------------------------------
+  public static final int pageSize = 4096;
+  public static final int bufferChunkSize = 50;
 
   //用于转换Object为数组类型
   //https://www.cnblogs.com/xingmangdieyi110/p/11676553.html
@@ -57,4 +65,16 @@ public class Global {
     }
     throw new InternalError("unvalid type");
   }
+
+  public static FileHandler getFileFromPid(String pid){
+    //TODO: 补充
+    return null;
+  }
+
+  public static Table getTableFromTid(String tid){
+    //TODO:
+    return null;
+  }
+
+
 }

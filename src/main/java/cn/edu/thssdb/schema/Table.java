@@ -3,6 +3,7 @@ package cn.edu.thssdb.schema;
 import cn.edu.thssdb.exception.FileNotExistException;
 import cn.edu.thssdb.index.BPlusTree;
 import cn.edu.thssdb.index.BPlusTreeIterator;
+import cn.edu.thssdb.storage.FileHandler;
 import cn.edu.thssdb.type.ColumnType;
 import cn.edu.thssdb.utils.Global;
 import com.sun.org.apache.xpath.internal.operations.Number;
@@ -20,12 +21,13 @@ public class Table implements Iterable<Row> {
   public HashMap<String, Integer> columnIndex;
   public ArrayList<Column> columns;
   public BPlusTree<Entry, Row> index;
-
+  private FileHandler file;
 
   private int primaryIndex;
 
-
-
+  public FileHandler getFile() {
+    return file;
+  }
 
   public Table(String databaseName, String tableName, Column[] columns)throws FileNotFoundException {
     // TODO
