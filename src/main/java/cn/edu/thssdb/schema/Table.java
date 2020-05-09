@@ -1,6 +1,6 @@
 package cn.edu.thssdb.schema;
 
-import cn.edu.thssdb.exception.FileNotExistException;
+import cn.edu.thssdb.exception.*;
 import cn.edu.thssdb.index.BPlusTree;
 import cn.edu.thssdb.index.BPlusTreeIterator;
 import cn.edu.thssdb.storage.FileHandler;
@@ -50,6 +50,17 @@ public class Table implements Iterable<Row> {
       }
     }
 
+
+  public Row findRowByPrimaryKey(Entry primaryKey) throws RuntimeException {
+    if (!this.index.contains(primaryKey)) {
+      // 主键不存在, 返回KeyNotExistException.
+      throw new KeyNotExistException();
+    } else {
+      return this.index.get(primaryKey);
+    }
+  }
+
+
   private void recover() throws FileNotExistException {
     // TODO
     String filename = databaseName
@@ -79,22 +90,26 @@ public class Table implements Iterable<Row> {
 
   // columnNames  一维排列的column所属名称
   // values       上面对应的值
-  public void insert(String[] values, String[] columnNames) {
+  public void insert(Row rowInsert) {
     // TODO
+    //查询主键情况
+    Entry primaryKey = rowInsert.getEntries().get(this.primaryIndex);
 
-    Entry[] entries = new Entry[columns.size()];
-    for (int i = 0 ; i < entries.length; i ++) {
-      String columnName = columnNames[i];
-      int columnIndex = this.columnIndex.get(columnName);
-      Column column = this.columns.get(columnIndex);
-      Comparable castValue = Global.castValue(values[i], column.getType());
-      entries[i] = new Entry(castValue);
+//    Entry[] entries = new Entry[columns.size()];
+    for (int i = 0 ; i < this.columns.size(); i ++) {
+//      String columnName = columnNames[i];
+//      int columnIndex = this.columnIndex.get(columnName);
+//      Column column = this.columns.get(columnIndex);
+//      Comparable castValue = Global.castValue(values[i], column.getType());
+//      entries[i] = new Entry(castValue);
+      this.index.put(primaryKey, rowInsert);
     }
 
-    Row row = new Row(entries);
+//    Row row = new Row(entries);
     this.lock.writeLock().lock();
     //TODO 写日记
-    index.put(row.getEntries().get(primaryIndex), row);
+//    index.put(row.getEntries().get(primaryIndex), row);
+    index.put(rowInsert.getEntries().get(primaryIndex), rowInsert);
     this.lock.writeLock().unlock();
   }
 
