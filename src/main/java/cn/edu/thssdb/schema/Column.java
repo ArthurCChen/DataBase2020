@@ -2,7 +2,9 @@ package cn.edu.thssdb.schema;
 
 import cn.edu.thssdb.type.ColumnType;
 
-public class Column implements Comparable<Column> {
+import java.io.Serializable;
+
+public class Column implements Comparable<Column>, Serializable {
   private String name;
   private ColumnType type;
   private int primary;

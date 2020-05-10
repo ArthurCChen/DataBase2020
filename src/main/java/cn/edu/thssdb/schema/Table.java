@@ -1,12 +1,11 @@
 package cn.edu.thssdb.schema;
 
 import cn.edu.thssdb.exception.FileNotExistException;
+import cn.edu.thssdb.exception.KeyNotExistException;
 import cn.edu.thssdb.index.BPlusTree;
 import cn.edu.thssdb.index.BPlusTreeIterator;
 import cn.edu.thssdb.storage.FileHandler;
-import cn.edu.thssdb.type.ColumnType;
 import cn.edu.thssdb.utils.Global;
-import com.sun.org.apache.xpath.internal.operations.Number;
 import javafx.util.Pair;
 import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
 
@@ -16,29 +15,41 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Table implements Iterable<Row> {
   ReentrantReadWriteLock lock;
-  private String databaseName;
-  public String tableName;
-  public HashMap<String, Integer> columnIndex;
-  public ArrayList<Column> columns;
+  private TableMeta meta;
+//  private String databaseName;
+//  public String tableName;
+  public HashMap<String, Integer> columnIndex; //通过column的名称查询其所在列
+//  public ArrayList<Column> columnLabel;
+  private File diskFile;
   public BPlusTree<Entry, Row> index;
   private FileHandler file;
+//  private Integer id;
 
   private int primaryIndex;
+
+  public File getDiskFile() {
+    return diskFile;
+  }
+
+  public Integer getId() {
+    return meta.tableId;
+  }
 
   public FileHandler getFile() {
     return file;
   }
 
-  public Table(String databaseName, String tableName, Column[] columns)throws FileNotFoundException {
+  public Table(
+              TableMeta tableMeta,
+               File diskFile){
     // TODO
     this.lock = new ReentrantReadWriteLock();
-    this.databaseName = databaseName;
-    this.tableName = tableName;
-    this.columns = new ArrayList<>(Arrays.asList(columns));
+    this.meta = tableMeta;
+    this.diskFile = diskFile;
     this.columnIndex = new HashMap<>();
-    for(int i = 0; i < columns.length; i ++){
-      columnIndex.put(this.columns.get(i).getName(), i);
-      if(this.columns.get(i).getPrimary() == Column.PRIMARY) {
+    for(int i = 0; i < meta.columnLabel.size(); i ++){
+      columnIndex.put(meta.columnLabel.get(i).getName(), i);
+      if(meta.columnLabel.get(i).getPrimary() == Column.PRIMARY) {
         primaryIndex = i;
         break;
       }
@@ -50,13 +61,24 @@ public class Table implements Iterable<Row> {
       }
     }
 
-  private void recover() throws FileNotExistException {
+
+
+  public Row findRowByPrimaryKey(Entry primaryKey) throws RuntimeException {
+    if (!this.index.contains(primaryKey)) {
+      // 主键不存在, 返回KeyNotExistException.
+      throw new KeyNotExistException();
+    } else {
+      return this.index.get(primaryKey);
+    }
+  }
+
+
+  private void recover(){
     // TODO
-    String filename = databaseName
-            + File.separator + tableName + Global.FILE_SUFFIX;
+    String filename = Global.synthFilePath(meta.databaseName, String.format(Global.DATA_FORMAT, meta.tableName));
     File file = new File(filename);
     if(!file.exists())
-      throw new FileNotExistException(databaseName, tableName + Global.FILE_SUFFIX);
+      throw new InternalException(filename);//TODO exception
 
     ArrayList<Row> rows;
     try{
@@ -68,7 +90,7 @@ public class Table implements Iterable<Row> {
 
     for(Row row: rows){
       ArrayList<Entry> entries = row.getEntries();
-      for(int i = 0 ; i < columns.size(); i ++){
+      for(int i = 0; i < meta.columnLabel.size(); i ++){
         Entry entry = entries.get(i);
         if(i == primaryIndex){
           index.put(entry, row);
@@ -82,11 +104,11 @@ public class Table implements Iterable<Row> {
   public void insert(String[] values, String[] columnNames) {
     // TODO
 
-    Entry[] entries = new Entry[columns.size()];
+    Entry[] entries = new Entry[meta.columnLabel.size()];
     for (int i = 0 ; i < entries.length; i ++) {
       String columnName = columnNames[i];
       int columnIndex = this.columnIndex.get(columnName);
-      Column column = this.columns.get(columnIndex);
+      Column column = meta.columnLabel.get(columnIndex);
       Comparable castValue = Global.castValue(values[i], column.getType());
       entries[i] = new Entry(castValue);
     }

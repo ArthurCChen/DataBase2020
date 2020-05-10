@@ -107,6 +107,12 @@ public class BufferPool {
 
     }
 
+    public void flushAllPages(){
+        for(String pid: pageMap.keySet()){
+            flushPage(pid);
+        }
+    }
+
     public void operateRow(String tid, Row row, FileOperation op){
         Table table = Global.getTableFromTid(tid);
         FileHandler file = table.getFile();

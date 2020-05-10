@@ -1,10 +1,14 @@
 package cn.edu.thssdb.utils;
 
 import cn.edu.thssdb.schema.Table;
+import cn.edu.thssdb.storage.BufferPool;
 import cn.edu.thssdb.storage.FileHandler;
 import cn.edu.thssdb.type.ColumnType;
 
 import java.io.File;
+import java.nio.Buffer;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +27,10 @@ public class Global {
 
   public static final String S_URL_INTERNAL = "jdbc:default:connection";
   public static final String FILE_SEPARATOR = File.separator;
-  public static final String FILE_SUFFIX = ".data";
+  public static final String DATA_FORMAT = "%s.data";
+  public static final String META_FORMAT = "%s.meta";
+  public static final String SCRIPT_FORMAT = "%s.script";
+  public static final String LOG_FORMAT = "%log.script";
 
   //--------------------------------------------------------
   //--------For Storage usage-------------------------------
@@ -74,6 +81,20 @@ public class Global {
   public static Table getTableFromTid(String tid){
     //TODO:
     return null;
+  }
+
+  public static BufferPool gBufferPool(){
+    //TODO
+    return null;
+  }
+
+
+  public static String synthFilePath(String ... paths){
+    Path path = path = Paths.get(paths[0]);;
+    for (int i = 1; i < paths.length; i ++){
+      path = path.resolve(paths[i]);
+    }
+    return path.toString();
   }
 
 
