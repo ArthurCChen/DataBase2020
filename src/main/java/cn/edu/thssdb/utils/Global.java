@@ -30,7 +30,10 @@ public class Global {
   public static final String DATA_FORMAT = "%s.data";
   public static final String META_FORMAT = "%s.meta";
   public static final String SCRIPT_FORMAT = "%s.script";
-  public static final String LOG_FORMAT = "%log.script";
+  public static final String LOG_FORMAT = "%s.log";
+
+  public static final String DEFAULT_SQLPATH = "data/";
+  public static final String DEFAULT_METAPATH = "catlog.meta";
 
   //--------------------------------------------------------
   //--------For Storage usage-------------------------------
@@ -97,5 +100,10 @@ public class Global {
     return path.toString();
   }
 
-
+  public static void createDir(String path){
+    File file = new File(path);
+    if(!file.exists()){
+      file.mkdir();
+    }
+  }
 }

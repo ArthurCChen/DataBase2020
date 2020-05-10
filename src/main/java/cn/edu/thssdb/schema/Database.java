@@ -87,6 +87,11 @@ public class Database {
     // TODO result
   }
 
+  public void dropAll(){
+    for(String tableName : this.tablename2meta.keySet())
+      drop(tableName);
+  }
+
   public FileHandler getFileHandler(String tableName){
     return getTable(tableName).getFile();
   }
