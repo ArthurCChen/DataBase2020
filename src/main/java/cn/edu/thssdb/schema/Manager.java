@@ -129,6 +129,11 @@ public class Manager {
     return getDatabase(databaseName);
   }
 
+  public String getDefaultDatabaseName(){
+    return databases.keySet().iterator().next();
+  }
+
+
   private static class ManagerHolder {
     private static final Manager INSTANCE = new Manager();
     private ManagerHolder() {
