@@ -50,6 +50,9 @@ public class BPTPageId implements PageId {
         return data;
     }
 
+    public int getPageCatag(){
+        return this.pageCatag;
+    }
 
 
 }

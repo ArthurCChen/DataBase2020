@@ -3,7 +3,7 @@ package cn.edu.thssdb.storage;
 import cn.edu.thssdb.schema.TableMeta;
 import cn.edu.thssdb.utils.Global;
 
-public class BPTPage implements Page {
+public abstract class BPTPage implements Page {
     protected boolean dirty = false;
 
     protected final static int INDEX_SIZE = 4;
@@ -23,6 +23,24 @@ public class BPTPage implements Page {
         this.tm = Global.getTableFromTid(id.getTableId()).getTableMeta();
     }
 
+    public static byte[] createEmptyPageData(){
+        return new byte[Global.pageSize];
+    }
+
+    public BPTPageId getParentId(){
+        if(parent == 0){
+            return BPTRootPage.getId(id.getTableId());
+        }
+        return new BPTPageId(id.getTableId(), parent, BPTPageId.INTERNAL);
+    }
+
+    public void setParent(BPTPageId id) {
+        if (id.getPageCatag() == BPTPageId.ROOT_PTR) {
+            parent = 0;
+        } else {
+            parent = id.getPageNumber();
+        }
+    }
 
     @Override
     public PageId getId() {
@@ -39,8 +57,7 @@ public class BPTPage implements Page {
         return this.dirty;
     }
 
-    @Override
-    public byte[] getData() {
-        return new byte[0];
-    }
+    public abstract int getNumEmptySlots();
+
+    public abstract boolean isSlotUsed(int i );
 }
