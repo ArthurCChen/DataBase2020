@@ -2,6 +2,7 @@ package cn.edu.thssdb.storage;
 
 import cn.edu.thssdb.index.BPlusTree;
 import cn.edu.thssdb.schema.Row;
+import cn.edu.thssdb.schema.TableMeta;
 import oracle.jrockit.jfr.StringConstantPool;
 
 import java.io.File;
@@ -45,5 +46,10 @@ public class BPTFileHandler extends BPlusTree implements FileHandler{
     @Override
     public String getId() {
         return this.id;
+    }
+
+    @Override
+    public TableMeta getMeta() {
+        return null;
     }
 }

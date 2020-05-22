@@ -19,4 +19,6 @@ public interface FileHandler {
     String getId();
 
     FileIterator iterator();
+
+    TableMeta getMeta();
 }

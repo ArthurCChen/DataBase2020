@@ -7,4 +7,5 @@ public interface FileIterator {
     public boolean hasNext();
 
     public Row next();
+
 }

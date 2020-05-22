@@ -27,6 +27,11 @@ public class Table implements Iterable<Row> {
 
   private int primaryIndex;
 
+  public TableMeta getTableMeta(){
+    return meta;
+  }
+
+
   public File getDiskFile() {
     return diskFile;
   }

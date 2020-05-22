@@ -2,7 +2,7 @@ package cn.edu.thssdb.storage;
 
 public interface Page {
 
-    String getId();
+    PageId getId();
 
     void markDirty(boolean dirty);
 

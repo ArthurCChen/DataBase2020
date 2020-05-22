@@ -86,6 +86,11 @@ public class Global {
     return null;
   }
 
+  public static Table getTableFromTid(int tid){
+    //TODO:
+    return null;
+  }
+
   public static BufferPool gBufferPool(){
     //TODO
     return null;
