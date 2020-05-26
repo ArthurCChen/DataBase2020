@@ -1,9 +1,11 @@
 package cn.edu.thssdb.query;
 
+import cn.edu.thssdb.predicate.Operand;
 import cn.edu.thssdb.predicate.base.Predicate;
 import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Entry;
 import cn.edu.thssdb.schema.Row;
+import cn.edu.thssdb.schema.VirtualTable;
 import com.sun.istack.internal.NotNull;
 
 import java.util.ArrayList;
@@ -29,7 +31,7 @@ public interface QueryManager {
     public void startTransaction();
 
     // end a transaction
-    public void summit();
+    public void commit();
 
     // discard all the changes that has been made within the current transaction
     public void rollback();
@@ -45,4 +47,8 @@ public interface QueryManager {
     public void showTable(@NotNull String tableName);
 
     public void insertEntry(@NotNull String tableName, @NotNull ArrayList<Column> columns, @NotNull ArrayList<Row> entries);
+
+    public void select(@NotNull ArrayList<Column> result_columns, @NotNull VirtualTable vt, @NotNull Predicate conditions);
+
+    public void update(@NotNull String table_name, @NotNull String column_name, @NotNull Operand value, @NotNull  Predicate condition);
 }

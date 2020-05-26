@@ -22,6 +22,7 @@ import cn.edu.thssdb.query.QueryManager;
 import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Entry;
 import cn.edu.thssdb.schema.Row;
+import cn.edu.thssdb.schema.VirtualTable;
 import cn.edu.thssdb.type.ColumnType;
 import cn.edu.thssdb.utils.LogBuffer;
 import com.sun.istack.internal.NotNull;
@@ -58,10 +59,8 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
             queryManager.rollback();
         }
         else {
-            queryManager.summit();
+            queryManager.commit();
         }
-        // write output (error log, warnings, etc.)
-        logBuffer.flush();
         return null;
     }
 
@@ -85,7 +84,10 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
         ArrayList<Column> columns = new ArrayList<>();
         // construct column definition
         for (SQLParser.Column_defContext context : ctx.column_def()) {
-            Object object = visit(context);
+            Object object = visitColumn_def(context);
+            if (object == null) {
+                return null;
+            }
             columns.add((Column) object);
         }
         // when primary key is specified at the end of command
@@ -112,28 +114,10 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
                 }
             }
         }
-        // check if each column is identical
-        // and if primary key appear only once
-        boolean primary_key_set = false;
-        for (int i = 0; i < columns.size() && !hasSyntaxError; i++) {
-            for (int j = i + 1; j < columns.size(); j++) {
-                if (columns.get(i).getName().equals(columns.get(j).getName())) {
-                    hasSyntaxError = true;
-                    logBuffer.write(String.format("SyntaxError: column %s occurs more than once.",
-                            columns.get(i).getName()));
-                    return null;
-                }
-            }
-            if (columns.get(i).isPrimary()) {
-                if (primary_key_set) {
-                    hasSyntaxError = true;
-                    logBuffer.write("SyntaxError: Primary key for more than one attribute not supported (for now).");
-                    return null;
-                }
-                else {
-                    primary_key_set = true;
-                }
-            }
+        else {
+            logBuffer.write("SyntaxError: you need to specify a primary key.");
+            hasSyntaxError = true;
+            return null;
         }
         queryManager.createTable(table_name, columns);
         return null;
@@ -143,7 +127,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
     public Object visitDelete_stmt(SQLParser.Delete_stmtContext ctx) {
         Predicate predicate = null;
         if (ctx.multiple_condition() != null) {
-            predicate = (Predicate)visit(ctx.multiple_condition());
+            predicate = (Predicate)visitMultiple_condition(ctx.multiple_condition());
         }
         queryManager.deleteRows(ctx.table_name().getText(), predicate);
         return null;
@@ -175,13 +159,13 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
         // if column name is provided
         if (ctx.column_name() != null) {
             for (SQLParser.Column_nameContext column : ctx.column_name()) {
-                columns.add((Column)visit(column));
+                columns.add((Column)visitColumn_name(column));
             }
             row_length = columns.size();
         }
         // one element is a row
         for (SQLParser.Value_entryContext entry : ctx.value_entry()) {
-            entries.add((Row) visit(entry));
+            entries.add((Row) visitValue_entry(entry));
         }
         // if column names not specified, take the length of the first entry as row length
         if (row_length == 0) {
@@ -202,7 +186,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
         ArrayList<Entry> entries = new ArrayList<Entry>();
         // add each literal
         for (SQLParser.Literal_valueContext entry : ctx.literal_value()) {
-            entries.add(((Operand)visit(entry)).getValue());
+            entries.add(((Operand)visitLiteral_value(entry)).getValue());
         }
         return new Row(entries);
     }
@@ -227,29 +211,43 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
 
         ArrayList<Column> columns = new ArrayList<>();
         for (SQLParser.Result_columnContext columnContext : ctx.result_column()) {
-            columns.add((Column)visit(columnContext));
+            Column column = (Column) visitResult_column(columnContext);
+            if (column == null) {
+                return null;
+            }
+            columns.add(column);
         }
+        Predicate condition = (Predicate)visitMultiple_condition(ctx.multiple_condition());
+        VirtualTable vt = (VirtualTable)visitTable_query(ctx.table_query(0));
 
-        Predicate condition = (Predicate)visit(ctx.multiple_condition());
-        // TODO: finish select
+        queryManager.select(columns, vt, condition);
         return null;
     }
 
     @Override
     public Object visitUpdate_stmt(SQLParser.Update_stmtContext ctx) {
-        // TODO: finish update
-        return super.visitUpdate_stmt(ctx);
+        String table_name = ctx.table_name().getText();
+        String column_name = ctx.column_name().getText();
+        Operand operand = (Operand)visitExpression(ctx.expression());
+        if (operand == null) {
+            return null;
+        }
+        Predicate condition = (Predicate)visitMultiple_condition(ctx.multiple_condition());
+        queryManager.update(table_name, column_name, operand, condition);
+        return null;
     }
 
     @Override
     public Object visitColumn_def(SQLParser.Column_defContext ctx) {
         // construct a column step by step
-        Column column = (Column)visit(ctx.type_name());
+        Column column = (Column)visitType_name(ctx.type_name());
         String name = ctx.column_name().getText();
         column.setName(name);
         for (SQLParser.Column_constraintContext constraint : ctx.column_constraint()) {
             if (constraint.K_PRIMARY() != null) {
-                column.setPrimary(true);
+                logBuffer.write("NotImplementError: primary key can only be set at the end of statement.");
+                hasSyntaxError = true;
+                return null;
             }
             if (constraint.K_NOT() != null) {
                 column.setNotNull(true);
@@ -281,11 +279,11 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
     @Override
     public Object visitMultiple_condition(SQLParser.Multiple_conditionContext ctx) {
         if (ctx.condition() != null) {
-            return (Predicate)visit(ctx.condition());
+            return (Predicate)visitCondition(ctx.condition());
         }
         else {
-            Predicate lhs = (Predicate)visit(ctx.multiple_condition(0));
-            Predicate rhs = (Predicate)visit(ctx.multiple_condition(1));
+            Predicate lhs = (Predicate)visitMultiple_condition(ctx.multiple_condition(0));
+            Predicate rhs = (Predicate)visitMultiple_condition(ctx.multiple_condition(1));
             if (ctx.AND() != null) {
                 return new AndPredicate(lhs, rhs);
             }
@@ -307,7 +305,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
         // full name or constant
         if (ctx.column_full_name() != null) {
             operand = new Operand(false);
-            Column column = (Column)visit(ctx.column_full_name());
+            Column column = (Column)visitColumn_full_name(ctx.column_full_name());
             if (column.getTable_name() != null) {
                 operand.setName(column.getTable_name() + "." + column.getName());
             }
@@ -316,7 +314,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
             }
         }
         else {
-            operand = (Operand)visit(ctx.literal_value());
+            operand = (Operand)visitLiteral_value(ctx.literal_value());
         }
         return operand;
     }
@@ -350,7 +348,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
             hasSyntaxError = true;
             return null;
         }
-        return (Operand)visit(ctx.comparer());
+        return (Operand)visitComparer(ctx.comparer());
     }
 
     @Override
@@ -360,12 +358,23 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
             hasSyntaxError = true;
             return null;
         }
-        return (Column)visit(ctx.column_full_name());
+        return (Column)visitColumn_full_name(ctx.column_full_name());
     }
 
     @Override
     public Object visitTable_query(SQLParser.Table_queryContext ctx) {
-        return super.visitTable_query(ctx);
+        VirtualTable vt = new VirtualTable();
+        if (ctx.K_JOIN() != null) {
+            // join
+            for (SQLParser.Table_nameContext tablename : ctx.table_name()) {
+                vt.tables.add(tablename.getText());
+            }
+            vt.condition = (Predicate)visitMultiple_condition(ctx.multiple_condition());
+        }
+        else {
+            vt.tables.add(ctx.table_name(0).getText());
+        }
+        return vt;
     }
 
     // return a string if not null
@@ -408,10 +417,14 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
 
     @Override
     public Object visitCondition(SQLParser.ConditionContext ctx) {
-        Operand lhs = (Operand) visit(ctx.expression(0));
-        Operand rhs = (Operand) visit(ctx.expression(1));
+        Operand lhs = (Operand) visitExpression(ctx.expression(0));
+        Operand rhs = (Operand) visitExpression(ctx.expression(1));
 
-        Class c = (Class)visit(ctx.comparator());
+        if (lhs == null || rhs == null) {
+            return null;
+        }
+
+        Class c = (Class)visitComparator(ctx.comparator());
         Predicate result;
         // instantiate the predicate
         try {

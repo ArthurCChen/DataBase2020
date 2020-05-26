@@ -29,6 +29,9 @@ public class Column implements Comparable<Column> {
 
   public void setPrimary(boolean primary) {
     this.primary = primary;
+    if (primary) {
+      this.notNull = true;
+    }
   }
 
   public boolean isPrimary() {
@@ -63,6 +66,6 @@ public class Column implements Comparable<Column> {
   }
 
   public String toString() {
-    return name + ',' + type + ',' + primary + ',' + notNull + ',' + maxLength;
+    return String.format("Column:{name: %s, type: %s, primary: %s, notNull: %s, maxLength: %s}", name, type, primary, notNull, maxLength);
   }
 }

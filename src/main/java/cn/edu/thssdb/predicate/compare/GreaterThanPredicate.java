@@ -17,4 +17,9 @@ public class GreaterThanPredicate extends CompareBasePredicate {
     public void accept(PredicateVisitor predicateVisitor) {
         predicateVisitor.visitGreaterThanPredicate(this);
     }
+
+    @Override
+    public String toString() {
+        return String.format("(%s>%s)", lhs.toString(), rhs.toString());
+    }
 }

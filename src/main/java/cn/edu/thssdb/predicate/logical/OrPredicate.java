@@ -17,4 +17,9 @@ public class OrPredicate extends LogicalBasePredicate {
     public void accept(PredicateVisitor predicateVisitor) {
         predicateVisitor.visitOrPredicate(this);
     }
+
+    @Override
+    public String toString() {
+        return String.format("(%s or %s)", lhs.toString(), rhs.toString());
+    }
 }

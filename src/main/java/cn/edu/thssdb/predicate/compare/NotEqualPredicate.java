@@ -17,4 +17,9 @@ public class NotEqualPredicate extends CompareBasePredicate {
     public void accept(PredicateVisitor predicateVisitor) {
         predicateVisitor.visitNotEqualPredicate(this);
     }
+
+    @Override
+    public String toString() {
+        return String.format("(%s!=%s)", lhs.toString(), rhs.toString());
+    }
 }

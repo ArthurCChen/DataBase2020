@@ -42,4 +42,14 @@ public class Operand {
             return row.getEntries().get(this.index);
         }
     }
+
+    @Override
+    public String toString() {
+        if (is_constant) {
+            return String.format("Constant operand: %s", value.toString());
+        }
+        else {
+            return String.format("Column operand: %s", name);
+        }
+    }
 }

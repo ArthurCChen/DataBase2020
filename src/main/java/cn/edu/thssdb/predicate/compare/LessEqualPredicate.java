@@ -17,4 +17,9 @@ public class LessEqualPredicate extends CompareBasePredicate {
     public void accept(PredicateVisitor predicateVisitor) {
         predicateVisitor.visitLessEqualPredicate(this);
     }
+
+    @Override
+    public String toString() {
+        return String.format("(%s<=%s)", lhs.toString(), rhs.toString());
+    }
 }

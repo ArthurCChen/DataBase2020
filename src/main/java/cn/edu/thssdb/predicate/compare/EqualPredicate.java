@@ -17,4 +17,9 @@ public class EqualPredicate extends CompareBasePredicate {
     public void accept(PredicateVisitor predicateVisitor) {
         predicateVisitor.visitEqualPredicate(this);
     }
+
+    @Override
+    public String toString() {
+        return String.format("(%s==%s)", lhs.toString(), rhs.toString());
+    }
 }

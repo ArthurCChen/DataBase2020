@@ -17,4 +17,9 @@ public class AndPredicate extends LogicalBasePredicate {
     public void accept(PredicateVisitor predicateVisitor) {
         predicateVisitor.visitAndPredicate(this);
     }
+
+    @Override
+    public String toString() {
+        return String.format("(%s and %s)", lhs.toString(), rhs.toString());
+    }
 }
