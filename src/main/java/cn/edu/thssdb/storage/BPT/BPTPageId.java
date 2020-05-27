@@ -1,4 +1,6 @@
-package cn.edu.thssdb.storage;
+package cn.edu.thssdb.storage.BPT;
+
+import cn.edu.thssdb.storage.PageId;
 
 public class BPTPageId implements PageId {
     public final static int ROOT_PTR = 0;

@@ -1,10 +1,10 @@
-package cn.edu.thssdb.storage;
+package cn.edu.thssdb.storage.BPT;
 
-import cn.edu.thssdb.schema.TableMeta;
+import cn.edu.thssdb.storage.Page;
 
 import java.io.*;
 
-public class BPTRootPage implements Page{
+public class BPTRootPage implements Page {
     protected boolean dirty = false;
 
     protected final static int PAGE_SIZE = 9;

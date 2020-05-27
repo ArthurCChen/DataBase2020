@@ -1,14 +1,18 @@
-package cn.edu.thssdb.storage;
+package cn.edu.thssdb.storage.BPT;
 
 import cn.edu.thssdb.index.BPlusTree;
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.TableMeta;
+import cn.edu.thssdb.storage.FileHandler;
+import cn.edu.thssdb.storage.Page;
 import oracle.jrockit.jfr.StringConstantPool;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 
-public class BPTFileHandler extends BPlusTree implements FileHandler{
+public class BPTFileHandler extends BPlusTree implements FileHandler {
 
     private final File file;
     private final String id;
@@ -50,6 +54,16 @@ public class BPTFileHandler extends BPlusTree implements FileHandler{
 
     @Override
     public TableMeta getMeta() {
+        return null;
+    }
+
+    @Override
+    public void forEach(Consumer action) {
+
+    }
+
+    @Override
+    public Spliterator spliterator() {
         return null;
     }
 }

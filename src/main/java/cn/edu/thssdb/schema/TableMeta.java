@@ -11,6 +11,7 @@ public class TableMeta implements Serializable {
     public int count;
     public int autoIncrement;
     public ArrayList<Column> columnLabel;
+    public int byteSize = -1;
 
     public TableMeta(int tableId,
                      String databaseName,
@@ -25,4 +26,15 @@ public class TableMeta implements Serializable {
         this.autoIncrement = autoIncrement;
         this.columnLabel = columnLabel;
     }
+
+    public int getSize(){
+        if(byteSize < 0){
+            byteSize = 0;
+            for(Column item : columnLabel){
+                byteSize += item.
+            }
+        }
+        return byteSize;
+    }
+
 }
