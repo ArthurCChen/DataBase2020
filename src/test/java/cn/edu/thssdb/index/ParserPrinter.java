@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * This class implements QueryManager interface,
  * it just prints out the passed parameters as it is,
  * in order to debug the parser and visitor.
- * Debug Only.
+ * Debug Only. Helper class for test.
  */
 public class ParserPrinter implements QueryManager {
 
@@ -47,7 +47,7 @@ public class ParserPrinter implements QueryManager {
 
     @Override
     public void deleteRows(String tableName, Predicate predicate) {
-        result = String.format("deleteRows called, table name: %s, predicate: %s", tableName, predicate.toString());
+        result = String.format("deleteRows called, table name: %s, predicate: %s", tableName, predicate);
     }
 
     @Override
@@ -67,7 +67,7 @@ public class ParserPrinter implements QueryManager {
 
     @Override
     public void insertEntry(String tableName, ArrayList<Column> columns, ArrayList<Row> entries) {
-        result = String.format("insertEntry called, table name: %s, columns: %s, entries: %s", tableName, columns.toString(), entries.toString());
+        result = String.format("insertEntry called, table name: %s, columns: %s, entries: %s", tableName, columns, entries);
     }
 
     @Override

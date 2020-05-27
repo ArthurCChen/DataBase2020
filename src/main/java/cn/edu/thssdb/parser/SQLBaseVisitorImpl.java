@@ -52,6 +52,10 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
     @Override
     public Object visitParse(SQLParser.ParseContext ctx) {
         hasSyntaxError = false;
+        // if there is error when parsing, stop
+        if (logBuffer.hasSyntaxError) {
+            return null;
+        }
         queryManager.startTransaction();
         super.visitParse(ctx);
         // submit the transaction if no syntax error is found
@@ -93,7 +97,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
         // when primary key is specified at the end of command
         if (ctx.table_constraint() != null) {
             if (ctx.table_constraint().column_name().size() != 1) {
-                logBuffer.write("SyntaxError: Primary key for more than one attribute not supported (for now).");
+                logBuffer.write("NotImplementError: Primary key for more than one attribute not supported (for now).");
                 hasSyntaxError = true;
                 return null;
             }
@@ -135,6 +139,11 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
 
     @Override
     public Object visitDrop_table_stmt(SQLParser.Drop_table_stmtContext ctx) {
+        if (ctx.K_IF() != null) {
+            logBuffer.write("NotImplementError: if exists not implemented.");
+            hasSyntaxError = true;
+            return null;
+        }
         queryManager.dropTable(ctx.table_name().getText());
         return null;
     }
@@ -157,11 +166,14 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
         ArrayList<Row> entries = new ArrayList<Row>();
         int row_length = 0;
         // if column name is provided
-        if (ctx.column_name() != null) {
+        if (ctx.column_name() != null && ctx.column_name().size() != 0) {
             for (SQLParser.Column_nameContext column : ctx.column_name()) {
-                columns.add((Column)visitColumn_name(column));
+                columns.add(new Column(column.getText(), null, false, false, 0));
             }
             row_length = columns.size();
+        }
+        else {
+            columns = null;
         }
         // one element is a row
         for (SQLParser.Value_entryContext entry : ctx.value_entry()) {
@@ -194,7 +206,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
     @Override
     public Object visitSelect_stmt(SQLParser.Select_stmtContext ctx) {
         if (ctx.K_DISTINCT() != null) {
-            logBuffer.write("NotImplementError: distinct not implemented.");
+            logBuffer.write("NotImplementError: 'distinct' not implemented.");
             hasSyntaxError = true;
             return null;
         }
@@ -217,7 +229,10 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
             }
             columns.add(column);
         }
-        Predicate condition = (Predicate)visitMultiple_condition(ctx.multiple_condition());
+        Predicate condition = null;
+        if (ctx.multiple_condition() != null) {
+            condition = (Predicate)visitMultiple_condition(ctx.multiple_condition());
+        }
         VirtualTable vt = (VirtualTable)visitTable_query(ctx.table_query(0));
 
         queryManager.select(columns, vt, condition);
@@ -232,7 +247,10 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
         if (operand == null) {
             return null;
         }
-        Predicate condition = (Predicate)visitMultiple_condition(ctx.multiple_condition());
+        Predicate condition = null;
+        if (ctx.multiple_condition() != null) {
+            condition = (Predicate)visitMultiple_condition(ctx.multiple_condition());
+        }
         queryManager.update(table_name, column_name, operand, condition);
         return null;
     }
@@ -278,7 +296,8 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
 
     @Override
     public Object visitMultiple_condition(SQLParser.Multiple_conditionContext ctx) {
-        if (ctx.condition() != null) {
+        System.out.println(ctx.multiple_condition());
+        if (ctx.AND() == null && ctx.OR() == null) {
             return (Predicate)visitCondition(ctx.condition());
         }
         else {
@@ -343,7 +362,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
 
     @Override
     public Object visitExpression(SQLParser.ExpressionContext ctx) {
-        if (ctx.ADD() != null || ctx.SUB() != null || ctx.DIV() != null || ctx.MUL() != null || ctx.expression() != null) {
+        if (ctx.ADD() != null || ctx.SUB() != null || ctx.DIV() != null || ctx.MUL() != null || ctx.comparer() == null) {
             logBuffer.write("NotImplementError: arithmetic expression not implemented.(for now)");
             hasSyntaxError = true;
             return null;
@@ -364,7 +383,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
     @Override
     public Object visitTable_query(SQLParser.Table_queryContext ctx) {
         VirtualTable vt = new VirtualTable();
-        if (ctx.K_JOIN() != null) {
+        if (ctx.K_JOIN().size() != 0) {
             // join
             for (SQLParser.Table_nameContext tablename : ctx.table_name()) {
                 vt.tables.add(tablename.getText());

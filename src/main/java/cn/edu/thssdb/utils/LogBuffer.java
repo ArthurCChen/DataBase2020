@@ -13,7 +13,7 @@ import java.util.ArrayList;
 public class LogBuffer extends BaseErrorListener {
     private ArrayList<String> buffer;
     private BufferedWriter output;
-    public boolean hasSyntaxError;
+    public boolean hasSyntaxError = false;
 
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine,
@@ -51,6 +51,7 @@ public class LogBuffer extends BaseErrorListener {
             result.append(message);
         }
         buffer.clear();
+        hasSyntaxError = false;
         return result.toString();
     }
 }

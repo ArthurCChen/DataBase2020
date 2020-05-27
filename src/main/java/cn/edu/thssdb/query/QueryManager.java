@@ -38,7 +38,7 @@ public interface QueryManager {
 
     public void createTable(@NotNull String tableName, @NotNull ArrayList<Column> columns);
 
-    public void deleteRows(@NotNull String tableName, @NotNull Predicate predicate);
+    public void deleteRows(@NotNull String tableName, Predicate predicate);
 
     public void dropTable(@NotNull String tableName);
 
