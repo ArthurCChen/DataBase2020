@@ -296,7 +296,6 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
 
     @Override
     public Object visitMultiple_condition(SQLParser.Multiple_conditionContext ctx) {
-        System.out.println(ctx.multiple_condition());
         if (ctx.AND() == null && ctx.OR() == null) {
             return (Predicate)visitCondition(ctx.condition());
         }

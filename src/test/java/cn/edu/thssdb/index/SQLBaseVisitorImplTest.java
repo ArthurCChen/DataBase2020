@@ -160,7 +160,28 @@ public class SQLBaseVisitorImplTest {
 
     @Test
     public void condition() throws ManagerNotReadyException {
-        parse("update table1 set a = 2 where a = b and b = c and c = d or d = e");
-        assertEquals("", printer.getResult());
+        // logical
+        parse("update table1 set a = 2 where a = b && b = c && c = d || d = e");
+        assertEquals("update called, table name: table1, value: a, " +
+                "condition: ((((Column operand: a==Column operand: b) " +
+                "and (Column operand: b==Column operand: c)) " +
+                "and (Column operand: c==Column operand: d)) " +
+                "or (Column operand: d==Column operand: e))", printer.getResult());
+        // compare
+        parse("update table1 set a = 2 where b <> c");
+        assertEquals("update called, table name: table1, value: a, " +
+                "condition: (Column operand: b!=Column operand: c)", printer.getResult());
+        parse("update table1 set a = 2 where b > c");
+        assertEquals("update called, table name: table1, value: a, " +
+                "condition: (Column operand: b>Column operand: c)", printer.getResult());
+        parse("update table1 set a = 2 where b < c");
+        assertEquals("update called, table name: table1, value: a, " +
+                "condition: (Column operand: b<Column operand: c)", printer.getResult());
+        parse("update table1 set a = 2 where b >= c");
+        assertEquals("update called, table name: table1, value: a, " +
+                "condition: (Column operand: b>=Column operand: c)", printer.getResult());
+        parse("update table1 set a = 2 where b <= c");
+        assertEquals("update called, table name: table1, value: a, " +
+                "condition: (Column operand: b<=Column operand: c)", printer.getResult());
     }
 }
