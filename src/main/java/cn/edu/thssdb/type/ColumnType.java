@@ -81,7 +81,7 @@ public enum ColumnType implements Serializable {
         throw new Exception();
       }
     }
-  }
+  };
 
   public abstract  int getBytes();
 
