@@ -1,6 +1,6 @@
 package cn.edu.thssdb.type;
 
-public interface ValueFactory {
+public class ValueFactory {
     public ColumnValue getField(ColumnType type, byte[] data){
         switch(type){
             case STRING:
