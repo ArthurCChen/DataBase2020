@@ -17,6 +17,12 @@ public class Row implements Serializable {
     this.entries = new ArrayList<>(Arrays.asList(entries));
   }
 
+  public Row(TableMeta tm){
+    this();
+    for(int i=0; i < tm.)
+
+  }
+
   public ArrayList<Entry> getEntries() {
     return entries;
   }

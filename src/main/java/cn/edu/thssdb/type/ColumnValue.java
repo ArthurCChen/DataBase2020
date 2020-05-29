@@ -9,4 +9,5 @@ public interface ColumnValue extends Serializable {
 
     public ColumnType getType();
 
+    Comparable getValue();
 }

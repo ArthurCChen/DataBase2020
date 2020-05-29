@@ -29,7 +29,6 @@ public class ValueFactory {
                 }else{
                     throw new InternalException("");
                 }
-                break;
             case LONG:
                 if(value instanceof Long){
                     return getField(value);
@@ -38,7 +37,6 @@ public class ValueFactory {
                 }else{
                     throw new InternalException("");
                 }
-                break;
             case DOUBLE:
                 if(value instanceof Double){
                     return getField(value);
@@ -47,7 +45,6 @@ public class ValueFactory {
                 }else{
                     throw new InternalException("");
                 }
-                break;
             case FLOAT:
                 if(value instanceof Float){
                     return getField(value);
@@ -56,7 +53,6 @@ public class ValueFactory {
                 }else{
                     throw new InternalException("");
                 }
-                break;
             case STRING:
                 if(value instanceof String){
                     return new StringValue((String)value, maxLen);

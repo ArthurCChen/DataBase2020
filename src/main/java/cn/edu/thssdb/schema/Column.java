@@ -1,25 +1,61 @@
 package cn.edu.thssdb.schema;
 
 import cn.edu.thssdb.type.ColumnType;
+import cn.edu.thssdb.type.ColumnValue;
 
+import java.io.DataInputStream;
 import java.io.Serializable;
 
 public class Column implements Comparable<Column>, Serializable {
+
+  private static final long serialVersionUID = 1L;
+
   private String name;
   private ColumnType type;
   private int primary;
   private boolean notNull;
   private int maxLength;
+  public String tableName;
 
-  static public int PRIMARY = 1;
-  static public int NOT_PRIMARY = 0;
+  static public int PRIMARY;
+  static public int NOT_PRIMARY;
 
-  public Column(String name, ColumnType type, int primary, boolean notNull, int maxLength) {
+  static {
+    NOT_PRIMARY = 0;
+    PRIMARY = 1;
+  }
+
+  public Column(String name, ColumnType type, boolean notNull, int maxLength) {
     this.name = name;
     this.type = type;
-    this.primary = primary;
     this.notNull = notNull;
-    this.maxLength = maxLength;
+    if (type == ColumnType.STRING) {
+      this.maxLength = maxLength;
+    }else{
+      this.maxLength = 0;
+    }
+    this.primary = NOT_PRIMARY;
+  }
+
+  public Column(String name, ColumnType type, boolean notNull) {
+    this(name, type, notNull, 0);
+  }
+
+  public Column(String name, ColumnType type, boolean notNull, int maxLength, String tableName){
+    this(name, type, notNull, maxLength);
+    this.tableName = tableName;
+  }
+
+  public void setPrimary(int primary) {
+    this.primary = PRIMARY;
+  }
+
+  // name is unnecessary
+  public boolean equals(Object obj){
+    if(!(obj instanceof  Column))
+      return false;
+    Column other = (Column)obj;
+    return (type == other.type)  && (notNull == other.notNull) && (maxLength == other.maxLength);
   }
 
   @Override
@@ -28,7 +64,18 @@ public class Column implements Comparable<Column>, Serializable {
   }
 
   public String toString() {
-    return name + ',' + type + ',' + primary + ',' + notNull + ',' + maxLength;
+    StringBuilder stringBuilder = new StringBuilder();
+    if(type == ColumnType.STRING) {
+      stringBuilder.append(String.format("%s(%s(%d)", name, type, maxLength));
+
+    }else{
+      stringBuilder.append(String.format("%s(%s", name, type));
+    }
+    if(notNull){
+      stringBuilder.append(" not null");
+    }
+    stringBuilder.append(")");
+    return stringBuilder.toString();
   }
 
   public int getPrimary() {
@@ -39,7 +86,23 @@ public class Column implements Comparable<Column>, Serializable {
     return name;
   }
 
+  public String fullName(){
+    if(tableName != null){
+      return tableName + "." + name;
+    }else{
+      return name;
+    }
+  }
+
   public ColumnType getType() {
     return type;
+  }
+
+  public int getByteSize(){
+    return type.getBytes() + this.maxLength;
+  }
+
+  public ColumnValue parse(DataInputStream dis) throws Exception{
+    return this.type.parse(dis, maxLength);
   }
 }
