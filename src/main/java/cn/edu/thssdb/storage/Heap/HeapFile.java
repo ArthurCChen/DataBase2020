@@ -9,6 +9,7 @@ import cn.edu.thssdb.storage.Heap.HeapPage;
 import cn.edu.thssdb.storage.Heap.HeapPageId;
 import cn.edu.thssdb.type.ColumnValue;
 import cn.edu.thssdb.utils.Global;
+import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
 import sun.security.action.GetLongAction;
 
 import java.io.File;
@@ -25,11 +26,10 @@ public class HeapFile implements FileHandler {
     private boolean hasPrimaryKeyConstraint=true;
 
 
-    public HeapFile(int id, File file, RowDesc tupleDesc, boolean hasPrimaryKeyConstraint){
+    public HeapFile(int id, File file, RowDesc tupleDesc){
         this.id = id;
         this.file = file;
         this.tupleDesc = tupleDesc;
-        this.hasPrimaryKeyConstraint = hasPrimaryKeyConstraint;
     }
 
 
@@ -159,8 +159,18 @@ public class HeapFile implements FileHandler {
     }
 
     @Override
-    public ArrayList<Page> updateRow(Row row) {
-        return null;
+    public ArrayList<Page> updateRow(Row t) {
+        throw new InternalException("updateRow ot implemented");
+        //        ArrayList<Page> affectedPages = new ArrayList<>();
+//        try {
+//            PageId pageId = t.getPageId();
+//            HeapPage page = (HeapPage) Global.gBufferPool().getPage(pageId);
+//            page.deleteRow(t);
+//            affectedPages.add(page);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return affectedPages;
     }
 
     public FileIterator iterator() {
