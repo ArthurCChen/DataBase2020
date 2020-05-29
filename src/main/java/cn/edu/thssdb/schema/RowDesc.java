@@ -13,6 +13,15 @@ public class RowDesc implements Serializable {
     private ArrayList<String> primaryKeys;
     private ArrayList<Integer> primaryIndex;
 
+    public ArrayList<String> getAttrNames(){
+        ArrayList<String> attrs = new ArrayList<>();
+        for(Column column: columns){
+            attrs.add(column.getName());
+        }
+        return attrs;
+    }
+
+
     public RowDesc(ArrayList<Column> columns, ArrayList<String> primaryKeys){
         this.columns = new ArrayList<>(columns);
         if (primaryKeys != null && primaryKeys.size() != 0){

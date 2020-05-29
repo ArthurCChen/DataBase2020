@@ -6,10 +6,7 @@ import cn.edu.thssdb.type.ColumnValue;
 import cn.edu.thssdb.type.ValueFactory;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.StringJoiner;
+import java.util.*;
 
 public class Row implements Serializable {
   private static final long serialVersionUID = -5809782578272943999L;
@@ -30,6 +27,32 @@ public class Row implements Serializable {
       ColumnValue val = ValueFactory.getField(0, column.getType(), column.getMaxLength());
       entries.add(new Entry(val));
       }
+  }
+
+  public Row(RowDesc desc, ArrayList<String> attrNames, ArrayList<Object> values) throws  Exception{
+    this(desc);
+    if (attrNames == null) {
+      //attrNames are all the attribute names of the table
+      attrNames = desc.getAttrNames();
+    }
+    if (attrNames.size() != values.size()) {
+      throw new Exception();
+    } else {
+      HashMap<String, Object> hashMap = new HashMap<>();
+      for (int i=0; i<attrNames.size(); i++) {
+        hashMap.put(attrNames.get(i), values.get(i));
+      }
+      for (int i = 0; i < desc.getColumnSize(); i ++){
+        Column item = desc.get(i);
+        String attr = desc.get(i).getName();
+        if(hashMap.containsKey(attr)){
+          ColumnValue val = ValueFactory.getField(values.get(i));
+          setValue(i, val);
+        }else if(item.getPrimary() == Column.PRIMARY || item.isNotNull()){
+          throw new Exception();
+        }
+      }
+    }
   }
 
   public ArrayList<Entry> getEntries() {
@@ -56,7 +79,9 @@ public class Row implements Serializable {
     this.entries.addAll(entries);
   }
 
-  public setValue()
+  public void setValue(int i, ColumnValue val){
+    this.entries.set(i, new Entry(val));
+  }
 
   public String toString() {
     if (entries == null)

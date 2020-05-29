@@ -176,7 +176,7 @@ public interface FileIterator {
 
 ```
 script:存储的是sql语句
-meta：存储的是序列化后的database信息
+desc：存储的是序列化后的database信息
 ```
 
 实现该模块的主要类及其功能有： 

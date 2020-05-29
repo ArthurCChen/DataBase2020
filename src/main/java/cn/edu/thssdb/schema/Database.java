@@ -49,7 +49,7 @@ public class Database {
     }
   }
 
-  public void create(String tableName, Column[] columns) {
+  public void create(String tableName, ArrayList<Column> columns, ArrayList<String> primaryNames) {
     // TODO
     if(getTable(tableName) != null){
       return; //TODO throw error
@@ -64,9 +64,11 @@ public class Database {
       }
 
     this.gId ++;
-    TableMeta meta = new TableMeta(gId, databaseName, tableName, 0, 0, new ArrayList<>(Arrays.asList(columns)));
-    Table table = new Table(meta, diskFile);
-    tablename2meta.put(tableName, meta);
+      RowDesc desc = new RowDesc(columns, primaryNames);
+      Table table = new Table(gId, tableName, desc, diskFile);
+//    TableMeta meta = new TableMeta(gId, databaseName, tableName, 0, 0, new ArrayList<>(Arrays.asList(columns)));
+//    Table table = new Table(meta, diskFile);
+    tablename2meta.put(tableName, desc);
     idTableMap.put(gId, table);
     //TODO return result
     }

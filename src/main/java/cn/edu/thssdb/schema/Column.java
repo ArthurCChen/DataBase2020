@@ -46,6 +46,10 @@ public class Column implements Comparable<Column>, Serializable {
     this.tableName = tableName;
   }
 
+  public boolean isNotNull() {
+    return notNull;
+  }
+
   public void setPrimary(int primary) {
     this.primary = PRIMARY;
   }

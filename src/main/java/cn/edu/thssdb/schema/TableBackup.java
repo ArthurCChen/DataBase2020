@@ -35,7 +35,7 @@ public class Table implements Iterable<Row> {
   private int primaryIndex;
 
   public RowDesc getTableMeta(){
-    return meta;
+    return desc;
   }
 
 
@@ -58,7 +58,7 @@ public class Table implements Iterable<Row> {
                File diskFile){
     // TODO
     this.lock = new ReentrantReadWriteLock();
-    this.meta = meta;
+    this.desc = meta;
     this.columnIndex = new HashMap<>();
     for(int i = 0; i < meta.getColumnSize(); i ++){
       columnIndex.put(meta.get(i).getName(), i);
@@ -88,7 +88,7 @@ public class Table implements Iterable<Row> {
 
   private void recover(){
     // TODO
-    String filename = Global.synthFilePath(meta.databaseName, String.format(Global.DATA_FORMAT, meta.tableName));
+    String filename = Global.synthFilePath(desc.databaseName, String.format(Global.DATA_FORMAT, desc.tableName));
     File file = new File(filename);
     if(!file.exists())
       throw new InternalException(filename);//TODO exception
@@ -103,7 +103,7 @@ public class Table implements Iterable<Row> {
 
     for(Row row: rows){
       ArrayList<Entry> entries = row.getEntries();
-      for(int i = 0; i < meta.columnLabel.size(); i ++){
+      for(int i = 0; i < desc.columnLabel.size(); i ++){
         Entry entry = entries.get(i);
         if(i == primaryIndex){
           index.put(entry, row);
@@ -117,11 +117,11 @@ public class Table implements Iterable<Row> {
   public void insert(String[] values, String[] columnNames) {
     // TODO
 
-    Entry[] entries = new Entry[meta.columnLabel.size()];
+    Entry[] entries = new Entry[desc.columnLabel.size()];
     for (int i = 0 ; i < entries.length; i ++) {
       String columnName = columnNames[i];
       int columnIndex = this.columnIndex.get(columnName);
-      Column column = meta.columnLabel.get(columnIndex);
+      Column column = desc.columnLabel.get(columnIndex);
       Comparable castValue = Global.castValue(values[i], column.getType());
       entries[i] = new Entry(castValue);
     }

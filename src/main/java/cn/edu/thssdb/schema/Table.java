@@ -1,22 +1,18 @@
 package cn.edu.thssdb.schema;
 
-import cn.edu.thssdb.exception.FileNotExistException;
-import cn.edu.thssdb.exception.KeyNotExistException;
-import cn.edu.thssdb.index.BPlusTreeIterator;
 import cn.edu.thssdb.storage.FileHandler;
+import cn.edu.thssdb.storage.FileIterator;
 import cn.edu.thssdb.storage.Heap.HeapFile;
 import cn.edu.thssdb.utils.Global;
-import javafx.util.Pair;
-import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
 
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class Table implements Iterable<Row> {
+public class Table  {
     ReentrantReadWriteLock lock;
 
-    RowDesc meta;
+    RowDesc desc;
     private File diskFile;
     public int tid;
     public String databaseName;
@@ -35,7 +31,7 @@ public class Table implements Iterable<Row> {
     private int primaryIndex;
 
     public RowDesc getTableMeta(){
-        return meta;
+        return desc;
     }
 
 
@@ -54,16 +50,16 @@ public class Table implements Iterable<Row> {
     public Table(
             Integer id,
             String name,
-            RowDesc meta,
+            RowDesc desc,
             File diskFile){
         // TODO
         this.lock = new ReentrantReadWriteLock();
-        this.meta = meta;
+        this.desc = desc;
         this.columnIndex = new HashMap<>();
-        for(int i = 0; i < meta.getColumnSize(); i ++){
-            columnIndex.put(meta.get(i).getName(), i);
+        for(int i = 0; i < desc.getColumnSize(); i ++){
+            columnIndex.put(desc.get(i).getName(), i);
         }
-        this.fileHandler = new HeapFile(id, diskFile, meta);
+        this.fileHandler = new HeapFile(id, diskFile, desc);
         this.tableName = name;
         this.diskFile = diskFile;
         count = 0;
@@ -71,15 +67,51 @@ public class Table implements Iterable<Row> {
 
     public void insertRow(Row row){
         try{
+            autoIncrement ++;
+            count ++;
             Global.gBufferPool().insertRow(this.tid, row);
         } catch (Exception e){
             e.printStackTrace();
         }
     }
 
-    public void insertRow(ArrayList<Object> values){
-
+    public void insertRow(ArrayList<String> attrNames, ArrayList<Object> values) {
+        try {
+            Row row = new Row(this.desc, attrNames, values);
+            insertRow(row);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
+    public FileIterator iterator(){
+        return fileHandler.iterator();
+    }
+
+
+    // warning should not use this, because delete is a filter op !!!
+    public void deleteRow(Entry primary_key){
+        primaryIndex = desc.getPrimaryIndex().get(0);
+        FileIterator iterator = iterator();
+        while(iterator.hasNext()){
+            Row row = iterator.next();
+            if(row.getEntries().get(primaryIndex).equals(primary_key)){
+                Global.gBufferPool().deleteRow(tid, row);
+            }
+        }
+    }
+
+    // warning should never use it !!!
+    public Row search(Entry primary_key){
+        primaryIndex = desc.getPrimaryIndex().get(0);
+        FileIterator iterator = iterator();
+        while(iterator.hasNext()){
+            Row row = iterator.next();
+            if(row.getEntries().get(primaryIndex).equals(primary_key)){
+                return row;
+            }
+        }
+        return null;
+    }
 
 }
