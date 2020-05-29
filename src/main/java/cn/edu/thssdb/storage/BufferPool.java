@@ -7,9 +7,7 @@ import cn.edu.thssdb.storage.operation.FileOperation;
 import cn.edu.thssdb.storage.operation.InsertOperation;
 import cn.edu.thssdb.storage.operation.UpdateOperation;
 import cn.edu.thssdb.utils.Global;
-import com.sun.rmi.rmid.ExecPermission;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -113,9 +111,9 @@ public class BufferPool {
         }
     }
 
-    public void operateRow(String tid, Row row, FileOperation op){
+    public void operateRow(Integer tid, Row row, FileOperation op){
         Table table = Global.getTableFromTid(tid);
-        FileHandler file = table.getFile();
+        FileHandler file = table.getFileHandler();
         ArrayList<Page> dirtyPages = op.operate(file, row);
         for(Page page: dirtyPages){
             page.markDirty(true);
@@ -123,15 +121,15 @@ public class BufferPool {
     }
 
 
-    public void insertRow(String tid, Row row){
+    public void insertRow(Integer tid, Row row){
         operateRow(tid, row, new InsertOperation());
     }
 
-    public void deleteRow(String tid, Row row){
+    public void deleteRow(Integer tid, Row row){
         operateRow(tid, row, new DeleteOperation());
     }
 
-    public void updateRow(String tid, Row row) {
+    public void updateRow(Integer tid, Row row) {
         operateRow(tid, row, new UpdateOperation());
     }
 }

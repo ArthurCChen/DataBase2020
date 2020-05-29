@@ -86,7 +86,7 @@ public class Global {
     return null;
   }
 
-  public static Table getTableFromTid(int tid){
+  public static Table getTableFromTid(Integer tid){
     //TODO:
     return null;
   }

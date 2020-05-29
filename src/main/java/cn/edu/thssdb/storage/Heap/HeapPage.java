@@ -1,7 +1,7 @@
 package cn.edu.thssdb.storage.Heap;
 
 import cn.edu.thssdb.schema.Row;
-import cn.edu.thssdb.schema.TableMeta;
+import cn.edu.thssdb.schema.RowDesc;
 import cn.edu.thssdb.storage.Page;
 import cn.edu.thssdb.storage.PageId;
 import cn.edu.thssdb.utils.Global;
@@ -13,13 +13,13 @@ import java.util.BitSet;
 
 public class HeapPage implements Page {
     final HeapPageId pid;
-    final TableMeta td;
+    final RowDesc td;
     final BitSet header;
     final Row rows[];
     final int numSlots;
     boolean dirty;
 
-    public HeapPage(HeapPageId id, byte[] data, TableMeta td) throws IOException {
+    public HeapPage(HeapPageId id, byte[] data, RowDesc td) throws IOException {
         this.pid = id;
         this.td = td;
         this.numSlots = getNumTuples();
@@ -71,6 +71,7 @@ public class HeapPage implements Page {
         }
 
         Row row = new Row(td);
+        return row;
     }
 
     private int getHeaderSize(){

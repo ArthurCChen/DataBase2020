@@ -1,6 +1,6 @@
 package cn.edu.thssdb.storage.BPT;
 
-import cn.edu.thssdb.schema.TableMeta;
+import cn.edu.thssdb.schema.RowDesc;
 import cn.edu.thssdb.storage.Page;
 import cn.edu.thssdb.storage.PageId;
 import cn.edu.thssdb.utils.Global;
@@ -12,7 +12,7 @@ public abstract class BPTPage implements Page {
 
     protected final BPTPageId id;
     protected final int keyField;
-    protected final TableMeta tm;
+    protected final RowDesc tm;
 
     protected int parent;
     protected byte[] oldDate;

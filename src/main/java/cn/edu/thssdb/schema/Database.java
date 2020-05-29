@@ -12,7 +12,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class Database {
 
   private String databaseName;
-  private HashMap<String, TableMeta> tablename2meta;
+  private HashMap<String, RowDesc> tablename2meta;
   ReentrantReadWriteLock lock;
   private HashMap<Integer, Table> idTableMap;
   private static int gId = 0;
@@ -93,7 +93,7 @@ public class Database {
   }
 
   public FileHandler getFileHandler(String tableName){
-    return getTable(tableName).getFile();
+    return getTable(tableName).getFileHandler();
   }
 
 //  public String select(QueryTable[] queryTables) {
@@ -111,7 +111,7 @@ public class Database {
     try {
       FileInputStream fis = new FileInputStream(databaseScriptFile);
       ObjectInputStream ois = new ObjectInputStream(fis);
-      tablename2meta = (HashMap<String, TableMeta>)ois.readObject();
+      tablename2meta = (HashMap<String, RowDesc>)ois.readObject();
       ois.close();
       fis.close();
     }catch (Exception e){

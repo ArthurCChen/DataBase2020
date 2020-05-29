@@ -20,5 +20,5 @@ public interface FileHandler {
 
     FileIterator iterator();
 
-    TableMeta getMeta();
+    RowDesc getMeta();
 }

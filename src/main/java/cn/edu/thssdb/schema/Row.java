@@ -27,7 +27,7 @@ public class Row implements Serializable {
   entries = new ArrayList<>();
   for(int i = 0; i < desc.getColumnSize(); i ++){
       Column column = desc.get(i);
-      ColumnValue val = ValueFactory.getField(0, column.getType(), column.getMaxLength())
+      ColumnValue val = ValueFactory.getField(0, column.getType(), column.getMaxLength());
       entries.add(new Entry(val));
       }
   }
@@ -55,6 +55,8 @@ public class Row implements Serializable {
   public void appendEntries(ArrayList<Entry> entries) {
     this.entries.addAll(entries);
   }
+
+  public setValue()
 
   public String toString() {
     if (entries == null)
