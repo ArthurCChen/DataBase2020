@@ -86,7 +86,7 @@ public class Column implements Comparable<Column>, Serializable {
     return name;
   }
 
-  public String fullName(){
+  public String getFullName(){
     if(tableName != null){
       return tableName + "." + name;
     }else{
@@ -104,5 +104,21 @@ public class Column implements Comparable<Column>, Serializable {
 
   public ColumnValue parse(DataInputStream dis) throws Exception{
     return this.type.parse(dis, maxLength);
+  }
+
+  public boolean isTableName(String tableName){
+    return this.tableName != null && this.tableName.equals(tableName);
+  }
+
+  public boolean isName(String name){
+    return this.name.equals(name);
+  }
+
+  public boolean isName(String tableName, String columnName){
+    return isName(columnName) && isTableName(tableName);
+  }
+
+  public void setTableName(String tableName) {
+    this.tableName = tableName;
   }
 }
