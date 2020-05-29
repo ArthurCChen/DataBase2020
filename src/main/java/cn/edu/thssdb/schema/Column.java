@@ -121,4 +121,8 @@ public class Column implements Comparable<Column>, Serializable {
   public void setTableName(String tableName) {
     this.tableName = tableName;
   }
+
+  public int getMaxLength() {
+    return maxLength;
+  }
 }

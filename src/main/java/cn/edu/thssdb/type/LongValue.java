@@ -28,7 +28,7 @@ public class LongValue extends  NumberValue{
         return getValue() == ((LongValue)obj).getValue();
     }
 
-    public long getValue(){
+    public Long getValue(){
         return value.longValue();
     }
 }

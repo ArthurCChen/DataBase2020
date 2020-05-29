@@ -28,7 +28,7 @@ public class IntValue extends NumberValue {
         return getValue() == ((IntValue)obj).getValue();
     }
 
-    public int getValue(){
+    public Integer getValue(){
         return value.intValue();
     }
 
