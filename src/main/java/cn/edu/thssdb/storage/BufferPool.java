@@ -16,18 +16,18 @@ public class BufferPool {
     private static int pageSize = Global.pageSize;
     private int chunkSize = Global.bufferChunkSize;
 
-    private HashMap<String, Page> pageMap;
+    private HashMap<PageId, Page> pageMap;
     private class ReplaceAlgorithm{
         // 使用clock算法
-        private LinkedList<String> idQueue;
-        private HashMap<String, Boolean> whetherVisited;
+        private LinkedList<PageId> idQueue;
+        private HashMap<PageId, Boolean> whetherVisited;
 
         ReplaceAlgorithm(){
             idQueue = new LinkedList<>();
             whetherVisited = new HashMap<>();
         }
 
-        void addPage(String id){
+        void addPage(PageId id){
             if(whetherVisited.containsKey(id)){
                 this.whetherVisited.put(id, true);
             }else{
@@ -36,9 +36,9 @@ public class BufferPool {
             }
         }
 
-        String evict(){
+        PageId evict(){
             while(!idQueue.isEmpty()){
-                String id = idQueue.removeFirst();
+                PageId id = idQueue.removeFirst();
                 Boolean visited = whetherVisited.remove(id);
                 if(visited){
                     idQueue.addLast(id);
@@ -66,7 +66,7 @@ public class BufferPool {
         this.chunkSize = chunkSize;
     }
 
-    public Page getPage(String id){
+    public Page getPage(PageId id){
         Page page;
         if(pageMap.containsKey(id)){
             page = pageMap.get(id);
@@ -82,18 +82,18 @@ public class BufferPool {
     }
 
     private void evictPage(){
-        String id = replaceAlgorithm.evict();
+        PageId id = replaceAlgorithm.evict();
         if(pageMap.get(id).isDirty()){
             flushPage(id);
         }
         discardPage(id);
     }
 
-    public void discardPage(String id){
+    public void discardPage(PageId id){
         pageMap.remove(id);
     }
 
-    private void flushPage(String id){
+    private void flushPage(PageId id){
         Page page = this.pageMap.get(id);
         try{
             FileHandler file = Global.getFileFromPid(id);
@@ -106,7 +106,7 @@ public class BufferPool {
     }
 
     public void flushAllPages(){
-        for(String pid: pageMap.keySet()){
+        for(PageId pid: pageMap.keySet()){
             flushPage(pid);
         }
     }

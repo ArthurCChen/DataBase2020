@@ -3,6 +3,7 @@ package cn.edu.thssdb.utils;
 import cn.edu.thssdb.schema.Table;
 import cn.edu.thssdb.storage.BufferPool;
 import cn.edu.thssdb.storage.FileHandler;
+import cn.edu.thssdb.storage.PageId;
 import cn.edu.thssdb.type.ColumnType;
 
 import java.io.File;
@@ -76,7 +77,7 @@ public class Global {
     throw new InternalError("unvalid type");
   }
 
-  public static FileHandler getFileFromPid(String pid){
+  public static FileHandler getFileFromPid(PageId pid){
     //TODO: 补充
     return null;
   }

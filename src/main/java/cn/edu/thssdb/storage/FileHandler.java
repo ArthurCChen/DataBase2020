@@ -6,7 +6,7 @@ import cn.edu.thssdb.schema.*;
 import java.util.ArrayList;
 
 public interface FileHandler {
-    Page readPage(String id);
+    Page readPage(PageId id);
 
     void writePage(Page p);
 
@@ -16,7 +16,7 @@ public interface FileHandler {
 
     ArrayList<Page> updateRow(Row row);
 
-    String getId();
+    int getId();
 
     FileIterator iterator();
 

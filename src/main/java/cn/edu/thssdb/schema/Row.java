@@ -5,6 +5,8 @@ import cn.edu.thssdb.storage.PageId;
 import cn.edu.thssdb.type.ColumnValue;
 import cn.edu.thssdb.type.ValueFactory;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 
@@ -27,6 +29,14 @@ public class Row implements Serializable {
       ColumnValue val = ValueFactory.getField(0, column.getType(), column.getMaxLength());
       entries.add(new Entry(val));
       }
+  }
+
+  public ColumnValue getColumnValue(int i){
+    return this.getEntries().get(i).value;
+  }
+
+  public RowDesc getRowDesc() {
+    return rowDesc;
   }
 
   public Row(RowDesc desc, ArrayList<String> attrNames, ArrayList<Object> values) throws  Exception{
@@ -77,6 +87,12 @@ public class Row implements Serializable {
 
   public void appendEntries(ArrayList<Entry> entries) {
     this.entries.addAll(entries);
+  }
+
+  public void serialize(DataOutputStream dos) throws IOException {
+    for (Entry entry: entries) {
+      entry.value.serialize(dos);
+    }
   }
 
   public void setValue(int i, ColumnValue val){

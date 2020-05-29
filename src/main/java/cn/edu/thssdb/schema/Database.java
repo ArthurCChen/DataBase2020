@@ -7,11 +7,13 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Database {
 
   private String databaseName;
+  private HashMap<String, Integer> name2Id;
   private HashMap<String, RowDesc> tablename2meta;
   ReentrantReadWriteLock lock;
   private HashMap<Integer, Table> idTableMap;
@@ -21,6 +23,7 @@ public class Database {
   public Database(String path, String name) {
     this.databaseName = name;
     this.path = path;
+    this.name2Id = new HashMap<>();
     this.tablename2meta = new HashMap<>();
     this.idTableMap = new HashMap<>();
     this.lock = new ReentrantReadWriteLock();
@@ -42,6 +45,7 @@ public class Database {
       FileOutputStream fos = new FileOutputStream(databaseScriptFile);
       ObjectOutputStream oos = new ObjectOutputStream(fos);
       oos.writeObject(tablename2meta);
+      oos.writeObject(name2Id);
       oos.close();
       fos.close();
     }catch (Exception e){
@@ -114,6 +118,7 @@ public class Database {
       FileInputStream fis = new FileInputStream(databaseScriptFile);
       ObjectInputStream ois = new ObjectInputStream(fis);
       tablename2meta = (HashMap<String, RowDesc>)ois.readObject();
+      name2Id = (HashMap<String, Integer>) ois.readObject();
       ois.close();
       fis.close();
     }catch (Exception e){
@@ -137,7 +142,7 @@ public class Database {
   }
 
   public Table getTable(String tableName){
-    return this.getTable(this.tablename2meta.get(tableName).tableId);
+    return this.getTable(name2Id.get(tableName));
   }
 
   public Table getTable(Integer tableId){

@@ -8,4 +8,9 @@ public interface FileIterator {
 
     public Row next();
 
+    public void open();
+
+    public void rewind();
+
+    public void close();
 }
