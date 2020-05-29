@@ -1,9 +1,6 @@
 package cn.edu.thssdb.utils;
 
-import cn.edu.thssdb.schema.Column;
-import cn.edu.thssdb.schema.Entry;
-import cn.edu.thssdb.schema.Row;
-import cn.edu.thssdb.schema.Table;
+import cn.edu.thssdb.schema.*;
 
 import java.util.ArrayList;
 
@@ -25,7 +22,7 @@ public interface Physical2LogicalInterface {
     // get a table, since cn.edu.thssdb.schema.Table implements iterable,
     // this can serve as the requested O(1) iterator
     // return null if the table is not found
-    Table get_table(String table_name, int transaction_id);
+    LogicalTable get_table(String table_name, int transaction_id);
 
     // return true when success
     boolean insert_row(String table_name, Row row, int transaction_id);
