@@ -28,4 +28,6 @@ public interface LogicalTable extends Iterable<Row> {
     void unlock();
 
     ArrayList<Column> get_columns();
+
+    String get_name();
 }
