@@ -12,9 +12,18 @@ public interface LogicalTable extends Iterable<Row> {
     boolean delete(Entry entry);
 
     // return true if successfully locked
-    boolean lock();
+    boolean shared_lock();
 
-    boolean is_locked();
+    // return true if successfully locked
+    boolean exclusive_lock();
+
+    boolean is_share_locked();
+
+    boolean is_exclusive_locked();
+
+    // upgrade from shared lock to exclusive lock
+    // return false if: 1. currently not locked(do not upgrade); 2. is already exclusive lock;
+    boolean upgrade_lock();
 
     void unlock();
 
