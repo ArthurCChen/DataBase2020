@@ -1,9 +1,6 @@
 package cn.edu.thssdb.memory_db;
 
-import cn.edu.thssdb.schema.Column;
-import cn.edu.thssdb.schema.Entry;
-import cn.edu.thssdb.schema.Row;
-import cn.edu.thssdb.schema.Table;
+import cn.edu.thssdb.schema.*;
 import cn.edu.thssdb.utils.Physical2LogicalInterface;
 
 import java.util.ArrayList;
@@ -32,7 +29,7 @@ public class MDBManager implements Physical2LogicalInterface {
     }
 
     @Override
-    public Table get_table(String table_name, int transaction_id) {
+    public LogicalTable get_table(String table_name, int transaction_id) {
         return null;
     }
 
