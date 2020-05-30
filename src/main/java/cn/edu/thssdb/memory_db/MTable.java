@@ -27,8 +27,13 @@ public class MTable implements LogicalTable {
         this.lock_state = "free";
     }
 
+    int getPrimary_index() {
+        return primary_index;
+    }
+
     @Override
     public boolean insert(Row row) {
+        // skip type check here
         rows.add(row);
         return true;
     }
@@ -89,6 +94,11 @@ public class MTable implements LogicalTable {
     @Override
     public ArrayList<Column> get_columns() {
         return columns;
+    }
+
+    @Override
+    public String get_name() {
+        return this.table_name;
     }
 
     @Override
