@@ -1,6 +1,7 @@
 package cn.edu.thssdb.memory_db;
 
 import cn.edu.thssdb.schema.*;
+import javafx.util.Pair;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -12,7 +13,7 @@ public class MTable implements LogicalTable {
     private ArrayList<Column> columns;
     private int primary_index;
     private ArrayList<Row> rows;
-    private boolean ;
+    private String lock_state;
 
     public MTable(String table_name, ArrayList<Column> columns) {
         this.table_name = table_name;
@@ -23,7 +24,7 @@ public class MTable implements LogicalTable {
             }
         }
         this.rows = new ArrayList<>();
-
+        this.lock_state = "free";
     }
 
     @Override
@@ -44,27 +45,54 @@ public class MTable implements LogicalTable {
     }
 
     @Override
-    public boolean lock() {
+    public boolean shared_lock() {
+        if (this.lock_state.equals("free")) {
+            this.lock_state = "share";
+            return true;
+        }
         return false;
     }
 
     @Override
-    public boolean is_locked() {
+    public boolean exclusive_lock() {
+        if (this.lock_state.equals("free")) {
+            this.lock_state = "exclusive";
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean is_share_locked() {
+        return lock_state.equals("share");
+    }
+
+    @Override
+    public boolean is_exclusive_locked() {
+        return lock_state.equals("exclusive");
+    }
+
+    @Override
+    public boolean upgrade_lock() {
+        if (lock_state.equals("share")) {
+            lock_state = "exclusive";
+            return true;
+        }
         return false;
     }
 
     @Override
     public void unlock() {
-
+        lock_state = "free";
     }
 
     @Override
     public ArrayList<Column> get_columns() {
-        return null;
+        return columns;
     }
 
     @Override
     public Iterator<Row> iterator() {
-        return null;
+        return this.rows.iterator();
     }
 }

@@ -17,9 +17,13 @@ import java.util.ArrayList;
  */
 public class MDBManager implements Physical2LogicalInterface {
 
+    ArrayList<MTable> tables;
 
     @Override
     public boolean create_table(String table_name, ArrayList<Column> columns, int transaction_id) {
+        for (int i = 0; i < this.tables.size(); i++) {
+            if (this.tables.)
+        }
         return false;
     }
 
@@ -29,7 +33,7 @@ public class MDBManager implements Physical2LogicalInterface {
     }
 
     @Override
-    public LogicalTable get_table(String table_name, int transaction_id) {
+    public MTable get_table(String table_name, int transaction_id) {
         return null;
     }
 
