@@ -1,7 +1,6 @@
 package cn.edu.thssdb.schema;
 
 import java.io.Serializable;
-import java.nio.file.attribute.UserPrincipalLookupService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.StringJoiner;
@@ -32,6 +31,11 @@ public class Row implements Serializable {
 
   public void appendEntries(ArrayList<Entry> entries) {
     this.entries.addAll(entries);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return (obj instanceof Row) && toString().equals(obj.toString());
   }
 
   public String toString() {

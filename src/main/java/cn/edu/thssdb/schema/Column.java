@@ -6,11 +6,10 @@ public class Column implements Comparable<Column> {
   private String name;
   private ColumnType type;
   private boolean primary;
-
   private boolean notNull;
-
   private int maxLength;
   private String table_name = null;
+
   public Column(String name, ColumnType type, boolean primary, boolean notNull, int maxLength) {
     this.name = name;
     this.type = type;
@@ -63,6 +62,15 @@ public class Column implements Comparable<Column> {
   @Override
   public int compareTo(Column e) {
     return name.compareTo(e.name);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof Column)) {
+      return false;
+    }
+    Column column = (Column)obj;
+    return name.equals(column.name) && type == column.type && primary == column.primary && notNull == column.notNull && maxLength == column.maxLength && table_name == column.table_name;
   }
 
   public String toString() {

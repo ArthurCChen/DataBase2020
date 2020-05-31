@@ -5,14 +5,11 @@ import cn.edu.thssdb.parser.SQLBaseVisitorImpl;
 import cn.edu.thssdb.parser.SQLLexer;
 import cn.edu.thssdb.parser.SQLParser;
 import cn.edu.thssdb.utils.LogBuffer;
-import com.sun.org.apache.bcel.internal.generic.ATHROW;
-import com.sun.org.apache.bcel.internal.generic.PUSH;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.Before;
 import org.junit.Test;
-import sun.awt.windows.WBufferStrategy;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;

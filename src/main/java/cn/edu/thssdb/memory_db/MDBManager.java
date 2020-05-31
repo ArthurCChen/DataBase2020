@@ -6,6 +6,7 @@ import jdk.nashorn.internal.ir.Block;
 
 import javax.swing.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -25,7 +26,14 @@ public class MDBManager implements Physical2LogicalInterface {
     ArrayList<MTable> tables;
     // an transaction is actually made up of several tasks which is to be executed when commit.
     // (such as writing log)
-    ArrayList<ArrayList<Consumer<Boolean>>> transaction_pool;
+    HashMap<Integer, ArrayList<Consumer<Boolean>>> transaction_pool;
+    int max_transaction_id;
+
+    public MDBManager() {
+        this.tables = new ArrayList<>();
+        this.transaction_pool = new HashMap<>();
+        this.max_transaction_id = 0;
+    }
 
 
     int get_table_index(String table_name) {
@@ -120,17 +128,20 @@ public class MDBManager implements Physical2LogicalInterface {
     public boolean insert_row(String table_name, Row row, int transaction_id) {
         int table_index = get_table_index(table_name);
         if (table_index != -1) {
-            this.tables.get(table_index).insert(row);
-            this.transaction_pool.get(transaction_id).add((success) -> {
-                if (success) {
-                    System.out.println("insert a row: " + row + " to table: " + table_name);
-                }
-                else {
-                    // remove the row
-                    this.tables.remove(row);
-                }
-            });
-            return true;
+            boolean success_insert = this.tables.get(table_index).insert(row);
+            if (success_insert) {
+                this.transaction_pool.get(transaction_id).add((success) -> {
+                    if (success) {
+                        System.out.println("insert a row: " + row + " to table: " + table_name);
+                    }
+                    else {
+                        // remove the row
+                        int primary_index = this.tables.get(table_index).getPrimary_index();
+                        this.tables.get(table_index).delete(row.getEntries().get(primary_index));
+                    }
+                });
+                return true;
+            }
         }
         return false;
     }
@@ -173,8 +184,9 @@ public class MDBManager implements Physical2LogicalInterface {
 
     @Override
     public int start_transaction() {
-        this.transaction_pool.add(new ArrayList<>());
-        return transaction_pool.size() - 1;
+        this.transaction_pool.put(this.max_transaction_id, new ArrayList<>());
+        max_transaction_id += 1;
+        return max_transaction_id - 1;
     }
 
     @Override

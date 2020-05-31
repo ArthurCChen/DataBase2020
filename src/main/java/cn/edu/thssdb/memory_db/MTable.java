@@ -34,6 +34,13 @@ public class MTable implements LogicalTable {
     @Override
     public boolean insert(Row row) {
         // skip type check here
+        Comparable value = row.getEntries().get(primary_index);
+        // sanity check
+        for (Row r : rows) {
+            if (r.getEntries().get(primary_index).equals(value)) {
+                return false;
+            }
+        }
         rows.add(row);
         return true;
     }
