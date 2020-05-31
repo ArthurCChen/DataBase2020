@@ -4,7 +4,9 @@ import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
 
 public class ValueFactory {
     public static ColumnValue getField(Object value){
-        if(value instanceof Integer){
+        if(value instanceof  ColumnValue)
+            return (ColumnValue)value;
+        else if(value instanceof Integer){
             return new IntValue((int)value);
         }else if(value instanceof Long){
             return new LongValue((Long) value);
@@ -15,7 +17,7 @@ public class ValueFactory {
         }else if(value instanceof String){
             return new StringValue((String) value, ((String)value).length());
         }else{
-            throw new InternalException("");
+            throw new InternalException("Not implemented");
         }
     }
 
@@ -35,6 +37,15 @@ public class ValueFactory {
 
 
     public static ColumnValue getField(Object value, ColumnType type, int maxLen){
+        if(value instanceof ColumnValue){
+            ColumnValue colVal = (ColumnValue) value;
+            switch (colVal.getType()){
+                case STRING:
+                    return new StringValue((String)colVal.getValue(), maxLen);
+                case DOUBLE:case FLOAT:case LONG:case INT:
+                    return colVal;
+            }
+        }
         switch (type){
             case INT:
                 if(value instanceof  Long){
@@ -42,7 +53,7 @@ public class ValueFactory {
                 }else if(value instanceof Integer){
                     return getField(value);
                 }else{
-                    throw new InternalException("");
+                    throw new InternalException("cast error");
                 }
             case LONG:
                 if(value instanceof Long){
@@ -50,7 +61,7 @@ public class ValueFactory {
                 }else if(value instanceof Integer){
                     return new LongValue(((Integer)value).longValue());
                 }else{
-                    throw new InternalException("");
+                    throw new InternalException("cast error");
                 }
             case DOUBLE:
                 if(value instanceof Double){
@@ -58,7 +69,7 @@ public class ValueFactory {
                 }else if(value instanceof Float){
                     return new DoubleValue(((Float)value).doubleValue());
                 }else{
-                    throw new InternalException("");
+                    throw new InternalException("cast error");
                 }
             case FLOAT:
                 if(value instanceof Float){
@@ -66,16 +77,16 @@ public class ValueFactory {
                 }else if(value instanceof Double){
                     return new FloatValue(((Double)value).floatValue());
                 }else{
-                    throw new InternalException("");
+                    throw new InternalException("cast error");
                 }
             case STRING:
                 if(value instanceof String){
                     return new StringValue((String)value, maxLen);
                 }else{
-                    throw new InternalException("");
+                    throw new InternalException("cast error");
                 }
             default:
-                throw new InternalException("");
+                throw new InternalException("not implemented");
         }
     }
 }

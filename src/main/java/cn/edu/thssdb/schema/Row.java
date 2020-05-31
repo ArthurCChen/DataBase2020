@@ -44,6 +44,7 @@ public class Row implements Serializable {
     return rowDesc;
   }
 
+
   public Row(RowDesc desc, ArrayList<String> attrNames, ArrayList<Object> values) throws  Exception{
     this(desc);
     if (attrNames == null) {
