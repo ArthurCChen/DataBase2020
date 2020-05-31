@@ -43,7 +43,7 @@ public class HeapPage implements Page {
     }
     @Override
     public PageId getId() {
-        return null;
+        return pid;
     }
 
     private int getNumTuples() {
@@ -71,7 +71,15 @@ public class HeapPage implements Page {
             return null;
         }
 
-        Row row = new Row(td);
+        ArrayList<String> attrs = new ArrayList<>();
+        ArrayList<Object> vals = new ArrayList<>();
+        for(int i = 0; i < td.getColumnSize(); i ++){
+            attrs.add(td.getAttrNames().get(i));
+            vals.add(td.get(i).parse(dis));
+        }
+        Row row = new Row(td, attrs, vals);
+        row.setRowId(slotId);
+        row.setPageId(pid);
         return row;
     }
 

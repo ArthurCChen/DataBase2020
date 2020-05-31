@@ -1,20 +1,14 @@
 package cn.edu.thssdb.schema;
 
-import cn.edu.thssdb.server.ThssDB;
 import cn.edu.thssdb.utils.Global;
-import com.sun.corba.se.impl.orb.DataCollectorBase;
-import com.sun.org.apache.xml.internal.serialize.LineSeparator;
 
-import javax.tools.FileObject;
-import javax.xml.crypto.Data;
 import java.io.*;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Manager {
   private HashMap<String, Database> databases;
-
+  private Database currentDatabase = null;
   private static ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
   private String path;
   private String metaPath;
@@ -23,7 +17,7 @@ public class Manager {
     return Manager.ManagerHolder.INSTANCE;
   }
 
-  public Manager(){
+  private Manager(){
     this.path = Global.DEFAULT_SQLPATH;
     this.metaPath = Global.DEFAULT_METAPATH;
     databases = new HashMap<>();
@@ -33,6 +27,13 @@ public class Manager {
     this.path = sqlPath;
     this.metaPath = metaPath;
     Global.createDir(this.path);
+  }
+
+  public void createDatabase(String databaseName) throws Exception{
+    if(databases.containsKey(databaseName))
+      throw new Exception();
+    databases.put(databaseName,
+            new Database(path, databaseName));
   }
 
   private void createDatabaseIfNotExists(String databaseName) {
@@ -99,12 +100,15 @@ public class Manager {
     }
   }
 
-  public Database getDatabase(String databaseName){
+  public void useDatabase(String databaseName){
     try{
       lock.readLock().lock();
-      if(databases.containsKey(databaseName))
-        return databases.get(databaseName);
-      throw new InternalError("");//TODO exception
+      if(databases.containsKey(databaseName)) {
+        Database database = databases.get(databaseName);
+        currentDatabase = database;
+      }else{
+        throw new InternalError("");//TODO exception
+      }
     }finally {
       lock.readLock().unlock();
     }
@@ -125,14 +129,17 @@ public class Manager {
     }
   }
 
-  public Database switchDatabase(String databaseName) {
-    return getDatabase(databaseName);
-  }
+//  public Database switchDatabase(String databaseName) {
+//    return useDatabase(databaseName);
+//  }
 
-  public String getDefaultDatabaseName(){
-    return databases.keySet().iterator().next();
-  }
+//  public String getDefaultDatabaseName(){
+//    return databases.keySet().iterator().next();
+//  }
 
+  public Database getCurrentDatabase(){
+    return  currentDatabase;
+  }
 
   private static class ManagerHolder {
     private static final Manager INSTANCE = new Manager();

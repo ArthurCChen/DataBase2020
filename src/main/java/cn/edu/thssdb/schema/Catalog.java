@@ -7,13 +7,13 @@ public class Catalog {
 
     public Catalog(String username){
         this.username = username;
-        this.curDatabasename = Manager.getInstance().getDefaultDatabaseName();
-        this.curDatabase = Manager.getInstance().getDatabase(curDatabasename);
+//        this.curDatabasename = Manager.getInstance().getDefaultDatabaseName();
+//        this.curDatabase = Manager.getInstance().useDatabase(curDatabasename);
     }
 
     public void switchDatabase(String databaseName){
         this.curDatabasename = databaseName;
-        this.curDatabase = Manager.getInstance().switchDatabase(curDatabasename);
+//        this.curDatabase = Manager.getInstance().switchDatabase(curDatabasename);
     }
 
     public void addDatabase(String databasename){

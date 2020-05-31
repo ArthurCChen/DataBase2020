@@ -117,6 +117,9 @@ public class BufferPool {
         ArrayList<Page> dirtyPages = op.operate(file, row);
         for(Page page: dirtyPages){
             page.markDirty(true);
+            if(op instanceof  InsertOperation){
+                pageMap.put(page.getId(), page);
+            }
         }
     }
 

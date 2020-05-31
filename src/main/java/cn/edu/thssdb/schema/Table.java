@@ -53,6 +53,7 @@ public class Table  {
             RowDesc desc,
             File diskFile){
         // TODO
+        this.tid = id;
         this.lock = new ReentrantReadWriteLock();
         this.desc = desc;
         this.columnIndex = new HashMap<>();

@@ -21,12 +21,12 @@ public class Row implements Serializable {
     this.entries = new ArrayList<>(Arrays.asList(entries));
   }
 
-  public Row(RowDesc desc){
+  private Row(RowDesc desc){
   this.rowDesc = desc;
   entries = new ArrayList<>();
   for(int i = 0; i < desc.getColumnSize(); i ++){
       Column column = desc.get(i);
-      ColumnValue val = ValueFactory.getField(0, column.getType(), column.getMaxLength());
+      ColumnValue val = ValueFactory.getField(column.getType().getDefault(), column.getType(), column.getMaxLength());
       entries.add(new Entry(val));
       }
   }

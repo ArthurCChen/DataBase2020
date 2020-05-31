@@ -1,5 +1,6 @@
 package cn.edu.thssdb.utils;
 
+import cn.edu.thssdb.schema.Manager;
 import cn.edu.thssdb.schema.Table;
 import cn.edu.thssdb.storage.BufferPool;
 import cn.edu.thssdb.storage.FileHandler;
@@ -79,24 +80,26 @@ public class Global {
 
   public static FileHandler getFileFromPid(PageId pid){
     //TODO: 补充
-    return null;
+    return Manager.getInstance().getCurrentDatabase().getTable(pid.getTableId()).getFileHandler();
   }
 
-  public static Table getTableFromTid(String tid){
-    //TODO:
-    return null;
-  }
+//  public static Table getTableFromTid(String tid){
+//    //TODO:
+//    return null;
+//  }
 
   public static Table getTableFromTid(Integer tid){
     //TODO:
-    return null;
+    Manager manager = Manager.getInstance();
+    //TODO: check in Database first
+    return manager.getCurrentDatabase().getTable(tid);
   }
 
   public static BufferPool gBufferPool(){
     //TODO
-    return null;
+    BufferPool gBufferPool = BufferPoolHolder.getInstance();
+    return gBufferPool;
   }
-
 
   public static String synthFilePath(String ... paths){
     Path path = path = Paths.get(paths[0]);;
@@ -110,6 +113,16 @@ public class Global {
     File file = new File(path);
     if(!file.exists()){
       file.mkdir();
+    }
+  }
+
+  private static class BufferPoolHolder {
+    private static final BufferPool INSTANCE = new BufferPool();
+    private BufferPoolHolder() {
+
+    }
+    public static BufferPool getInstance(){
+      return INSTANCE;
     }
   }
 }

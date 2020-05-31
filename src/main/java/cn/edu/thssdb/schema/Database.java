@@ -73,6 +73,7 @@ public class Database {
 //    TableMeta meta = new TableMeta(gId, databaseName, tableName, 0, 0, new ArrayList<>(Arrays.asList(columns)));
 //    Table table = new Table(meta, diskFile);
     tablename2meta.put(tableName, desc);
+    name2Id.put(tableName, gId);
     idTableMap.put(gId, table);
     //TODO return result
     }
@@ -87,6 +88,7 @@ public class Database {
       table.getDiskFile().delete();
       Integer id = table.getId();
       idTableMap.remove(id);
+      name2Id.remove(tableName);
       tablename2meta.remove(tableName);
     }
 
