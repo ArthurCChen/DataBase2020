@@ -16,7 +16,7 @@ public interface Physical2LogicalInterface {
     // create a table, cn.edu.thssdb.schema.Column is different from sample code form TA
     // transaction_id can be ignored  for now, but it is related to a bonus of 3 points.
     // return true when success
-    boolean create_table(String table_name, ArrayList<Column> columns, int transaction_id);
+    boolean create_table(String table_name, ArrayList<Column> columns, ArrayList<String> primaryNames ,int transaction_id);
 
     // drop a table
     // return true when success
@@ -28,7 +28,7 @@ public interface Physical2LogicalInterface {
     Table get_table(String table_name, int transaction_id);
 
     // return true when success
-    boolean insert_row(String table_name, Row row, int transaction_id);
+    boolean insert_row(String table_name, ArrayList<String> attrNames, ArrayList<Object> values, int transaction_id);
 
     // return true when success
     boolean delete_row(String table_name, Entry primary_key, int transaction_id);
