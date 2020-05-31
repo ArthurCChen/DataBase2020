@@ -24,22 +24,23 @@ public class TableTest {
         manager.useDatabase("test");
         Column[] c = {
                 new Column("id", ColumnType.INT, true, 0, "test"),
-                new Column("name", ColumnType.STRING, true, 10, "test")
+                new Column("name", ColumnType.STRING, true, 10, "test"),
+                new Column("grade", ColumnType.DOUBLE, false, 0, "test")
         };
         ArrayList<Column> columns = new ArrayList<Column>(Arrays.asList(c));
-        ArrayList<String> names = new ArrayList<String>(Arrays.asList("id", "name"));
+        ArrayList<String> primary = new ArrayList<String>(Arrays.asList("id"));
         Database db = manager.getCurrentDatabase();
         try {
-            db.create("test", columns, names);
+            db.create("test", columns, primary);
         }catch (Exception e){
             return;
         }
         Table table = db.getTable("test");
-        ArrayList<String> attrs = new ArrayList<String>(Arrays.asList("id", "name"));
-        ArrayList<Object> val1 = new ArrayList<>(Arrays.asList(1, "bad0"));
-        ArrayList<Object> val2 = new ArrayList<>(Arrays.asList(2, "bad1"));
-        ArrayList<Object> val3 = new ArrayList<>(Arrays.asList(3, "bad2"));
-        ArrayList<Object> val4 = new ArrayList<>(Arrays.asList(4, "bad3"));
+        ArrayList<String> attrs = new ArrayList<String>(Arrays.asList("id", "name", "grade"));
+        ArrayList<Object> val1 = new ArrayList<>(Arrays.asList(1, "bad0", 4.0));
+        ArrayList<Object> val2 = new ArrayList<>(Arrays.asList(2, "bad1", 3.6));
+        ArrayList<Object> val3 = new ArrayList<>(Arrays.asList(3, "bad2", 3.3));
+        ArrayList<Object> val4 = new ArrayList<>(Arrays.asList(4, "bad3", 0.0));
 
         table.insertRow( attrs ,
                 val1);
@@ -47,7 +48,7 @@ public class TableTest {
         table.insertRow(attrs, val3);
         table.insertRow(attrs, val4);
         //相当于保存
-        Global.gBufferPool().flushAllPages();
+
         manager.exit();
     }
 
@@ -57,6 +58,7 @@ public class TableTest {
         manager.recover();
         manager.useDatabase("test");
         manager.getCurrentDatabase().drop("test");
+
         manager.exit();
     }
 
@@ -77,6 +79,46 @@ public class TableTest {
         System.out.println(rows);
         iter.close();
 
+        manager.exit();
+    }
+    @Test
+    public void nullVal(){
+        manager = Manager.getInstance();
+        manager.recover();
+        manager.useDatabase("test");
+        Table table = manager.getCurrentDatabase().getTable("test");
+        ArrayList<String> attrs = new ArrayList<String>(Arrays.asList("id", "name"));
+        ArrayList<Object> val = new ArrayList<>(Arrays.asList(6, "chuchong"));
+        table.insertRow(attrs, val);
+
+        FileIterator iter = table.iterator();
+        ArrayList<Row> rows = new ArrayList<>();
+        while(iter.hasNext()){
+            Row row = iter.next();
+            rows.add(row);
+        }
+        System.out.println(rows);
+        iter.close();
+
+        manager.exit();
     }
 
+    @Test
+    public void deleteVal(){
+        manager = Manager.getInstance();
+        manager.recover();
+        manager.useDatabase("test");
+        Table table = manager.getCurrentDatabase().getTable("test");
+
+        FileIterator iter = table.iterator();
+        while(iter.hasNext()){
+            Row row = iter.next();
+            if(row.matchValue("id", 6)){
+                table.deleteRow(row);
+            }
+        }
+        iter.close();
+
+        manager.exit();
+    }
 }

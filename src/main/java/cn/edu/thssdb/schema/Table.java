@@ -114,19 +114,12 @@ public class Table  {
 
 
     // warning should not use this, because delete is a filter op !!!
-    public void deleteRow(Entry primary_key){
-        primaryIndex = desc.getPrimaryIndex().get(0);
-        FileIterator iterator = iterator();
-        while(iterator.hasNext()){
-            Row row = iterator.next();
-            if(row.getEntries().get(primaryIndex).equals(primary_key)){
-                Global.gBufferPool().deleteRow(tid, row);
-            }
-        }
+    public void deleteRow(Row row){
+        fileHandler.deleteRow(row);
     }
 
     // warning should never use it !!!
-    public Row search(Entry primary_key){
+    private Row search(Entry primary_key){
         primaryIndex = desc.getPrimaryIndex().get(0);
         FileIterator iterator = iterator();
         while(iterator.hasNext()){

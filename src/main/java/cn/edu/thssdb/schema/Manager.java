@@ -71,6 +71,7 @@ public class Manager {
   public void exit(){
     try{
       lock.writeLock().lock();;
+      Global.gBufferPool().flushAllPages();
       persist();
       for(Database database: databases.values()){
         database.quit();
