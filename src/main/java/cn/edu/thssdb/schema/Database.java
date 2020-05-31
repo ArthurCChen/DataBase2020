@@ -2,6 +2,7 @@ package cn.edu.thssdb.schema;
 
 import cn.edu.thssdb.storage.FileHandler;
 import cn.edu.thssdb.utils.Global;
+import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -14,7 +15,8 @@ public class Database {
 
   private String databaseName;
   private HashMap<String, Integer> name2Id;
-  private HashMap<String, RowDesc> tablename2meta;
+  private HashMap<String, RowDesc> tablename2Desc;
+  private HashMap<String, TableInfo>tablename2Info;
   ReentrantReadWriteLock lock;
   private HashMap<Integer, Table> idTableMap;
   private static int gId = 0;
@@ -24,7 +26,8 @@ public class Database {
     this.databaseName = name;
     this.path = path;
     this.name2Id = new HashMap<>();
-    this.tablename2meta = new HashMap<>();
+    this.tablename2Desc = new HashMap<>();
+    this.tablename2Info = new HashMap<>();
     this.idTableMap = new HashMap<>();
     this.lock = new ReentrantReadWriteLock();
     recover();
@@ -35,28 +38,21 @@ public class Database {
     return rootFile.exists() || rootFile.mkdirs();
   }
 
-  private void persist() {
-    String root = Global.synthFilePath(path, databaseName);
-    if(!newDatabaseDirectory(root)){
-      return;//TODO throw
-    }
-    String databaseScriptFile = Global.synthFilePath(root, String.format(Global.META_FORMAT, databaseName));
-    try {
-      FileOutputStream fos = new FileOutputStream(databaseScriptFile);
-      ObjectOutputStream oos = new ObjectOutputStream(fos);
-      oos.writeObject(tablename2meta);
-      oos.writeObject(name2Id);
-      oos.close();
-      fos.close();
-    }catch (Exception e){
-      //TODO
-    }
+
+  public void create(String tableName, RowDesc desc, TableInfo info){
+    create(tableName, desc.getColumns(), desc.getPrimaryNames(), info);
   }
 
-  public void create(String tableName, ArrayList<Column> columns, ArrayList<String> primaryNames) {
+  // 默认新增,添加为(0,0)
+  public void create(String tableName, ArrayList<Column> columns, ArrayList<String> primaryNames){
+    TableInfo tableInfo = new TableInfo();
+    create(tableName, columns, primaryNames, tableInfo);
+  }
+
+  public void create(String tableName, ArrayList<Column> columns, ArrayList<String> primaryNames, TableInfo info) {
     // TODO
     if(getTable(tableName) != null){
-      return; //TODO throw error
+      throw new InternalException("already exist");
 
     }else{
       File diskFile = new File(
@@ -69,11 +65,11 @@ public class Database {
 
     this.gId ++;
       RowDesc desc = new RowDesc(columns, primaryNames);
-      Table table = new Table(gId, tableName, desc, diskFile);
-//    TableMeta meta = new TableMeta(gId, databaseName, tableName, 0, 0, new ArrayList<>(Arrays.asList(columns)));
-//    Table table = new Table(meta, diskFile);
-    tablename2meta.put(tableName, desc);
+      Table table = new Table(gId, tableName, desc, diskFile, info);
+    tablename2Desc.put(tableName, desc);
+    tablename2Info.put(tableName, info);
     name2Id.put(tableName, gId);
+
     idTableMap.put(gId, table);
     //TODO return result
     }
@@ -89,14 +85,15 @@ public class Database {
       Integer id = table.getId();
       idTableMap.remove(id);
       name2Id.remove(tableName);
-      tablename2meta.remove(tableName);
+      tablename2Desc.remove(tableName);
+      tablename2Info.remove(tableName);
     }
 
     // TODO result
   }
 
   public void dropAll(){
-    for(String tableName : this.tablename2meta.keySet())
+    for(String tableName : this.tablename2Desc.keySet())
       drop(tableName);
   }
 
@@ -110,19 +107,45 @@ public class Database {
 //    return null;
 //  }
 
-  private void recover() {
+  private void persist() {
     String root = Global.synthFilePath(path, databaseName);
     if(!newDatabaseDirectory(root)){
       return;//TODO throw
     }
     String databaseScriptFile = Global.synthFilePath(root, String.format(Global.META_FORMAT, databaseName));
     try {
+      FileOutputStream fos = new FileOutputStream(databaseScriptFile);
+      ObjectOutputStream oos = new ObjectOutputStream(fos);
+      oos.writeObject(tablename2Desc);
+      oos.writeObject(tablename2Info);
+      oos.writeObject(name2Id);
+      oos.close();
+      fos.close();
+    }catch (Exception e){
+      //TODO
+    }
+  }
+
+  private void recover() {
+    String root = Global.synthFilePath(path, databaseName);
+    if(!newDatabaseDirectory(root)){
+      throw new InternalException("not exist");//TODO throw
+    }
+    String databaseScriptFile = Global.synthFilePath(root, String.format(Global.META_FORMAT, databaseName));
+    try {
       FileInputStream fis = new FileInputStream(databaseScriptFile);
       ObjectInputStream ois = new ObjectInputStream(fis);
-      tablename2meta = (HashMap<String, RowDesc>)ois.readObject();
+      tablename2Desc = (HashMap<String, RowDesc>)ois.readObject();
+      tablename2Info = (HashMap<String, TableInfo>) ois.readObject();
       name2Id = (HashMap<String, Integer>) ois.readObject();
       ois.close();
       fis.close();
+
+      for(String name: tablename2Desc.keySet()){
+        RowDesc desc = tablename2Desc.get(name);
+        TableInfo info = tablename2Info.get(name);
+        create(name, desc, info);
+      }
     }catch (Exception e){
       //TODO
     }

@@ -32,8 +32,7 @@ public class Manager {
   public void createDatabase(String databaseName) throws Exception{
     if(databases.containsKey(databaseName))
       throw new Exception();
-    databases.put(databaseName,
-            new Database(path, databaseName));
+    createDatabaseIfNotExists(databaseName);
   }
 
   private void createDatabaseIfNotExists(String databaseName) {
@@ -43,7 +42,7 @@ public class Manager {
       if (databases.containsKey(databaseName))
         return;
       Database database = new Database(
-              databaseName + "/",
+              path,
               databaseName);
       databases.put(databaseName, database);
     }finally {
@@ -56,6 +55,8 @@ public class Manager {
       try {
         File file = new File(metaPath);
         FileWriter fileWriter = new FileWriter(file, false);
+        fileWriter.write(path);
+        fileWriter.write(System.lineSeparator());
         for(String name : databases.keySet()) {
           fileWriter.write(name);
           fileWriter.write(System.lineSeparator());
@@ -85,10 +86,11 @@ public class Manager {
       if(file.exists()){
         FileReader fileReader = new FileReader(file);
         BufferedReader bufferedReader = new BufferedReader(fileReader);
+        path = bufferedReader.readLine();
         String databaseName;
         while((databaseName = bufferedReader.readLine()) != null){
           Database database = new Database(
-                  databaseName + "/",
+                  path,
                   databaseName);
           databases.put(databaseName, database);
         }

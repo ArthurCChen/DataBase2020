@@ -38,7 +38,12 @@ public class TableTest {
 
         //相当于保存
         Global.gBufferPool().flushAllPages();
+        manager.exit();
 
+        manager.recover();
 
+        manager.useDatabase("test");
+
+        Table table2 = manager.getCurrentDatabase().getTable("test");
     }
 }

@@ -17,8 +17,9 @@ public class Table  {
     public int tid;
     public String databaseName;
     public String tableName;
-    public int count = 0;
-    public int autoIncrement = 0;
+    private TableInfo tableInfo;
+//    public int count = 0;
+//    public int autoIncrement = 0;
     //  private String databaseName;
 //  public String tableName;
     public HashMap<String, Integer> columnIndex; //通过column的名称查询其所在列
@@ -47,7 +48,7 @@ public class Table  {
         return fileHandler;
     }
 
-    public Table(
+    private Table(
             Integer id,
             String name,
             RowDesc desc,
@@ -63,13 +64,33 @@ public class Table  {
         this.fileHandler = new HeapFile(id, diskFile, desc);
         this.tableName = name;
         this.diskFile = diskFile;
-        count = 0;
+        this.tableInfo = new TableInfo(0, 0);
+    }
+
+    public Table(
+            Integer id,
+            String name,
+            RowDesc desc,
+            File diskFile,
+            TableInfo tableInfo
+            ){
+        this(id, name, desc, diskFile);
+        this.tableInfo = tableInfo;
+        // TODO
+    }
+
+    public ArrayList<Column> getColumns(){
+        return desc.getColumns();
+    }
+
+    public ArrayList<String> getPrimaryNames(){
+        return desc.getPrimaryNames();
     }
 
     public void insertRow(Row row){
         try{
-            autoIncrement ++;
-            count ++;
+            tableInfo.autoIncrement ++;
+            tableInfo.count ++;
             Global.gBufferPool().insertRow(this.tid, row);
         } catch (Exception e){
             e.printStackTrace();

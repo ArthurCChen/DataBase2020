@@ -1,7 +1,6 @@
 package cn.edu.thssdb.schema;
 
 import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -10,8 +9,16 @@ public class RowDesc implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private ArrayList<Column> columns;
-    private ArrayList<String> primaryKeys;
+    private ArrayList<String> primaryNames;
     private ArrayList<Integer> primaryIndex;
+
+    public ArrayList<Column> getColumns() {
+        return columns;
+    }
+
+    public ArrayList<String> getPrimaryNames() {
+        return primaryNames;
+    }
 
     public ArrayList<String> getAttrNames(){
         ArrayList<String> attrs = new ArrayList<>();
@@ -26,7 +33,7 @@ public class RowDesc implements Serializable {
         this.columns = new ArrayList<>(columns);
         if (primaryKeys != null && primaryKeys.size() != 0){
             this.primaryIndex = new ArrayList<Integer>();
-            this.primaryKeys = new ArrayList<>(primaryKeys);
+            this.primaryNames = new ArrayList<>(primaryKeys);
             for(int i = 0; i < columns.size(); i ++){
                 if(primaryKeys.contains(columns.get(i).getName())){
                     this.primaryIndex.add(i);
@@ -34,7 +41,7 @@ public class RowDesc implements Serializable {
                 }
             }
         }else {
-            this.primaryKeys = new ArrayList<String>();
+            this.primaryNames = new ArrayList<String>();
             this.primaryIndex = new ArrayList<Integer>();
         }
     }
@@ -96,9 +103,9 @@ public class RowDesc implements Serializable {
             stringBuilder.append(",");
         }
         stringBuilder.append(" PRIMARY KEY(");
-        for(int i = 0; i < primaryKeys.size(); i ++){
-            stringBuilder.append(primaryKeys.get(i));
-            if(i < primaryKeys.size() - 1){
+        for(int i = 0; i < primaryNames.size(); i ++){
+            stringBuilder.append(primaryNames.get(i));
+            if(i < primaryNames.size() - 1){
                 stringBuilder.append(",");
             }
         }
