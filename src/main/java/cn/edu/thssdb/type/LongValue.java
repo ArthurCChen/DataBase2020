@@ -8,6 +8,10 @@ public class LongValue extends  NumberValue{
         super(i, ColumnType.LONG);
     }
 
+    public LongValue(long i, boolean isNotNull){
+        super(i, ColumnType.LONG, isNotNull);
+    }
+
     @Override
     public boolean greater_than(ColumnValue val) {
         return getValue() > ((LongValue)val).getValue();
@@ -20,7 +24,8 @@ public class LongValue extends  NumberValue{
 
     @Override
     public void serialize(DataOutputStream dos) throws IOException {
-        dos.writeDouble(value.longValue());
+        dos.writeLong(value.longValue());
+        dos.writeBoolean(isNotNull);
     }
 
     @Override

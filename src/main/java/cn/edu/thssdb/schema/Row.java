@@ -26,13 +26,18 @@ public class Row implements Serializable {
   entries = new ArrayList<>();
   for(int i = 0; i < desc.getColumnSize(); i ++){
       Column column = desc.get(i);
-      ColumnValue val = ValueFactory.getField(column.getType().getDefault(), column.getType(), column.getMaxLength());
+      ColumnValue val = ValueFactory.getNullValue(column.getType());
       entries.add(new Entry(val));
       }
   }
 
   public ColumnValue getColumnValue(int i){
     return this.getEntries().get(i).value;
+  }
+
+  public boolean matchValue(String attr, Object otherVal){
+    int index = rowDesc.columnName2Index(attr);
+    return getColumnValue(index).getValue().equals(otherVal);
   }
 
   public RowDesc getRowDesc() {
@@ -56,7 +61,7 @@ public class Row implements Serializable {
         Column item = desc.get(i);
         String attr = desc.get(i).getName();
         if(hashMap.containsKey(attr)){
-          ColumnValue val = ValueFactory.getField(values.get(i));
+          ColumnValue val = ValueFactory.getField(hashMap.get(attr), desc.get(i).getType(), desc.get(i).getMaxLength());
           setValue(i, val);
         }else if(item.getPrimary() == Column.PRIMARY || item.isNotNull()){
           throw new Exception();

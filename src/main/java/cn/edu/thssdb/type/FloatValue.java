@@ -1,5 +1,7 @@
 package cn.edu.thssdb.type;
 
+import cn.edu.thssdb.schema.Column;
+
 import java.io.DataOutputStream;
 import java.io.IOException;
 
@@ -7,6 +9,11 @@ public class FloatValue extends NumberValue{
     public FloatValue(float i){
         super(i, ColumnType.FLOAT);
     }
+
+    public FloatValue(float i, boolean isNotNull){
+        super(i, ColumnType.FLOAT, isNotNull);
+    }
+
 
     @Override
     public boolean greater_than(ColumnValue val) {
@@ -20,7 +27,8 @@ public class FloatValue extends NumberValue{
 
     @Override
     public void serialize(DataOutputStream dos) throws IOException {
-        dos.writeDouble(value.floatValue());
+        dos.writeFloat(value.floatValue());
+        dos.writeBoolean(isNotNull);
     }
 
     @Override

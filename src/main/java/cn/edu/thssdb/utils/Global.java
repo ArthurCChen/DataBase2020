@@ -37,6 +37,7 @@ public class Global {
   public static final String DEFAULT_SQLPATH = "data/";
   public static final String DEFAULT_METAPATH = "catlog.meta";
 
+  public static final String NULL_VALUE_DISPLAY = "NULL";
   //--------------------------------------------------------
   //--------For Storage usage-------------------------------
   //--------------------------------------------------------

@@ -1,5 +1,8 @@
 package cn.edu.thssdb.type;
 
+import cn.edu.thssdb.utils.Global;
+
+import javax.xml.bind.annotation.XmlElementDecl;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
@@ -8,9 +11,11 @@ public class StringValue implements ColumnValue{
 
     private final String value;
     private final int maxLen;
+    private final boolean isNotNull;
 
-    public StringValue(String s, int maxLen){
+    public StringValue(String s, int maxLen, boolean isNotNull){
         this.maxLen = maxLen;
+        this.isNotNull = isNotNull;
 
         if(s.length() > maxLen)//TODO throw Exception?
             value = s.substring(0, maxLen);
@@ -18,12 +23,19 @@ public class StringValue implements ColumnValue{
             value = s;
     }
 
+    public StringValue(String s, int maxLen){
+        this(s, maxLen, true);
+    }
+
     public String getValue(){
         return value;
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
+        if(! isNotNull)
+            return Global.NULL_VALUE_DISPLAY;
         return value;
     }
 
@@ -47,6 +59,7 @@ public class StringValue implements ColumnValue{
         dos.writeBytes(s);
         while(overflow -- > 0)
             dos.write((byte)0);
+        dos.writeBoolean(isNotNull);
     }
 
     @Override

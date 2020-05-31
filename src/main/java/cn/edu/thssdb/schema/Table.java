@@ -107,7 +107,9 @@ public class Table  {
     }
 
     public FileIterator iterator(){
-        return fileHandler.iterator();
+        FileIterator iterator = fileHandler.iterator();
+        iterator.open();
+        return iterator;
     }
 
 

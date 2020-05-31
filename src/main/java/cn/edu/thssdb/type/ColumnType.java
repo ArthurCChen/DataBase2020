@@ -10,13 +10,13 @@ public enum ColumnType implements Serializable {
   INT(){
     @Override
     public int getBytes() {
-      return Integer.BYTES;
+      return Integer.BYTES + 1;
     }
 
     @Override
     public ColumnValue parse(DataInputStream dis, int maxLen) throws Exception {
       try{
-        return new IntValue(dis.readInt());
+        return new IntValue(dis.readInt(), dis.readBoolean());
       } catch (IOException e){
         throw new Exception();
       }
@@ -29,13 +29,13 @@ public enum ColumnType implements Serializable {
   }, LONG(){
     @Override
     public int getBytes() {
-      return Long.BYTES;
+      return Long.BYTES + 1;
     }
 
     @Override
     public ColumnValue parse(DataInputStream dis, int maxLen) throws Exception {
       try{
-        return new LongValue(dis.readLong());
+        return new LongValue(dis.readLong(), dis.readBoolean());
       } catch (IOException e){
         throw new Exception();
       }
@@ -48,13 +48,13 @@ public enum ColumnType implements Serializable {
   }, FLOAT(){
     @Override
     public int getBytes() {
-      return Float.BYTES;
+      return Float.BYTES + 1;
     }
 
     @Override
     public ColumnValue parse(DataInputStream dis, int maxLen) throws Exception {
       try{
-        return new FloatValue(dis.readFloat());
+        return new FloatValue(dis.readFloat(), dis.readBoolean());
       } catch (IOException e){
         throw new Exception();
       }
@@ -67,13 +67,13 @@ public enum ColumnType implements Serializable {
   }, DOUBLE(){
     @Override
     public int getBytes() {
-      return Double.BYTES;
+      return Double.BYTES + 1;
     }
 
     @Override
     public ColumnValue parse(DataInputStream dis, int maxLen) throws Exception {
       try{
-        return new DoubleValue(dis.readDouble());
+        return new DoubleValue(dis.readDouble(), dis.readBoolean());
       } catch (IOException e){
         throw new Exception();
       }
@@ -96,7 +96,8 @@ public enum ColumnType implements Serializable {
         byte s[] = new byte[len];
         dis.read(s);
         dis.skipBytes(maxLen - len);
-        return new StringValue(new String(s), maxLen);
+        boolean isNotNull = dis.readBoolean();
+        return new StringValue(new String(s), maxLen, isNotNull);
       } catch (IOException e){
         throw new Exception();
       }

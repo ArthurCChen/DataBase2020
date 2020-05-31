@@ -9,6 +9,11 @@ public class DoubleValue extends NumberValue{
         super(i, ColumnType.DOUBLE);
     }
 
+    public DoubleValue(Double i, boolean isNotNull){
+        super(i, ColumnType.DOUBLE, isNotNull);
+
+    }
+
     @Override
     public boolean greater_than(ColumnValue val) {
         return value.doubleValue() > ((DoubleValue)val).getValue();
@@ -22,6 +27,7 @@ public class DoubleValue extends NumberValue{
     @Override
     public void serialize(DataOutputStream dos) throws IOException {
         dos.writeDouble(value.doubleValue());
+        dos.writeBoolean(isNotNull);
     }
 
     @Override

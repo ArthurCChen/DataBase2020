@@ -19,6 +19,21 @@ public class ValueFactory {
         }
     }
 
+    public static ColumnValue getNullValue(ColumnType type){
+        switch (type){
+            case INT:
+            case LONG:
+            case FLOAT:
+            case DOUBLE:
+                return new IntValue(0, false);
+            case STRING:
+                return new StringValue("", 0, false);
+            default:
+                throw new InternalException("not implemented");
+        }
+    }
+
+
     public static ColumnValue getField(Object value, ColumnType type, int maxLen){
         switch (type){
             case INT:

@@ -1,10 +1,9 @@
-import cn.edu.thssdb.schema.Column;
-import cn.edu.thssdb.schema.Database;
-import cn.edu.thssdb.schema.Manager;
-import cn.edu.thssdb.schema.Table;
+import cn.edu.thssdb.schema.*;
+import cn.edu.thssdb.storage.FileIterator;
 import cn.edu.thssdb.type.ColumnType;
 import cn.edu.thssdb.utils.Global;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.lang.reflect.Array;
@@ -52,7 +51,7 @@ public class TableTest {
         manager.exit();
     }
 
-    @Test
+    @Ignore
     public void dropTable(){
         manager = Manager.getInstance();
         manager.recover();
@@ -60,4 +59,24 @@ public class TableTest {
         manager.getCurrentDatabase().drop("test");
         manager.exit();
     }
+
+    @Test
+    public void Search(){
+        manager = Manager.getInstance();
+        manager.recover();
+        manager.useDatabase("test");
+        Table table = manager.getCurrentDatabase().getTable("test");
+        FileIterator iter = table.iterator();
+        ArrayList<Row> rows = new ArrayList<>();
+        while(iter.hasNext()){
+            Row row = iter.next();
+            if(row.matchValue("name", "bad1")){
+                rows.add(row);
+            }
+        }
+        System.out.println(rows);
+        iter.close();
+
+    }
+
 }

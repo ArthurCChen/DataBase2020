@@ -1,5 +1,7 @@
 package cn.edu.thssdb.type;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
+
 import java.io.DataOutputStream;
 import java.io.IOException;
 
@@ -7,6 +9,11 @@ public class IntValue extends NumberValue {
     public IntValue(int i){
         super(i, ColumnType.INT);
     }
+
+    public IntValue(int i, boolean isNotNull){
+        super(i, ColumnType.INT, isNotNull);
+    }
+
 
     @Override
     public boolean greater_than(ColumnValue val) {
@@ -20,7 +27,8 @@ public class IntValue extends NumberValue {
 
     @Override
     public void serialize(DataOutputStream dos) throws IOException {
-        dos.writeDouble(value.intValue());
+        dos.writeInt(value.intValue());
+        dos.writeBoolean(isNotNull);
     }
 
     @Override
