@@ -65,6 +65,22 @@ public class Physical2LogicalInterfaceTest {
         success = create_test_table1(transaction_id, "table2");
         assertTrue(success);
         storage.commit(transaction_id);
+
+        // create a table and abort
+        transaction_id = storage.start_transaction();
+        success = create_test_table1(transaction_id, "table3");
+        assertTrue(success);
+        storage.abort(transaction_id);
+        transaction_id = storage.start_transaction();
+        LogicalTable table = storage.get_table("table3", transaction_id);
+        assertNull(table);
+        storage.abort(transaction_id);
+
+        // create that table again
+        transaction_id = storage.start_transaction();
+        success = create_test_table1(transaction_id, "table3");
+        assertTrue(success);
+        storage.commit(transaction_id);
     }
 
     @Test
@@ -170,5 +186,56 @@ public class Physical2LogicalInterfaceTest {
             count += 1;
         }
         assertEquals(1, count);
+    }
+
+    @Test
+    public void other_test() {
+        // create a table
+        String name = "table1";
+        int transaction_id = storage.start_transaction();
+        boolean success = create_test_table1(transaction_id, name);
+        assertTrue(success);
+        LogicalTable table1 = storage.get_table(name, transaction_id);
+        storage.drop_table(name, transaction_id);
+        storage.commit(transaction_id);
+
+        // create the table again
+        transaction_id = storage.start_transaction();
+        success = create_test_table1(transaction_id, name);
+        assertTrue(success);
+        LogicalTable table2 = storage.get_table(name, transaction_id);
+        storage.drop_table(name, transaction_id);
+        storage.commit(transaction_id);
+
+        // make sure two tables compare by address
+        assertFalse(table1 == table2);
+
+        assertTrue(table1.shared_lock());
+        assertTrue(table1.shared_lock());
+        assertTrue(table1.is_share_locked());
+        assertFalse(table1.is_exclusive_locked());
+        table1.unlock();
+        // shared_lock() is called twice, so two transactions own this lock
+        assertTrue(table1.is_share_locked());
+        table1.unlock();
+        assertFalse(table1.is_share_locked());
+        assertFalse(table1.upgrade_lock());
+        assertTrue(table1.exclusive_lock());
+        assertTrue(table1.is_exclusive_locked());
+        assertFalse(table1.exclusive_lock());
+        assertTrue(table1.is_exclusive_locked());
+        table1.unlock();
+        assertFalse(table1.is_exclusive_locked());
+        assertTrue(table1.shared_lock());
+        assertTrue(table1.shared_lock());
+        assertFalse(table1.exclusive_lock());
+        // more than one transactions own read lock, can not upgrade
+        assertFalse(table1.upgrade_lock());
+        table1.unlock();
+        assertTrue(table1.upgrade_lock());
+        assertTrue(table1.is_exclusive_locked());
+        table1.unlock();
+        assertFalse(table1.is_exclusive_locked());
+
     }
 }

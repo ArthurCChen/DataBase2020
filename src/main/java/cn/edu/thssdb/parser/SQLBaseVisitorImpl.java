@@ -18,7 +18,7 @@ import cn.edu.thssdb.predicate.base.Predicate;
 import cn.edu.thssdb.predicate.compare.*;
 import cn.edu.thssdb.predicate.logical.AndPredicate;
 import cn.edu.thssdb.predicate.logical.OrPredicate;
-import cn.edu.thssdb.query.QueryManager;
+import cn.edu.thssdb.query.QueryManagerInterface;
 import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Entry;
 import cn.edu.thssdb.schema.Row;
@@ -28,17 +28,16 @@ import cn.edu.thssdb.utils.LogBuffer;
 import com.sun.istack.internal.NotNull;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
 
-    private QueryManager queryManager = null;
+    private QueryManagerInterface queryManager = null;
     private LogBuffer logBuffer = null;
     public boolean hasSyntaxError = false;
 
 
     // Bind to a query manager. All sql command is executed by the manager.
-    public void bindQueryManager(@NotNull QueryManager manager, @NotNull LogBuffer buffer) throws ManagerNotReadyException {
+    public void bindQueryManager(@NotNull QueryManagerInterface manager, @NotNull LogBuffer buffer) throws ManagerNotReadyException {
         if (manager.ready()) {
             this.queryManager = manager;
             this.logBuffer = buffer;
@@ -189,7 +188,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
                 hasSyntaxError = true;
             }
         }
-        queryManager.insertEntry(ctx.table_name().getText(), columns, entries);
+        queryManager.insertRow(ctx.table_name().getText(), columns, entries);
         return null;
     }
 

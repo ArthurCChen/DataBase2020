@@ -2,7 +2,7 @@ package cn.edu.thssdb.parser;
 
 import cn.edu.thssdb.predicate.Operand;
 import cn.edu.thssdb.predicate.base.Predicate;
-import cn.edu.thssdb.query.QueryManager;
+import cn.edu.thssdb.query.QueryManagerInterface;
 import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.VirtualTable;
@@ -15,7 +15,7 @@ import java.util.ArrayList;
  * in order to debug the parser and visitor.
  * Debug Only. Helper class for test.
  */
-public class ParserPrinter implements QueryManager {
+public class ParserPrinter implements QueryManagerInterface {
 
     private String result;
 
@@ -66,7 +66,7 @@ public class ParserPrinter implements QueryManager {
     }
 
     @Override
-    public void insertEntry(String tableName, ArrayList<Column> columns, ArrayList<Row> entries) {
+    public void insertRow(String tableName, ArrayList<Column> columns, ArrayList<Row> entries) {
         result = String.format("insertEntry called, table name: %s, columns: %s, entries: %s", tableName, columns, entries);
     }
 

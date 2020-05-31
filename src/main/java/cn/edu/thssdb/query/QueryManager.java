@@ -2,53 +2,277 @@ package cn.edu.thssdb.query;
 
 import cn.edu.thssdb.predicate.Operand;
 import cn.edu.thssdb.predicate.base.Predicate;
-import cn.edu.thssdb.schema.Column;
-import cn.edu.thssdb.schema.Entry;
-import cn.edu.thssdb.schema.Row;
-import cn.edu.thssdb.schema.VirtualTable;
+import cn.edu.thssdb.schema.*;
+import cn.edu.thssdb.utils.LogBuffer;
+import cn.edu.thssdb.utils.Physical2LogicalInterface;
 import com.sun.istack.internal.NotNull;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.function.BooleanSupplier;
 
-/**
- *     Usage:
- *         Each query manager is a virtual user on the server side.
- *         It records the current user's state, his privilege, and so on.
- *         The query manager doesn't do any physical work,
- *         it just check if the query made by the current user is valid, and feasible.
- *         Once the manager has validated the query,
- *         it will be added to a task queue with user specific information.
- *     Output:
- *         all the methods except ready returns a String,
- *         indicating whether the operation has been successfully added to the queue,
- *         if "OK", everything is fine; else the error is returned.
- */
-public interface QueryManager {
+public class QueryManager implements QueryManagerInterface {
 
-    public boolean ready();
+    Physical2LogicalInterface storage;
+    private LogBuffer logBuffer = null;
+    int current_transaction_id;
+    boolean has_semantic_error;
+    private HashSet<LogicalTable> shared;
+    private HashSet<LogicalTable> exclusive;
+    // the number of tasks in the queue and not executed
+    private int stacked_tasks;
 
-    // start a transaction
-    public void startTransaction();
+    public QueryManager(@NotNull Physical2LogicalInterface storage, @NotNull LogBuffer buffer) {
+        this.storage = storage;
+        this.logBuffer = buffer;
+        this.current_transaction_id = -1;
+        this.has_semantic_error = false;
+        this.shared = new HashSet<>();
+        this.exclusive = new HashSet<>();
+        this.stacked_tasks = 0;
+    }
 
-    // end a transaction
-    public void commit();
+    public void reset() {
+        this.has_semantic_error= false;
+    }
 
-    // discard all the changes that has been made within the current transaction
-    public void rollback();
+    private boolean require_shared_lock(LogicalTable table) {
+        assert(table != null);
+        // if it already has the privilege
+        if (shared.contains(table) || exclusive.contains(table)) {
+            return true;
+        }
+        if (table.shared_lock()) {
+            shared.add(table);
+            return true;
+        }
+        return false;
+    }
 
-    public void createTable(@NotNull String tableName, @NotNull ArrayList<Column> columns);
+    private boolean require_exclusive_lock(LogicalTable table) {
+        assert(table != null);
+        // if it already has the privilege
+        if (exclusive.contains(table)) {
+            return true;
+        }
+        // if it owns shared lock to this table, try update it
+        if (shared.contains(table) && table.upgrade_lock()) {
+            shared.remove(table);
+            exclusive.add(table);
+            return true;
+        }
+        if (table.exclusive_lock()) {
+            exclusive.add(table);
+            return true;
+        }
+        return false;
+    }
 
-    public void deleteRows(@NotNull String tableName, Predicate predicate);
+    private void clear_locks() {
+        for (LogicalTable table : shared) {
+            table.unlock();
+        }
+        for (LogicalTable table : exclusive) {
+            table.unlock();
+        }
+        shared.clear();
+        exclusive.clear();
+    }
 
-    public void dropTable(@NotNull String tableName);
+    private void submit_task(BooleanSupplier task) {
+        TaskQueue.get_task_queue().add_task(task);
+        stacked_tasks += 1;
+    }
 
-    public void quit();
+    private boolean is_first_task() {
+        return stacked_tasks == 1;
+    }
 
-    public void showTable(@NotNull String tableName);
+    private void finish_task() {
+        stacked_tasks -= 1;
+    }
 
-    public void insertEntry(@NotNull String tableName, @NotNull ArrayList<Column> columns, @NotNull ArrayList<Row> entries);
+    @Override
+    public boolean ready() {
+        return storage != null;
+    }
 
-    public void select(@NotNull ArrayList<Column> result_columns, @NotNull VirtualTable vt, @NotNull Predicate conditions);
+    @Override
+    public void startTransaction() {
+        if (has_semantic_error) {
+            return;
+        }
+        if (current_transaction_id == -1) {
+            current_transaction_id = storage.start_transaction();
+        }
+    }
 
-    public void update(@NotNull String table_name, @NotNull String column_name, @NotNull Operand value, @NotNull  Predicate condition);
+    @Override
+    public void commit() {
+        if (has_semantic_error) {
+            return;
+        }
+        if (current_transaction_id != -1) {
+            storage.commit(current_transaction_id);
+            current_transaction_id = -1;
+            // as we are implementing Rigorous 2PL, release locks after transaction finish
+            clear_locks();
+        }
+    }
+
+    @Override
+    public void rollback() {
+        if (current_transaction_id != -1) {
+            storage.abort(current_transaction_id);
+            current_transaction_id = -1;
+            // as we are implementing Rigorous 2PL, release locks after transaction finish
+            clear_locks();
+        }
+    }
+
+    @Override
+    public void createTable(String tableName, ArrayList<Column> columns) {
+        if (has_semantic_error) {
+            return;
+        }
+        // carry out the task in current thread, since it do not have conflict
+        if (this.storage.get_table(tableName, current_transaction_id) == null) {
+            this.storage.create_table(tableName, columns, current_transaction_id);
+            LogicalTable table = storage.get_table(tableName, current_transaction_id);
+            boolean suc = require_shared_lock(table);
+            assert(suc);
+        }
+        else {
+            handle_error("SemanticError: the table already exists.");
+        }
+    }
+
+    @Override
+    public void deleteRows(String tableName, Predicate predicate) {
+        if (has_semantic_error) {
+            return;
+        }
+    }
+
+    @Override
+    public void dropTable(String tableName) {
+        if (has_semantic_error) {
+            return;
+        }
+        BooleanSupplier task = () -> {
+            if (has_semantic_error) {
+                finish_task();
+                return true;
+            }
+            LogicalTable table = storage.get_table(tableName, current_transaction_id);
+            if (table == null) {
+                if (is_first_task()) {
+                    finish_task();
+                    handle_error("SemanticError: can not drop a non-exist table.");
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+            if (!require_shared_lock(table)) {
+                return false;
+            }
+            storage.drop_table(tableName, current_transaction_id);
+            return true;
+        };
+        submit_task(task);
+    }
+
+    @Override
+    public void quit() {
+        if (has_semantic_error) {
+            return;
+        }
+        if (current_transaction_id != -1) {
+            commit();
+        }
+        // something else
+    }
+
+    @Override
+    public void showTable(String tableName) {
+        if (has_semantic_error) {
+            return;
+        }
+        BooleanSupplier task = () -> {
+            if (has_semantic_error) {
+                finish_task();
+                return true;
+            }
+            LogicalTable table = storage.get_table(tableName, current_transaction_id);
+            if (table == null) {
+                if (is_first_task()) {
+                    finish_task();
+                    handle_error("SemanticError: can not show a non-exist table.");
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+            if (!require_shared_lock(table)) {
+                return false;
+            }
+            // now show by print it out
+            ArrayList<Column> columns = table.get_columns();
+            System.out.println("Show table: " + tableName);
+            StringBuilder header = new StringBuilder();
+            header.append("\t");
+            for (Column column : columns) {
+                header.append(column.getName()).append("\t");
+            }
+            System.out.println(header);
+            for (Row row : table) {
+                StringBuilder r = new StringBuilder();
+                r.append("\t");
+                for (Entry e : row.getEntries()) {
+                    r.append(e.value).append("\t");
+                }
+                System.out.println(r);
+            }
+            System.out.println("End table");
+            finish_task();
+            return true;
+        };
+        submit_task(task);
+    }
+
+    @Override
+    public void insertRow(String tableName, ArrayList<Column> columns, ArrayList<Row> entries) {
+        if (has_semantic_error) {
+            return;
+        }
+        LogicalTable table = storage.get_table(tableName, current_transaction_id);
+        if (table == null) {
+            this.handle_error("SemanticError: can not insert to a non-exist table.");
+            return;
+        }
+
+    }
+
+    @Override
+    public void select(ArrayList<Column> result_columns, VirtualTable vt, Predicate conditions) {
+        if (has_semantic_error) {
+            return;
+        }
+    }
+
+    @Override
+    public void update(String table_name, String column_name, Operand value, Predicate condition) {
+        if (has_semantic_error) {
+            return;
+        }
+    }
+
+    private void handle_error(String error) {
+        logBuffer.write(error);
+        has_semantic_error = true;
+        rollback();
+    }
 }

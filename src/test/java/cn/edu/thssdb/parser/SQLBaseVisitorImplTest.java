@@ -1,10 +1,6 @@
 package cn.edu.thssdb.parser;
 
-import cn.edu.thssdb.parser.ParserPrinter;
 import cn.edu.thssdb.exception.ManagerNotReadyException;
-import cn.edu.thssdb.parser.SQLBaseVisitorImpl;
-import cn.edu.thssdb.parser.SQLLexer;
-import cn.edu.thssdb.parser.SQLParser;
 import cn.edu.thssdb.utils.LogBuffer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -61,8 +57,8 @@ public class SQLBaseVisitorImplTest {
         parse("create table test1(i int, j int not null, primary key (i))");
         assertEquals("createTable called, table name: test1, columns: " +
                         "[Column:{name: i, type: INT, primary: true, notNull: true, maxLength: 0}, " +
-                        "Column:{name: j, type: INT, primary: false, notNull: true, maxLength: 0}]"
-                , printer.getResult());
+                        "Column:{name: j, type: INT, primary: false, notNull: true, maxLength: 0}]",
+                printer.getResult());
     }
 
     @Test

@@ -13,7 +13,13 @@ public class MTable implements LogicalTable {
     private ArrayList<Column> columns;
     private int primary_index;
     private ArrayList<Row> rows;
-    private String lock_state;
+    /**
+     * lock state encoded as follows:
+     *     = 0: free
+     *     >0 : times of shared lock
+     *     = -1: exclusive lock
+     */
+    private int lock_state;
 
     public MTable(String table_name, ArrayList<Column> columns) {
         this.table_name = table_name;
@@ -24,7 +30,7 @@ public class MTable implements LogicalTable {
             }
         }
         this.rows = new ArrayList<>();
-        this.lock_state = "free";
+        this.lock_state = 0;
     }
 
     int getPrimary_index() {
@@ -58,8 +64,8 @@ public class MTable implements LogicalTable {
 
     @Override
     public boolean shared_lock() {
-        if (this.lock_state.equals("free")) {
-            this.lock_state = "share";
+        if (this.lock_state >= 0) {
+            this.lock_state += 1;
             return true;
         }
         return false;
@@ -67,8 +73,8 @@ public class MTable implements LogicalTable {
 
     @Override
     public boolean exclusive_lock() {
-        if (this.lock_state.equals("free")) {
-            this.lock_state = "exclusive";
+        if (this.lock_state == 0) {
+            this.lock_state = -1;
             return true;
         }
         return false;
@@ -76,18 +82,20 @@ public class MTable implements LogicalTable {
 
     @Override
     public boolean is_share_locked() {
-        return lock_state.equals("share");
+        return lock_state > 0;
     }
 
     @Override
     public boolean is_exclusive_locked() {
-        return lock_state.equals("exclusive");
+        return lock_state == -1;
     }
 
     @Override
     public boolean upgrade_lock() {
-        if (lock_state.equals("share")) {
-            lock_state = "exclusive";
+        // there is only one shared lock
+        // need to assume the caller is the owner of the shared lock
+        if (lock_state == 1) {
+            lock_state = -1;
             return true;
         }
         return false;
@@ -95,7 +103,12 @@ public class MTable implements LogicalTable {
 
     @Override
     public void unlock() {
-        lock_state = "free";
+        if (lock_state > 0) {
+            lock_state -= 1;
+        }
+        else {
+            lock_state = 0;
+        }
     }
 
     @Override
