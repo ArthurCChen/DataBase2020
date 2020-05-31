@@ -1,3 +1,5 @@
+package cn.edu.thssdb;
+
 import cn.edu.thssdb.memory_db.MDBManager;
 import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Entry;
@@ -169,5 +171,4 @@ public class Physical2LogicalInterfaceTest {
         }
         assertEquals(1, count);
     }
-
 }

@@ -1,5 +1,6 @@
-package cn.edu.thssdb.index;
+package cn.edu.thssdb.parser;
 
+import cn.edu.thssdb.parser.ParserPrinter;
 import cn.edu.thssdb.exception.ManagerNotReadyException;
 import cn.edu.thssdb.parser.SQLBaseVisitorImpl;
 import cn.edu.thssdb.parser.SQLLexer;

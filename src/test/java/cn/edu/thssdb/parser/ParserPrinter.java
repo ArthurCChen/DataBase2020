@@ -1,4 +1,4 @@
-package cn.edu.thssdb.index;
+package cn.edu.thssdb.parser;
 
 import cn.edu.thssdb.predicate.Operand;
 import cn.edu.thssdb.predicate.base.Predicate;
