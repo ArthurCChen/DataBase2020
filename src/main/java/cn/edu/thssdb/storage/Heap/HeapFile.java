@@ -97,7 +97,7 @@ public class HeapFile implements FileHandler {
             while (iterator.hasNext()) {
                 Row tuple = iterator.next();
                 if (tuple.getColumnValue(primaryKeyIdx).equals(pkField)){
-                    throw new Exception();
+                    throw new Exception("primary key clash");
                 }
             }
         }

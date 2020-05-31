@@ -52,7 +52,7 @@ public class Row implements Serializable {
       attrNames = desc.getAttrNames();
     }
     if (attrNames.size() != values.size()) {
-      throw new Exception();
+      throw new Exception("attr and value not match");
     } else {
       HashMap<String, Object> hashMap = new HashMap<>();
       for (int i=0; i<attrNames.size(); i++) {
@@ -65,7 +65,7 @@ public class Row implements Serializable {
           ColumnValue val = ValueFactory.getField(hashMap.get(attr), desc.get(i).getType(), desc.get(i).getMaxLength());
           setValue(i, val);
         }else if(item.getPrimary() == Column.PRIMARY || item.isNotNull()){
-          throw new Exception();
+          throw new Exception("not satisfy the constrain");
         }
       }
     }

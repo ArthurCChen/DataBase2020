@@ -154,9 +154,9 @@ public class HeapPage implements Page {
         int tupleNumber = t.getRowId();
 
         if (t.getPageId() != pid) {
-            throw new InternalException("");
+            throw new InternalException("pid not match");
         } else if (!isSlotUsed(tupleNumber)) {
-            throw new InternalException("");
+            throw new InternalException("slot not in use");
         } else {
             rows[tupleNumber] = null;
             markSlotUsed(tupleNumber, false);

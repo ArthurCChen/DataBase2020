@@ -31,7 +31,7 @@ public class Manager {
 
   public void createDatabase(String databaseName) throws Exception{
     if(databases.containsKey(databaseName))
-      throw new Exception();
+      throw new Exception("database already exist");
     createDatabaseIfNotExists(databaseName);
   }
 

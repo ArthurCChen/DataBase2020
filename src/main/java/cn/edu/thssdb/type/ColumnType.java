@@ -18,7 +18,7 @@ public enum ColumnType implements Serializable {
       try{
         return new IntValue(dis.readInt(), dis.readBoolean());
       } catch (IOException e){
-        throw new Exception();
+        throw e;
       }
     }
 
@@ -37,7 +37,7 @@ public enum ColumnType implements Serializable {
       try{
         return new LongValue(dis.readLong(), dis.readBoolean());
       } catch (IOException e){
-        throw new Exception();
+        throw e;
       }
     }
 
@@ -56,7 +56,7 @@ public enum ColumnType implements Serializable {
       try{
         return new FloatValue(dis.readFloat(), dis.readBoolean());
       } catch (IOException e){
-        throw new Exception();
+        throw e;
       }
     }
 
@@ -75,7 +75,7 @@ public enum ColumnType implements Serializable {
       try{
         return new DoubleValue(dis.readDouble(), dis.readBoolean());
       } catch (IOException e){
-        throw new Exception();
+        throw e;
       }
     }
 
@@ -99,7 +99,7 @@ public enum ColumnType implements Serializable {
         boolean isNotNull = dis.readBoolean();
         return new StringValue(new String(s), maxLen, isNotNull);
       } catch (IOException e){
-        throw new Exception();
+        throw e;
       }
     }
 
@@ -127,7 +127,7 @@ public enum ColumnType implements Serializable {
     }else if(type.toUpperCase().equals("STRING")){
       return STRING;
     }else{
-      throw new Exception();
+      throw new Exception("this type cannot defined");
     }
   }
 };
