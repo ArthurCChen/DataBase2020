@@ -1,17 +1,16 @@
-import cn.edu.thssdb.adapter.LogicalTable;
-import cn.edu.thssdb.adapter.ReferenceInterface;
+import cn.edu.thssdb.memory_db.MDBManager;
 import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Entry;
+import cn.edu.thssdb.adapter.LogicalTable;
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.RowDesc;
 import cn.edu.thssdb.type.ColumnType;
-import cn.edu.thssdb.type.ValueFactory;
+import cn.edu.thssdb.type.IntValue;
+import cn.edu.thssdb.type.StringValue;
 import cn.edu.thssdb.utils.Physical2LogicalInterface;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -20,55 +19,20 @@ import static org.junit.Assert.*;
 /**
  * A test class for potentially multiple implementations of cn.edu.thssdb.utils.Physical2LogicalInterface
  */
-public class Physical2LogicalInterfaceTest {
+public class M_Physical2LogicalInterfaceTest {
 
     // change here to switch to other implementations
-//    Physical2LogicalInterface storage = new MDBManager();
-    Physical2LogicalInterface storage;
+    Physical2LogicalInterface storage = new MDBManager();
 
     Column c0;
     Column c1;
     Row r0;
     Row r1;
-    Integer p0 = 0;
-    Integer p1 = 1;
-
-    public Physical2LogicalInterfaceTest(){
-        try {
-            storage = ReferenceInterface.getInstance();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    public static void deleteDirectory(String filePath){
-        File file = new File(filePath);
-        if(!file.exists()){
-            return;
-        }
-        if(file.isFile()){
-            file.delete();
-        }else if(file.isDirectory()){
-            File[] files = file.listFiles();
-            for (File myfile : files) {
-                deleteDirectory(filePath + "/" + myfile.getName());
-            }
-            file.delete();
-        }
-    }
-
-    public static boolean deleteFile(String filePath){
-        boolean result = false;
-        File file = new File(filePath);
-        if(file.exists() && file.isFile()){
-            result = file.delete();
-        }
-        return result;
-    }
+    int p0 = 0;
+    int p1 = 1;
 
     @Before
-    public void setup() throws InterruptedException {
-
+    public void setup() {
         c0 = new Column("primary", ColumnType.INT, true, true, 0);
         c1 = new Column("data", ColumnType.STRING, false, false, 5);
 
@@ -135,10 +99,10 @@ public class Physical2LogicalInterfaceTest {
     public void drop_table_test() {
         int transaction_id = storage.start_transaction();
         // create a table
-        boolean success = create_test_table1(transaction_id, "table10");
+        boolean success = create_test_table1(transaction_id, "table1");
         assertTrue(success);
         // drop the table
-        success = storage.drop_table("table10", transaction_id);
+        success = storage.drop_table("table1", transaction_id);
         assertTrue(success);
         // drop a non-exist table
         success = storage.drop_table("not exist", transaction_id);
@@ -150,7 +114,7 @@ public class Physical2LogicalInterfaceTest {
     public void get_table_test() {
         // create a table
         int transaction_id = storage.start_transaction();
-        String name = "table4";
+        String name = "table1";
         boolean success = create_test_table1(transaction_id, name);
         assertTrue(success);
         LogicalTable table = storage.get_table(name, transaction_id);
@@ -171,7 +135,7 @@ public class Physical2LogicalInterfaceTest {
     @Test
     public void insert_delete_row_test() {
         // create a table
-        String name = "table5";
+        String name = "table1";
         int transaction_id = storage.start_transaction();
         boolean success = create_test_table1(transaction_id, name);
         assertTrue(success);
@@ -198,11 +162,11 @@ public class Physical2LogicalInterfaceTest {
 
         // delete the row
         transaction_id = storage.start_transaction();
-        success = storage.delete_row("not exist", new Entry(ValueFactory.getValue(p0)), transaction_id);
+        success = storage.delete_row("not exist", new Entry(new IntValue(p0)), transaction_id);
         assertFalse(success);
-        success = storage.delete_row(name, new Entry(ValueFactory.getValue(p1)), transaction_id);
+        success = storage.delete_row(name, new Entry(new IntValue(p1)), transaction_id);
         assertFalse(success);
-        success = storage.delete_row(name, new Entry(ValueFactory.getValue(p0)), transaction_id);
+        success = storage.delete_row(name, new Entry(new IntValue(p0)), transaction_id);
         assertTrue(success);
         table = storage.get_table(name, transaction_id);
         count = 0;
@@ -221,8 +185,8 @@ public class Physical2LogicalInterfaceTest {
         int trans1 = storage.start_transaction();
         int trans2 = storage.start_transaction();
         create_test_table1(trans1, name);
-        boolean b1 = storage.insert_row(name, r0, trans1);
-        boolean b2 = storage.insert_row(name, r1, trans2);
+        storage.insert_row(name, r0, trans1);
+        storage.insert_row(name, r1, trans2);
         storage.commit(trans1);
         storage.abort(trans2);
 
@@ -230,15 +194,16 @@ public class Physical2LogicalInterfaceTest {
         LogicalTable table = storage.get_table(name, trans3);
         int count = 0;
         for (Row r : table) {
+            assertEquals(r.toString(), r0.toString());
             count += 1;
         }
-        assertEquals(2, count);
+        assertEquals(1, count);
     }
 
     @Test
     public void other_test() {
         // create a table
-        String name = "table6";
+        String name = "table1";
         int transaction_id = storage.start_transaction();
         boolean success = create_test_table1(transaction_id, name);
         assertTrue(success);
