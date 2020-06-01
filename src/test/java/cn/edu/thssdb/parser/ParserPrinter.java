@@ -65,7 +65,7 @@ public class ParserPrinter implements QueryManagerInterface {
     }
 
     @Override
-    public void insertRow(String tableName, ArrayList<Column> columns, ArrayList<ArrayList<String>> entries) {
+    public void insertRow(String tableName, ArrayList<String> columns, ArrayList<ArrayList<Object>> entries) {
         result = String.format("insertEntry called, table name: %s, columns: %s, entries: %s", tableName, columns, entries);
     }
 

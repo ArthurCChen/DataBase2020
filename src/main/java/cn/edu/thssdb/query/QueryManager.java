@@ -3,15 +3,13 @@ package cn.edu.thssdb.query;
 import cn.edu.thssdb.adapter.LogicalTable;
 import cn.edu.thssdb.predicate.Operand;
 import cn.edu.thssdb.predicate.base.Predicate;
-import cn.edu.thssdb.schema.Column;
-import cn.edu.thssdb.schema.Entry;
-import cn.edu.thssdb.schema.Row;
-import cn.edu.thssdb.schema.VirtualTable;
+import cn.edu.thssdb.schema.*;
 import cn.edu.thssdb.utils.LogBuffer;
 import cn.edu.thssdb.utils.Physical2LogicalInterface;
 import com.sun.istack.internal.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.function.BooleanSupplier;
 
@@ -248,20 +246,41 @@ public class QueryManager implements QueryManagerInterface {
     }
 
     @Override
-    public void insertRow(String tableName, ArrayList<Column> columns, ArrayList<ArrayList<String>> entries) {
+    public void insertRow(String tableName, ArrayList<String> attr_names, ArrayList<ArrayList<Object>> entries) {
         if (has_semantic_error) {
             return;
         }
         String error_log = "SemanticError: can not insert to a non-exist table.";
         java.util.function.Predicate<LogicalTable> func = (LogicalTable table) -> {
-            ArrayList<Row> expanded_row;
-            if (columns == null) {
-//                expanded_row = entries;
+            RowDesc rowDesc;
+            rowDesc = new RowDesc(table.get_columns());
+            ArrayList<String> names;
+            if (attr_names == null) {
+                names = new ArrayList<>();
+                for (Column column : table.get_columns()) {
+                    names.add(column.getName());
+                }
             }
             else {
-                
+                names = attr_names;
             }
-            return true;
+            ArrayList<ArrayList<Object>> rows = new ArrayList<>();
+            boolean success = true;
+            for (ArrayList<Object> entry : entries) {
+                try {
+                    Row row = new Row(rowDesc, names, entry);
+                    if (!storage.insert_row(tableName, row, current_transaction_id)) {
+                        handle_error("SemanticError: fail to insert row " + row + " into table " + tableName + ".");
+                        success = false;
+                        break;
+                    }
+                } catch (Exception e) {
+                    handle_error("SemanticError: convert fail.");
+                    success = false;
+                    break;
+                }
+            }
+            return success;
         };
         BooleanSupplier task = build_task(tableName, func, false, error_log);
         submit_task(task);

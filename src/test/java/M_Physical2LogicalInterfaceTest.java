@@ -6,7 +6,6 @@ import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.RowDesc;
 import cn.edu.thssdb.type.ColumnType;
 import cn.edu.thssdb.type.IntValue;
-import cn.edu.thssdb.type.StringValue;
 import cn.edu.thssdb.utils.Physical2LogicalInterface;
 import org.junit.Before;
 import org.junit.Test;

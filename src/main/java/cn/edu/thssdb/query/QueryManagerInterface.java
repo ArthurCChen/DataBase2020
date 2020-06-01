@@ -44,7 +44,7 @@ public interface QueryManagerInterface {
 
     public void showTable(@NotNull String tableName);
 
-    public void insertRow(@NotNull String tableName, @NotNull ArrayList<Column> columns, @NotNull ArrayList<ArrayList<String>> entries);
+    public void insertRow(@NotNull String tableName, @NotNull ArrayList<String> columns, @NotNull ArrayList<ArrayList<Object>> entries);
 
     public void select(@NotNull ArrayList<Column> result_columns, @NotNull VirtualTable vt, @NotNull Predicate conditions);
 

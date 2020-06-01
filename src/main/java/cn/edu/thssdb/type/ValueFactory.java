@@ -52,6 +52,8 @@ public class ValueFactory {
                     return new IntValue(((Long)value).intValue());
                 }else if(value instanceof Integer){
                     return getValue(value);
+                }else if (value instanceof String) {
+                    return new IntValue(Integer.parseInt((String)value));
                 }else{
                     throw new InternalException("cast error");
                 }
@@ -60,7 +62,9 @@ public class ValueFactory {
                     return getValue(value);
                 }else if(value instanceof Integer){
                     return new LongValue(((Integer)value).longValue());
-                }else{
+                }else if (value instanceof  String) {
+                    return new LongValue(Integer.parseInt((String)value));
+                }else {
                     throw new InternalException("cast error");
                 }
             case DOUBLE:
@@ -68,6 +72,8 @@ public class ValueFactory {
                     return getValue(value);
                 }else if(value instanceof Float){
                     return new DoubleValue(((Float)value).doubleValue());
+                }else if (value instanceof String) {
+                    return new DoubleValue(Double.parseDouble((String)value));
                 }else{
                     throw new InternalException("cast error");
                 }
@@ -76,6 +82,8 @@ public class ValueFactory {
                     return getValue(value);
                 }else if(value instanceof Double){
                     return new FloatValue(((Double)value).floatValue());
+                }else if (value instanceof String) {
+                    return new FloatValue(Float.parseFloat((String)value));
                 }else{
                     throw new InternalException("cast error");
                 }

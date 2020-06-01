@@ -75,4 +75,22 @@ public class PipelineTest {
         parse("drop table test1");
         assertEquals("SemanticError: can not drop a non-exist table.", buffer.get());
     }
+
+    @Test
+    public void insert_delete_row_test() throws ManagerNotReadyException {
+        // create a table, insert two rows, and show it
+        parse("create table test1(i int, j int not null, primary key (i));" +
+                "insert into test1 values (1, 2);" +
+                "insert into test1 (i, j) values (3,4);" +
+                "show table test1;");
+        assertEquals("", buffer.get());
+
+        // insert by wrong type
+        parse("insert into test1 values ('ha', 2);");
+        assertEquals("SemanticError: convert fail.", buffer.get());
+
+        // insert duplicate row
+        parse("insert into test1 values (1, 2);");
+        assertEquals("SemanticError: fail to insert row 1, 2 into table test1.", buffer.get());
+    }
 }

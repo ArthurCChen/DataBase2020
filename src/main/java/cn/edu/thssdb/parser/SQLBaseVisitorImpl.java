@@ -159,13 +159,13 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
 
     @Override
     public Object visitInsert_stmt(SQLParser.Insert_stmtContext ctx) {
-        ArrayList<Column> columns = new ArrayList<Column>();
-        ArrayList<ArrayList<String>> entries = new ArrayList<>();
+        ArrayList<String> columns = new ArrayList<>();
+        ArrayList<ArrayList<Object>> entries = new ArrayList<>();
         int row_length = 0;
         // if column name is provided
         if (ctx.column_name() != null && ctx.column_name().size() != 0) {
             for (SQLParser.Column_nameContext column : ctx.column_name()) {
-                columns.add(new Column(column.getText(), null, false, false, 0));
+                columns.add(column.getText());
             }
             row_length = columns.size();
         }
@@ -174,13 +174,13 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
         }
         // one element is a row
         for (SQLParser.Value_entryContext entry : ctx.value_entry()) {
-            entries.add((ArrayList<String>) visitValue_entry(entry));
+            entries.add((ArrayList<Object>) visitValue_entry(entry));
         }
         // if column names not specified, take the length of the first entry as row length
         if (row_length == 0) {
             row_length = entries.get(0).size();
         }
-        for (ArrayList<String> entry : entries) {
+        for (ArrayList<Object> entry : entries) {
             if (entry.size() != row_length) {
                 logBuffer.write("SyntaxError: rows should have the same size as schema size.");
                 hasSyntaxError = true;
@@ -192,7 +192,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
 
     @Override
     public Object visitValue_entry(SQLParser.Value_entryContext ctx) {
-        ArrayList<String> values = new ArrayList<String>();
+        ArrayList<Object> values = new ArrayList<>();
         // add each literal
         for (SQLParser.Literal_valueContext entry : ctx.literal_value()) {
             values.add(((String)visitLiteral_value(entry)));
