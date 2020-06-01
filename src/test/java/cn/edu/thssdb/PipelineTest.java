@@ -75,31 +75,4 @@ public class PipelineTest {
         parse("drop table test1");
         assertEquals("SemanticError: can not drop a non-exist table.", buffer.get());
     }
-
-    @Test
-    public void grammar_test() {
-        class LambdaTest {
-            int string = 0;
-
-            Consumer<String> returnConsumer() {
-                return ((s) -> {System.out.println(s);});
-            }
-
-            Consumer<String> returnConsumerWithInstanceVariable() {
-                return ((s) -> {System.out.println(s + string);});
-            }
-
-            Consumer<String> returnConsumerWithLocalFinalVariable() {
-                final String foo = " you there!";
-                return ((s) -> {System.out.println(s + foo);});
-            }
-
-        }
-
-        LambdaTest test = new LambdaTest();
-        test.string = 1;
-        test.returnConsumer().accept("Hello");
-        test.returnConsumerWithInstanceVariable().accept("Hello");
-        test.returnConsumerWithLocalFinalVariable().accept("Hello");
-    }
 }

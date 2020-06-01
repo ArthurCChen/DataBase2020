@@ -1,62 +1,70 @@
 package cn.edu.thssdb.schema;
 
 import cn.edu.thssdb.type.ColumnType;
+import cn.edu.thssdb.type.ColumnValue;
 
-public class Column implements Comparable<Column> {
+import java.io.DataInputStream;
+import java.io.Serializable;
+
+public class Column implements Comparable<Column>, Serializable {
+
+  private static final long serialVersionUID = 1L;
+
   private String name;
   private ColumnType type;
   private boolean primary;
   private boolean notNull;
   private int maxLength;
-  private String table_name = null;
+  public String tableName;
 
-  public Column(String name, ColumnType type, boolean primary, boolean notNull, int maxLength) {
+  static public boolean PRIMARY;
+  static public boolean NOT_PRIMARY;
+
+  static {
+    NOT_PRIMARY = false;
+    PRIMARY = true;
+  }
+
+  public Column(String name, ColumnType type, boolean primacy ,boolean notNull, int maxLength){
+    this(name, type, notNull, maxLength);
+    this.primary = primacy;
+  }
+
+  public Column(String name, ColumnType type, boolean notNull, int maxLength) {
     this.name = name;
     this.type = type;
-    this.primary = primary;
     this.notNull = notNull;
-    this.maxLength = maxLength;
+    if (type == ColumnType.STRING) {
+      this.maxLength = maxLength;
+    }else{
+      this.maxLength = 0;
+    }
+    this.primary = NOT_PRIMARY;
+  }
+
+  public Column(String name, ColumnType type, boolean notNull) {
+    this(name, type, notNull, 0);
+  }
+
+  public Column(String name, ColumnType type, boolean notNull, int maxLength, String tableName){
+    this(name, type, notNull, maxLength);
+    this.tableName = tableName;
   }
 
   public boolean isNotNull() {
     return notNull;
   }
 
-  public void setNotNull(boolean notNull) {
-    this.notNull = notNull;
-  }
-
   public void setPrimary(boolean primary) {
-    this.primary = primary;
-    if (primary) {
-      this.notNull = true;
-    }
+    this.primary = PRIMARY;
   }
 
-  public boolean isPrimary() {
-    return this.primary;
-  }
-
-  public ColumnType getType() { return this.type; }
-
-  public String getName() {
-    return this.name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public void setType(ColumnType type) {
-    this.type = type;
-  }
-
-  public String getTable_name() {
-    return table_name;
-  }
-
-  public void setTable_name(String table_name) {
-    this.table_name = table_name;
+  // name is unnecessary
+  public boolean equals(Object obj){
+    if(!(obj instanceof  Column))
+      return false;
+    Column other = (Column)obj;
+    return (primary == other.primary) && (type == other.type)  && (notNull == other.notNull) && (maxLength == other.maxLength);
   }
 
   @Override
@@ -64,16 +72,66 @@ public class Column implements Comparable<Column> {
     return name.compareTo(e.name);
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof Column)) {
-      return false;
+  public String toString() {
+    StringBuilder stringBuilder = new StringBuilder();
+    if(type == ColumnType.STRING) {
+      stringBuilder.append(String.format("%s(%s(%d)", name, type, maxLength));
+
+    }else{
+      stringBuilder.append(String.format("%s(%s", name, type));
     }
-    Column column = (Column)obj;
-    return name.equals(column.name) && type == column.type && primary == column.primary && notNull == column.notNull && maxLength == column.maxLength && table_name == column.table_name;
+    if(notNull){
+      stringBuilder.append(" not null");
+    }
+    stringBuilder.append(")");
+    return stringBuilder.toString();
   }
 
-  public String toString() {
-    return String.format("Column:{name: %s, type: %s, primary: %s, notNull: %s, maxLength: %s}", name, type, primary, notNull, maxLength);
+  public boolean getPrimary() {
+    return primary;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public String getFullName(){
+    if(tableName != null){
+      return tableName + "." + name;
+    }else{
+      return name;
+    }
+  }
+
+  public ColumnType getType() {
+    return type;
+  }
+
+  public int getByteSize(){
+    return type.getBytes() + this.maxLength;
+  }
+
+  public ColumnValue parse(DataInputStream dis) throws Exception{
+    return this.type.parse(dis, maxLength);
+  }
+
+  public boolean isTableName(String tableName){
+    return this.tableName != null && this.tableName.equals(tableName);
+  }
+
+  public boolean isName(String name){
+    return this.name.equals(name);
+  }
+
+  public boolean isName(String tableName, String columnName){
+    return isName(columnName) && isTableName(tableName);
+  }
+
+  public void setTableName(String tableName) {
+    this.tableName = tableName;
+  }
+
+  public int getMaxLength() {
+    return maxLength;
   }
 }
