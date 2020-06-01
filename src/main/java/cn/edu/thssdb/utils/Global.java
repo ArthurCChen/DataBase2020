@@ -1,5 +1,17 @@
 package cn.edu.thssdb.utils;
 
+import cn.edu.thssdb.schema.Column;
+import cn.edu.thssdb.schema.Manager;
+import cn.edu.thssdb.schema.Table;
+import cn.edu.thssdb.storage.BufferPool;
+import cn.edu.thssdb.storage.FileHandler;
+import cn.edu.thssdb.storage.PageId;
+import cn.edu.thssdb.type.ColumnType;
+
+import java.io.File;
+import java.nio.Buffer;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +29,21 @@ public class Global {
   public static final String QUIT = "quit;";
 
   public static final String S_URL_INTERNAL = "jdbc:default:connection";
+  public static final String FILE_SEPARATOR = File.separator;
+  public static final String DATA_FORMAT = "%s.data";
+  public static final String META_FORMAT = "%s.meta";
+  public static final String SCRIPT_FORMAT = "%s.script";
+  public static final String LOG_FORMAT = "%s.log";
+
+  public static final String DEFAULT_SQLPATH = "data/";
+  public static final String DEFAULT_METAPATH = "catlog.meta";
+
+  public static final String NULL_VALUE_DISPLAY = "NULL";
+  //--------------------------------------------------------
+  //--------For Storage usage-------------------------------
+  //--------------------------------------------------------
+  public static final int pageSize = 4096;
+  public static final int bufferChunkSize = 50;
 
   //用于转换Object为数组类型
   //https://www.cnblogs.com/xingmangdieyi110/p/11676553.html
@@ -32,5 +59,82 @@ public class Global {
       return result;
     }
     return null;
+  }
+
+  public static Comparable castValue(Comparable value, ColumnType type){
+    if(value == null)
+      return null;
+
+    switch(type){
+      case STRING:
+        return value;
+      case LONG:
+        return ((Number) value).longValue();
+      case FLOAT:
+        return ((Number)value).floatValue();
+      case DOUBLE:
+        return ((Number)value).doubleValue();
+      case INT:
+        return ((Number)value).intValue();
+    }
+    throw new InternalError("unvalid type");
+  }
+
+  public static FileHandler getFileFromPid(PageId pid){
+    //TODO: 补充
+    return Manager.getInstance().getCurrentDatabase().getTable(pid.getTableId()).getFileHandler();
+  }
+
+//  public static Table getTableFromTid(String tid){
+//    //TODO:
+//    return null;
+//  }
+
+  public static Table getTableFromTid(Integer tid){
+    //TODO:
+    Manager manager = Manager.getInstance();
+    //TODO: check in Database first
+    return manager.getCurrentDatabase().getTable(tid);
+  }
+
+  public static BufferPool gBufferPool(){
+    //TODO
+    BufferPool gBufferPool = BufferPoolHolder.getInstance();
+    return gBufferPool;
+  }
+
+  public static String synthFilePath(String ... paths){
+    Path path = path = Paths.get(paths[0]);;
+    for (int i = 1; i < paths.length; i ++){
+      path = path.resolve(paths[i]);
+    }
+    return path.toString();
+  }
+
+  public static void createDir(String path){
+    File file = new File(path);
+    if(!file.exists()){
+      file.mkdir();
+    }
+  }
+
+  private static class BufferPoolHolder {
+    private static final BufferPool INSTANCE = new BufferPool();
+    private BufferPoolHolder() {
+
+    }
+    public static BufferPool getInstance(){
+      return INSTANCE;
+    }
+
+  }
+
+  static public ArrayList<String> getPrimaryKeysFromColumns(ArrayList<Column> columns){
+    ArrayList<String> primaryKeys = new ArrayList<>();
+    for(Column column:columns){
+      if(column.getPrimary())
+        primaryKeys.add(column.getName());
+    }
+    return primaryKeys;
   }
 }

@@ -1,18 +1,20 @@
 package cn.edu.thssdb.schema;
 
+import cn.edu.thssdb.type.ColumnValue;
+
 import java.io.Serializable;
 
-public class Entry implements Comparable<Entry>, Serializable {
+public class Entry implements Serializable {
   private static final long serialVersionUID = -5809782578272943999L;
-  public Comparable value;
+  public final ColumnValue value;
 
-  public Entry(Comparable value) {
+  public Entry(ColumnValue value) {
     this.value = value;
   }
 
-  @Override
+
   public int compareTo(Entry e) {
-    return value.compareTo(e.value);
+    return value.getValue().compareTo(e.value.getValue());
   }
 
   @Override
@@ -24,6 +26,8 @@ public class Entry implements Comparable<Entry>, Serializable {
     Entry e = (Entry) obj;
     return value.equals(e.value);
   }
+
+
 
   public String toString() {
     return value.toString();

@@ -1,5 +1,6 @@
 package cn.edu.thssdb.utils;
 
+import cn.edu.thssdb.adapter.LogicalTable;
 import cn.edu.thssdb.schema.*;
 
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ public interface Physical2LogicalInterface {
     boolean drop_table(String table_name, int transaction_id);
 
     // get a table, since cn.edu.thssdb.schema.Table implements iterable,
-    // this can serve as the requested O(1) iterator
+    // this can serve as the requested O(1) Iterator
     // return null if the table is not found
     LogicalTable get_table(String table_name, int transaction_id);
 

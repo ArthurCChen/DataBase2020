@@ -1,86 +1,132 @@
 package cn.edu.thssdb.schema;
 
-import cn.edu.thssdb.index.BPlusTree;
-import cn.edu.thssdb.index.BPlusTreeIterator;
+import cn.edu.thssdb.storage.FileHandler;
+import cn.edu.thssdb.storage.FileIterator;
+import cn.edu.thssdb.storage.Heap.HeapFile;
 import cn.edu.thssdb.utils.Global;
-import javafx.util.Pair;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class Table implements Iterable<Row> {
-  ReentrantReadWriteLock lock;
-  private String databaseName;
-  public String tableName;
-  public ArrayList<Column> columns;
-  public BPlusTree<Entry, Row> index;
-  private int primaryIndex;
+public class Table  {
+    ReentrantReadWriteLock lock;
 
-  public Table(String databaseName, String tableName, Column[] columns) {
-    // TODO
-  }
+    RowDesc desc;
+    private File diskFile;
+    public int tid;
+    public String databaseName;
+    public String tableName;
+    private TableInfo tableInfo;
+//    public int count = 0;
+//    public int autoIncrement = 0;
+    //  private String databaseName;
+//  public String tableName;
+    public HashMap<String, Integer> columnIndex; //通过column的名称查询其所在列
+//  public ArrayList<Column> columnLabel;
 
-  private void recover() {
-    // TODO
-  }
+    //  public BPlusTree<Entry, Row> index;
+    private FileHandler fileHandler;
+//  private Integer id;
 
-  public void insert() {
-    // TODO
-  }
+    private int primaryIndex;
 
-  public void delete() {
-    // TODO
-  }
-
-  public void update() {
-    // TODO
-  }
-
-  private void serialize(String filename) throws IOException {
-    // TODO 改进暂时输出当前table所有row的不足
-    FileOutputStream fileOut = new FileOutputStream(filename);
-    ObjectOutputStream ooStream = new ObjectOutputStream(fileOut);
-    ArrayList<Row> rows = new ArrayList<>();
-    BPlusTreeIterator<Entry, Row> iterator = index.iterator();
-    while (iterator.hasNext()) {
-      ooStream.writeObject(iterator.next());
-    }
-    ooStream.close();
-  }
-
-  private ArrayList<Row> deserialize(String filename) throws IOException, ClassNotFoundException, ClassCastException{
-    // TODO
-    FileInputStream fileIn = new FileInputStream(filename);
-    ObjectInputStream oiStream = new ObjectInputStream(fileIn);
-    Object obj = oiStream.readObject();
-    ArrayList<Row> rows = null;
-    rows = (ArrayList<Row>) Global.castList(obj, Row.class);
-    oiStream.close();
-    return rows;
-  }
-
-  private class TableIterator implements Iterator<Row> {
-    private Iterator<Pair<Entry, Row>> iterator;
-
-    TableIterator(Table table) {
-      this.iterator = table.index.iterator();
+    public RowDesc getTableMeta(){
+        return desc;
     }
 
-    @Override
-    public boolean hasNext() {
-      return iterator.hasNext();
+
+    public File getDiskFile() {
+        return diskFile;
     }
 
-    @Override
-    public Row next() {
-      return iterator.next().getValue();
+    public Integer getId() {
+        return tid;
     }
-  }
 
-  @Override
-  public Iterator<Row> iterator() {
-    return new TableIterator(this);
-  }
+    public FileHandler getFileHandler() {
+        return fileHandler;
+    }
+
+    private Table(
+            Integer id,
+            String name,
+            RowDesc desc,
+            File diskFile){
+        // TODO
+        this.tid = id;
+        this.lock = new ReentrantReadWriteLock();
+        this.desc = desc;
+        this.columnIndex = new HashMap<>();
+        for(int i = 0; i < desc.getColumnSize(); i ++){
+            columnIndex.put(desc.get(i).getName(), i);
+        }
+        this.fileHandler = new HeapFile(id, diskFile, desc);
+        this.tableName = name;
+        this.diskFile = diskFile;
+        this.tableInfo = new TableInfo(0, 0);
+    }
+
+    public Table(
+            Integer id,
+            String name,
+            RowDesc desc,
+            File diskFile,
+            TableInfo tableInfo
+            ){
+        this(id, name, desc, diskFile);
+        this.tableInfo = tableInfo;
+        // TODO
+    }
+
+    public ArrayList<Column> getColumns(){
+        return desc.getColumns();
+    }
+
+    public ArrayList<String> getPrimaryNames(){
+        return desc.getPrimaryNames();
+    }
+
+    public boolean insertRow(Row row){
+        tableInfo.autoIncrement ++;
+        tableInfo.count ++;
+        return Global.gBufferPool().insertRow(this.tid, row);
+    }
+
+    public boolean insertRow(ArrayList<String> attrNames, ArrayList<Object> values) {
+        try {
+            Row row = new Row(this.desc, attrNames, values);
+            return insertRow(row);
+        }catch (Exception e){
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public FileIterator getIterator(){
+        FileIterator iterator = fileHandler.iterator();
+        iterator.open();
+        return iterator;
+    }
+
+
+    //
+    public boolean deleteRow(Row row){
+        this.tableInfo.count --;
+        return Global.gBufferPool().deleteRow(this.tid, row);
+    }
+
+    // warning should never use it !!!
+    private Row search(Entry primary_key){
+        primaryIndex = desc.getPrimaryIndex().get(0);
+        FileIterator iterator = getIterator();
+        while(iterator.hasNext()){
+            Row row = iterator.next();
+            if(row.getEntries().get(primaryIndex).equals(primary_key)){
+                return row;
+            }
+        }
+        return null;
+    }
+
 }
