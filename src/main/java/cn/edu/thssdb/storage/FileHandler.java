@@ -10,11 +10,11 @@ public interface FileHandler {
 
     void writePage(Page p);
 
-    ArrayList<Page> insertRow(Row row);
+    ArrayList<Page> insertRow(Row row) throws  Exception;
 
-    ArrayList<Page> deleteRow(Row row);
+    ArrayList<Page> deleteRow(Row row) throws  Exception;
 
-    ArrayList<Page> updateRow(Row row);
+    ArrayList<Page> updateRow(Row row) throws  Exception;
 
     int getId();
 

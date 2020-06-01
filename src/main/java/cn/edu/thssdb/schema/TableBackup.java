@@ -155,9 +155,9 @@
 //    FileOutputStream fileOut = new FileOutputStream(filename);
 //    ObjectOutputStream ooStream = new ObjectOutputStream(fileOut);
 //    ArrayList<Row> rows = new ArrayList<>();
-//    BPlusTreeIterator<Entry, Row> iterator = index.iterator();
-//    while (iterator.hasNext()) {
-//      ooStream.writeObject(iterator.next());
+//    BPlusTreeIterator<Entry, Row> getIterator = index.getIterator();
+//    while (getIterator.hasNext()) {
+//      ooStream.writeObject(getIterator.next());
 //    }
 //    ooStream.close();
 //  }
@@ -174,25 +174,25 @@
 //  }
 //
 //  private class TableIterator implements Iterator<Row> {
-//    private Iterator<Pair<Entry, Row>> iterator;
+//    private Iterator<Pair<Entry, Row>> getIterator;
 //
 //    TableIterator(Table table) {
-//      this.iterator = table.index.iterator();
+//      this.getIterator = table.index.getIterator();
 //    }
 //
 //    @Override
 //    public boolean hasNext() {
-//      return iterator.hasNext();
+//      return getIterator.hasNext();
 //    }
 //
 //    @Override
 //    public Row next() {
-//      return iterator.next().getValue();
+//      return getIterator.next().getValue();
 //    }
 //  }
 //
 //  @Override
-//  public Iterator<Row> iterator() {
+//  public Iterator<Row> getIterator() {
 //    return new TableIterator(this);
 //  }
 //}

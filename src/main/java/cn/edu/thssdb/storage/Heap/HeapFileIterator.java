@@ -67,7 +67,7 @@ public class HeapFileIterator implements FileIterator {
     }
 
     /**
-     * Closes the iterator.
+     * Closes the getIterator.
      */
     @Override
     public void close(){

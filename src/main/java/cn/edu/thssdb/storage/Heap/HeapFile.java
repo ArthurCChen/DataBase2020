@@ -104,24 +104,22 @@ public class HeapFile implements FileHandler {
     }
 
 
-    public ArrayList<Page> insertRow(Row t){
+    public ArrayList<Page> insertRow(Row t)throws  Exception{
         ArrayList<Page> affectedPages = new ArrayList<>();
-        try {
-            if (hasPrimaryKeyConstraint) {
-                this.checkPrimaryKeyViolated(t); //Check whether the Row satisfies the Primary Key
-            }
-            HeapPage heapPage = (HeapPage)this.getEmptyPage(0);
-            if (heapPage == null) {
-                HeapPageId heapPageId = new HeapPageId(this.getId(), this.numPages());
-                heapPage = new HeapPage(heapPageId, HeapPage.createEmptyPageData(), tupleDesc);
-                this.writePage(heapPage);
-                heapPage = (HeapPage) Global.gBufferPool().getPage(heapPageId);
-            }
-            heapPage.insertRow(t);
-            affectedPages.add(heapPage);
-        } catch (Exception e){
-            e.printStackTrace();
+
+        if (hasPrimaryKeyConstraint) {
+            this.checkPrimaryKeyViolated(t); //Check whether the Row satisfies the Primary Key
         }
+        HeapPage heapPage = (HeapPage)this.getEmptyPage(0);
+        if (heapPage == null) {
+            HeapPageId heapPageId = new HeapPageId(this.getId(), this.numPages());
+            heapPage = new HeapPage(heapPageId, HeapPage.createEmptyPageData(), tupleDesc);
+            this.writePage(heapPage);
+            heapPage = (HeapPage) Global.gBufferPool().getPage(heapPageId);
+        }
+        heapPage.insertRow(t);
+        affectedPages.add(heapPage);
+
         return affectedPages;
     }
 
@@ -145,21 +143,17 @@ public class HeapFile implements FileHandler {
     }
 
 
-    public ArrayList<Page> deleteRow(Row t) {
+    public ArrayList<Page> deleteRow(Row t) throws  Exception {
         ArrayList<Page> affectedPages = new ArrayList<>();
-        try {
-            PageId pageId = t.getPageId();
-            HeapPage page = (HeapPage) Global.gBufferPool().getPage(pageId);
-            page.deleteRow(t);
-            affectedPages.add(page);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        PageId pageId = t.getPageId();
+        HeapPage page = (HeapPage) Global.gBufferPool().getPage(pageId);
+        page.deleteRow(t);
+        affectedPages.add(page);
         return affectedPages;
     }
 
     @Override
-    public ArrayList<Page> updateRow(Row t) {
+    public ArrayList<Page> updateRow(Row t) throws  Exception{
         throw new InternalException("updateRow ot implemented");
         //        ArrayList<Page> affectedPages = new ArrayList<>();
 //        try {

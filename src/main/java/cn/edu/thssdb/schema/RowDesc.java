@@ -1,5 +1,7 @@
 package cn.edu.thssdb.schema;
 
+import cn.edu.thssdb.utils.Global;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,6 +30,11 @@ public class RowDesc implements Serializable {
         return attrs;
     }
 
+
+    public RowDesc(ArrayList<Column> columns){
+        this(columns, Global.getPrimaryKeysFromColumns(columns));
+
+    }
 
     public RowDesc(ArrayList<Column> columns, ArrayList<String> primaryKeys){
         this.columns = new ArrayList<>(columns);
@@ -67,6 +74,20 @@ public class RowDesc implements Serializable {
                 return i;
         }
         return -1;
+    }
+
+    public boolean equals(Object otherDesc){
+        if(!(otherDesc instanceof RowDesc))
+            return false;
+        RowDesc otherRowDesc = (RowDesc) otherDesc;
+        if(getColumnSize() != otherRowDesc.getColumnSize()){
+            return false;
+        }
+        for (int i = 0; i < getColumnSize(); i ++){
+            if(!get(i).equals(otherRowDesc.get(i)))
+                return false;
+        }
+        return true;
     }
 
     public int columnName2Index(String tableName, String columnName){

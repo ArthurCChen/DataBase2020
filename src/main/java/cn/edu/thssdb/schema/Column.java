@@ -12,17 +12,22 @@ public class Column implements Comparable<Column>, Serializable {
 
   private String name;
   private ColumnType type;
-  private int primary;
+  private boolean primary;
   private boolean notNull;
   private int maxLength;
   public String tableName;
 
-  static public int PRIMARY;
-  static public int NOT_PRIMARY;
+  static public boolean PRIMARY;
+  static public boolean NOT_PRIMARY;
 
   static {
-    NOT_PRIMARY = 0;
-    PRIMARY = 1;
+    NOT_PRIMARY = false;
+    PRIMARY = true;
+  }
+
+  public Column(String name, ColumnType type, boolean primacy ,boolean notNull, int maxLength){
+    this(name, type, notNull, maxLength);
+    this.primary = primacy;
   }
 
   public Column(String name, ColumnType type, boolean notNull, int maxLength) {
@@ -50,7 +55,7 @@ public class Column implements Comparable<Column>, Serializable {
     return notNull;
   }
 
-  public void setPrimary(int primary) {
+  public void setPrimary(boolean primary) {
     this.primary = PRIMARY;
   }
 
@@ -59,7 +64,7 @@ public class Column implements Comparable<Column>, Serializable {
     if(!(obj instanceof  Column))
       return false;
     Column other = (Column)obj;
-    return (type == other.type)  && (notNull == other.notNull) && (maxLength == other.maxLength);
+    return (primary == other.primary) && (type == other.type)  && (notNull == other.notNull) && (maxLength == other.maxLength);
   }
 
   @Override
@@ -82,7 +87,7 @@ public class Column implements Comparable<Column>, Serializable {
     return stringBuilder.toString();
   }
 
-  public int getPrimary() {
+  public boolean getPrimary() {
     return primary;
   }
 

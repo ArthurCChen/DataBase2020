@@ -111,28 +111,33 @@ public class BufferPool {
         }
     }
 
-    public void operateRow(Integer tid, Row row, FileOperation op){
-        Table table = Global.getTableFromTid(tid);
-        FileHandler file = table.getFileHandler();
-        ArrayList<Page> dirtyPages = op.operate(file, row);
-        for(Page page: dirtyPages){
-            page.markDirty(true);
-            if(op instanceof  InsertOperation){
-                pageMap.put(page.getId(), page);
+    public boolean operateRow(Integer tid, Row row, FileOperation op){
+        try {
+            Table table = Global.getTableFromTid(tid);
+            FileHandler file = table.getFileHandler();
+            ArrayList<Page> dirtyPages = op.operate(file, row);
+            for (Page page : dirtyPages) {
+                page.markDirty(true);
+                if (op instanceof InsertOperation) {
+                    pageMap.put(page.getId(), page);
+                }
             }
+            return true;
+        }catch (Exception e){
+            return false;
         }
     }
 
 
-    public void insertRow(Integer tid, Row row){
-        operateRow(tid, row, new InsertOperation());
+    public boolean insertRow(Integer tid, Row row){
+        return operateRow(tid, row, new InsertOperation());
     }
 
-    public void deleteRow(Integer tid, Row row){
-        operateRow(tid, row, new DeleteOperation());
+    public boolean deleteRow(Integer tid, Row row){
+        return operateRow(tid, row, new DeleteOperation());
     }
 
-    public void updateRow(Integer tid, Row row) {
-        operateRow(tid, row, new UpdateOperation());
+    public boolean updateRow(Integer tid, Row row) {
+        return operateRow(tid, row, new UpdateOperation());
     }
 }

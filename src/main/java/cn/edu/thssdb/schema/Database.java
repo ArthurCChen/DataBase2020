@@ -39,20 +39,30 @@ public class Database {
   }
 
 
-  public void create(String tableName, RowDesc desc, TableInfo info){
+  public void create(String tableName, ArrayList<Column> columns) throws   Exception{
+    ArrayList<String> primaryNames = new ArrayList<>();
+    for (int i = 0; i < columns.size(); i ++){
+      if(columns.get(i).getPrimary()){
+        primaryNames.add(columns.get(i).getName());
+      }
+    }
+      create(tableName, columns, primaryNames);
+  }
+
+  public void create(String tableName, RowDesc desc, TableInfo info) throws Exception{
     create(tableName, desc.getColumns(), desc.getPrimaryNames(), info);
   }
 
   // 默认新增,添加为(0,0)
-  public void create(String tableName, ArrayList<Column> columns, ArrayList<String> primaryNames){
+  public void create(String tableName, ArrayList<Column> columns, ArrayList<String> primaryNames) throws Exception{
     TableInfo tableInfo = new TableInfo();
     create(tableName, columns, primaryNames, tableInfo);
   }
 
-  public void create(String tableName, ArrayList<Column> columns, ArrayList<String> primaryNames, TableInfo info) {
+  public void create(String tableName, ArrayList<Column> columns, ArrayList<String> primaryNames, TableInfo info) throws Exception{
     // TODO
     if(getTable(tableName) != null){
-      throw new InternalException("already exist");
+      throw new Exception("already exist");
 
     }else{
       File diskFile = new File(
@@ -75,11 +85,11 @@ public class Database {
     }
   }
 
-  public void drop(String tableName) {
+  public void drop(String tableName) throws Exception{
 
     Table table = this.getTable(tableName);
     if(table == null){
-
+      throw new Exception("cannot found table");
     }else{
       table.getDiskFile().delete();
       Integer id = table.getId();
@@ -92,7 +102,7 @@ public class Database {
     // TODO result
   }
 
-  public void dropAll(){
+  public void dropAll() throws Exception{
     for(String tableName : this.tablename2Desc.keySet())
       drop(tableName);
   }

@@ -8,7 +8,7 @@ import cn.edu.thssdb.storage.operation.FileOperation;
 import java.util.ArrayList;
 
 public class InsertOperation implements FileOperation {
-    public ArrayList<Page> operate(FileHandler file, Row row){
+    public ArrayList<Page> operate(FileHandler file, Row row)throws Exception{
         return file.insertRow(row);
     }
 }

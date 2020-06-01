@@ -1,8 +1,8 @@
 package cn.edu.thssdb.schema;
 
-import cn.edu.thssdb.storage.Page;
 import cn.edu.thssdb.storage.PageId;
 import cn.edu.thssdb.type.ColumnValue;
+import cn.edu.thssdb.type.StringValue;
 import cn.edu.thssdb.type.ValueFactory;
 
 import java.io.DataOutputStream;
@@ -17,7 +17,7 @@ public class Row implements Serializable {
   private PageId pageId;
   private int rowId;
 
-  public Row(Entry[] entries) {
+  private Row(Entry[] entries) {
     this.entries = new ArrayList<>(Arrays.asList(entries));
   }
 
@@ -35,10 +35,16 @@ public class Row implements Serializable {
     return this.getEntries().get(i).value;
   }
 
-  public boolean matchValue(String attr, Object otherVal){
+  public boolean matchValue(String attr, Comparable otherVal){
     int index = rowDesc.columnName2Index(attr);
     return getColumnValue(index).getValue().equals(otherVal);
   }
+
+  public boolean matchValue(String attr, ColumnValue otherVal){
+    int index = rowDesc.columnName2Index(attr);
+    return getColumnValue(index).equals(otherVal);
+  }
+
 
   public RowDesc getRowDesc() {
     return rowDesc;
@@ -62,7 +68,7 @@ public class Row implements Serializable {
         Column item = desc.get(i);
         String attr = desc.get(i).getName();
         if(hashMap.containsKey(attr)){
-          ColumnValue val = ValueFactory.getField(hashMap.get(attr), desc.get(i).getType(), desc.get(i).getMaxLength());
+          ColumnValue val = ValueFactory.getValue(hashMap.get(attr), desc.get(i).getType(), desc.get(i).getMaxLength());
           setValue(i, val);
         }else if(item.getPrimary() == Column.PRIMARY || item.isNotNull()){
           throw new Exception("not satisfy the constrain");

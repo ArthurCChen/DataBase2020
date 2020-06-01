@@ -174,7 +174,7 @@ public class HeapPage implements Page {
         if (this.getNumEmptySlots() == 0) {
             throw new InternalException("page is full");
         }
-        if (!t.getRowDesc().equals(this.td)) {
+        if (!this.td.equals(t.getRowDesc())) {
             throw new InternalException("tupledesc is mismatch");
         }
         int i = this.nextEmptySlotNum();

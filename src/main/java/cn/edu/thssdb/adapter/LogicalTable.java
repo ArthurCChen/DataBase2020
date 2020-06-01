@@ -1,4 +1,8 @@
-package cn.edu.thssdb.schema;
+package cn.edu.thssdb.adapter;
+
+import cn.edu.thssdb.schema.Column;
+import cn.edu.thssdb.schema.Entry;
+import cn.edu.thssdb.schema.Row;
 
 import java.util.ArrayList;
 

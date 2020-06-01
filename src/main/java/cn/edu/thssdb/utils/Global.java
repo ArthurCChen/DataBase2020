@@ -1,5 +1,6 @@
 package cn.edu.thssdb.utils;
 
+import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Manager;
 import cn.edu.thssdb.schema.Table;
 import cn.edu.thssdb.storage.BufferPool;
@@ -125,5 +126,15 @@ public class Global {
     public static BufferPool getInstance(){
       return INSTANCE;
     }
+
+  }
+
+  static public ArrayList<String> getPrimaryKeysFromColumns(ArrayList<Column> columns){
+    ArrayList<String> primaryKeys = new ArrayList<>();
+    for(Column column:columns){
+      if(column.getPrimary())
+        primaryKeys.add(column.getName());
+    }
+    return primaryKeys;
   }
 }

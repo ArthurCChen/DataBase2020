@@ -1,14 +1,15 @@
 import cn.edu.thssdb.schema.*;
 import cn.edu.thssdb.storage.FileIterator;
 import cn.edu.thssdb.type.ColumnType;
-import cn.edu.thssdb.utils.Global;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.lang.reflect.Array;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import static org.junit.Assert.*;
 
 public class TableTest {
     Manager manager;
@@ -57,8 +58,7 @@ public class TableTest {
         manager = Manager.getInstance();
         manager.recover();
         manager.useDatabase("test");
-        manager.getCurrentDatabase().drop("test");
-
+        assertThrows(Exception.class, ()->manager.getCurrentDatabase().drop("test") );
         manager.exit();
     }
 
@@ -68,7 +68,7 @@ public class TableTest {
         manager.recover();
         manager.useDatabase("test");
         Table table = manager.getCurrentDatabase().getTable("test");
-        FileIterator iter = table.iterator();
+        FileIterator iter = table.getIterator();
         ArrayList<Row> rows = new ArrayList<>();
         while(iter.hasNext()){
             Row row = iter.next();
@@ -91,7 +91,7 @@ public class TableTest {
         ArrayList<Object> val = new ArrayList<>(Arrays.asList(6, "chuchong"));
         table.insertRow(attrs, val);
 
-        FileIterator iter = table.iterator();
+        FileIterator iter = table.getIterator();
         ArrayList<Row> rows = new ArrayList<>();
         while(iter.hasNext()){
             Row row = iter.next();
@@ -110,7 +110,7 @@ public class TableTest {
         manager.useDatabase("test");
         Table table = manager.getCurrentDatabase().getTable("test");
 
-        FileIterator iter = table.iterator();
+        FileIterator iter = table.getIterator();
         while(iter.hasNext()){
             Row row = iter.next();
             if(row.matchValue("id", 6)){

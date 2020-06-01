@@ -3,7 +3,7 @@ package cn.edu.thssdb.type;
 import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
 
 public class ValueFactory {
-    public static ColumnValue getField(Object value){
+    public static ColumnValue getValue(Object value){
         if(value instanceof  ColumnValue)
             return (ColumnValue)value;
         else if(value instanceof Integer){
@@ -36,7 +36,7 @@ public class ValueFactory {
     }
 
 
-    public static ColumnValue getField(Object value, ColumnType type, int maxLen){
+    public static ColumnValue getValue(Object value, ColumnType type, int maxLen){
         if(value instanceof ColumnValue){
             ColumnValue colVal = (ColumnValue) value;
             switch (colVal.getType()){
@@ -51,13 +51,13 @@ public class ValueFactory {
                 if(value instanceof  Long){
                     return new IntValue(((Long)value).intValue());
                 }else if(value instanceof Integer){
-                    return getField(value);
+                    return getValue(value);
                 }else{
                     throw new InternalException("cast error");
                 }
             case LONG:
                 if(value instanceof Long){
-                    return getField(value);
+                    return getValue(value);
                 }else if(value instanceof Integer){
                     return new LongValue(((Integer)value).longValue());
                 }else{
@@ -65,7 +65,7 @@ public class ValueFactory {
                 }
             case DOUBLE:
                 if(value instanceof Double){
-                    return getField(value);
+                    return getValue(value);
                 }else if(value instanceof Float){
                     return new DoubleValue(((Float)value).doubleValue());
                 }else{
@@ -73,7 +73,7 @@ public class ValueFactory {
                 }
             case FLOAT:
                 if(value instanceof Float){
-                    return getField(value);
+                    return getValue(value);
                 }else if(value instanceof Double){
                     return new FloatValue(((Double)value).floatValue());
                 }else{

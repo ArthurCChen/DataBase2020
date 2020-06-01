@@ -119,7 +119,7 @@ public class Manager {
 
 
 
-  private void deleteDatabase(String databaseName) {
+  private void deleteDatabase(String databaseName) throws Exception{
     // TODO
     try{
       lock.writeLock().lock();
@@ -137,7 +137,7 @@ public class Manager {
 //  }
 
 //  public String getDefaultDatabaseName(){
-//    return databases.keySet().iterator().next();
+//    return databases.keySet().getIterator().next();
 //  }
 
   public Database getCurrentDatabase(){

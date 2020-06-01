@@ -87,41 +87,39 @@ public class Table  {
         return desc.getPrimaryNames();
     }
 
-    public void insertRow(Row row){
-        try{
-            tableInfo.autoIncrement ++;
-            tableInfo.count ++;
-            Global.gBufferPool().insertRow(this.tid, row);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
+    public boolean insertRow(Row row){
+        tableInfo.autoIncrement ++;
+        tableInfo.count ++;
+        return Global.gBufferPool().insertRow(this.tid, row);
     }
 
-    public void insertRow(ArrayList<String> attrNames, ArrayList<Object> values) {
+    public boolean insertRow(ArrayList<String> attrNames, ArrayList<Object> values) {
         try {
             Row row = new Row(this.desc, attrNames, values);
-            insertRow(row);
+            return insertRow(row);
         }catch (Exception e){
             e.printStackTrace();
+            return false;
         }
     }
 
-    public FileIterator iterator(){
+    public FileIterator getIterator(){
         FileIterator iterator = fileHandler.iterator();
         iterator.open();
         return iterator;
     }
 
 
-    // warning should not use this, because delete is a filter op !!!
-    public void deleteRow(Row row){
-        fileHandler.deleteRow(row);
+    //
+    public boolean deleteRow(Row row){
+        this.tableInfo.count --;
+        return Global.gBufferPool().deleteRow(this.tid, row);
     }
 
     // warning should never use it !!!
     private Row search(Entry primary_key){
         primaryIndex = desc.getPrimaryIndex().get(0);
-        FileIterator iterator = iterator();
+        FileIterator iterator = getIterator();
         while(iterator.hasNext()){
             Row row = iterator.next();
             if(row.getEntries().get(primaryIndex).equals(primary_key)){
