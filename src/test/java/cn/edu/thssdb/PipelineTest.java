@@ -18,6 +18,7 @@ import org.junit.Test;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
 
@@ -58,7 +59,7 @@ public class PipelineTest {
     public void create_drop_table_test() throws ManagerNotReadyException {
         // create a table, show another table, should abort
         parse("create table test1(i int, j int not null, primary key (i)); show table table1;");
-        assertEquals("SemanticError: table to be shown does not exist.",
+        assertEquals("SemanticError: can not show a non-exist table.",
                 buffer.get());
         // create a table and show it
         parse("create table test1(i int, j int not null, primary key (i)); show table test1;");
@@ -73,5 +74,32 @@ public class PipelineTest {
         assertEquals("", buffer.get());
         parse("drop table test1");
         assertEquals("SemanticError: can not drop a non-exist table.", buffer.get());
+    }
+
+    @Test
+    public void grammar_test() {
+        class LambdaTest {
+            int string = 0;
+
+            Consumer<String> returnConsumer() {
+                return ((s) -> {System.out.println(s);});
+            }
+
+            Consumer<String> returnConsumerWithInstanceVariable() {
+                return ((s) -> {System.out.println(s + string);});
+            }
+
+            Consumer<String> returnConsumerWithLocalFinalVariable() {
+                final String foo = " you there!";
+                return ((s) -> {System.out.println(s + foo);});
+            }
+
+        }
+
+        LambdaTest test = new LambdaTest();
+        test.string = 1;
+        test.returnConsumer().accept("Hello");
+        test.returnConsumerWithInstanceVariable().accept("Hello");
+        test.returnConsumerWithLocalFinalVariable().accept("Hello");
     }
 }

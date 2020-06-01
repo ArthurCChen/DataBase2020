@@ -15,20 +15,21 @@ public class QueryManager implements QueryManagerInterface {
 
     Physical2LogicalInterface storage;
     private LogBuffer logBuffer = null;
-    int current_transaction_id;
-    boolean has_semantic_error;
     private HashSet<LogicalTable> shared;
     private HashSet<LogicalTable> exclusive;
+    private int current_transaction_id;
+    private boolean has_semantic_error;
     // the number of tasks in the queue and not executed
-    private int stacked_tasks;
+    private Integer stacked_tasks;
+
 
     public QueryManager(@NotNull Physical2LogicalInterface storage, @NotNull LogBuffer buffer) {
         this.storage = storage;
         this.logBuffer = buffer;
-        this.current_transaction_id = -1;
-        this.has_semantic_error = false;
         this.shared = new HashSet<>();
         this.exclusive = new HashSet<>();
+        this.current_transaction_id = -1;
+        this.has_semantic_error = false;
         this.stacked_tasks = 0;
     }
 
@@ -80,8 +81,8 @@ public class QueryManager implements QueryManagerInterface {
     }
 
     private void submit_task(BooleanSupplier task) {
-        TaskQueue.get_task_queue().add_task(task);
         stacked_tasks += 1;
+        TaskQueue.get_task_queue().add_task(task);
     }
 
     private boolean is_first_task() {
@@ -90,6 +91,39 @@ public class QueryManager implements QueryManagerInterface {
 
     private void finish_task() {
         stacked_tasks -= 1;
+    }
+
+    // to simplify the code
+    // check semantic error, table existence, check lock,
+    private BooleanSupplier build_task(String tableName, java.util.function.Predicate<LogicalTable> func,
+                                       boolean shared_lock, String error_log) {
+        BooleanSupplier task = () -> {
+            boolean over = false;
+            for (;;) {
+                if (has_semantic_error) {
+                    over = true;
+                    break;
+                }
+                LogicalTable table = storage.get_table(tableName, current_transaction_id);
+                if (table == null) {
+                    if (is_first_task()) {
+                        handle_error(error_log);
+                        over = true;
+                    }
+                    break;
+                }
+                if ((shared_lock && require_shared_lock(table)) ||
+                        (!shared_lock && require_exclusive_lock(table))) {
+                    over = func.test(table);
+                }
+                break;
+            }
+            if (over) {
+                finish_task();
+            }
+            return over;
+        };
+        return task;
     }
 
     @Override
@@ -159,28 +193,11 @@ public class QueryManager implements QueryManagerInterface {
         if (has_semantic_error) {
             return;
         }
-        BooleanSupplier task = () -> {
-            if (has_semantic_error) {
-                finish_task();
-                return true;
-            }
-            LogicalTable table = storage.get_table(tableName, current_transaction_id);
-            if (table == null) {
-                if (is_first_task()) {
-                    finish_task();
-                    handle_error("SemanticError: can not drop a non-exist table.");
-                    return true;
-                }
-                else {
-                    return false;
-                }
-            }
-            if (!require_shared_lock(table)) {
-                return false;
-            }
-            storage.drop_table(tableName, current_transaction_id);
-            return true;
+        java.util.function.Predicate<LogicalTable> func = (LogicalTable table) -> {
+            return storage.drop_table(tableName, current_transaction_id);
         };
+        String error_log = "SemanticError: can not drop a non-exist table.";
+        BooleanSupplier task = build_task(tableName, func, true, error_log);
         submit_task(task);
     }
 
@@ -201,44 +218,49 @@ public class QueryManager implements QueryManagerInterface {
             return;
         }
         BooleanSupplier task = () -> {
-            if (has_semantic_error) {
+            boolean over = false;
+            for (;;) {
+                if (has_semantic_error) {
+                    over = true;
+                    break;
+                }
+                LogicalTable table = storage.get_table(tableName, current_transaction_id);
+                if (table == null) {
+                    if (is_first_task()) {
+                        handle_error("SemanticError: can not show a non-exist table.");
+                        over = true;
+                    }
+                    break;
+                }
+                if (!require_shared_lock(table)) {
+                    over = false;
+                    break;
+                }
+                // now show by print it out
+                ArrayList<Column> columns = table.get_columns();
+                System.out.println("Show table: " + tableName);
+                StringBuilder header = new StringBuilder();
+                header.append("\t");
+                for (Column column : columns) {
+                    header.append(column.getName()).append("\t");
+                }
+                System.out.println(header);
+                for (Row row : table) {
+                    StringBuilder r = new StringBuilder();
+                    r.append("\t");
+                    for (Entry e : row.getEntries()) {
+                        r.append(e.value).append("\t");
+                    }
+                    System.out.println(r);
+                }
+                System.out.println("End table");
+                over = true;
+                break;
+            }
+            if (over) {
                 finish_task();
-                return true;
             }
-            LogicalTable table = storage.get_table(tableName, current_transaction_id);
-            if (table == null) {
-                if (is_first_task()) {
-                    finish_task();
-                    handle_error("SemanticError: can not show a non-exist table.");
-                    return true;
-                }
-                else {
-                    return false;
-                }
-            }
-            if (!require_shared_lock(table)) {
-                return false;
-            }
-            // now show by print it out
-            ArrayList<Column> columns = table.get_columns();
-            System.out.println("Show table: " + tableName);
-            StringBuilder header = new StringBuilder();
-            header.append("\t");
-            for (Column column : columns) {
-                header.append(column.getName()).append("\t");
-            }
-            System.out.println(header);
-            for (Row row : table) {
-                StringBuilder r = new StringBuilder();
-                r.append("\t");
-                for (Entry e : row.getEntries()) {
-                    r.append(e.value).append("\t");
-                }
-                System.out.println(r);
-            }
-            System.out.println("End table");
-            finish_task();
-            return true;
+            return over;
         };
         submit_task(task);
     }
@@ -248,12 +270,8 @@ public class QueryManager implements QueryManagerInterface {
         if (has_semantic_error) {
             return;
         }
-        LogicalTable table = storage.get_table(tableName, current_transaction_id);
-        if (table == null) {
-            this.handle_error("SemanticError: can not insert to a non-exist table.");
-            return;
-        }
 
+//        submit_task(task);
     }
 
     @Override
