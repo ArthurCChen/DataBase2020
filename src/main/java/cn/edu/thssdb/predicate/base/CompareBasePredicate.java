@@ -1,7 +1,6 @@
 package cn.edu.thssdb.predicate.base;
 
 import cn.edu.thssdb.predicate.Operand;
-import cn.edu.thssdb.predicate.base.Predicate;
 import com.sun.istack.internal.NotNull;
 
 /**

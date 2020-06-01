@@ -3,9 +3,9 @@ package cn.edu.thssdb.predicate;
 import cn.edu.thssdb.predicate.base.CompareBasePredicate;
 import cn.edu.thssdb.predicate.base.LogicalBasePredicate;
 import cn.edu.thssdb.predicate.base.PredicateVisitor;
+import cn.edu.thssdb.predicate.compare.*;
 import cn.edu.thssdb.predicate.logical.AndPredicate;
 import cn.edu.thssdb.predicate.logical.OrPredicate;
-import cn.edu.thssdb.predicate.compare.*;
 import cn.edu.thssdb.schema.Entry;
 import cn.edu.thssdb.schema.Row;
 

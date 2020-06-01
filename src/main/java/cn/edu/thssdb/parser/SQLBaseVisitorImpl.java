@@ -20,8 +20,6 @@ import cn.edu.thssdb.predicate.logical.AndPredicate;
 import cn.edu.thssdb.predicate.logical.OrPredicate;
 import cn.edu.thssdb.query.QueryManagerInterface;
 import cn.edu.thssdb.schema.Column;
-import cn.edu.thssdb.schema.Entry;
-import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.VirtualTable;
 import cn.edu.thssdb.type.ColumnType;
 import cn.edu.thssdb.utils.LogBuffer;
@@ -396,7 +394,12 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
     // return a string if not null
     @Override
     public Object visitLiteral_value(SQLParser.Literal_valueContext ctx) {
-        return ctx.NUMERIC_LITERAL().getText();
+        if (ctx.NUMERIC_LITERAL() != null) {
+            return ctx.NUMERIC_LITERAL().getText();
+        }
+        else {
+            return ctx.STRING_LITERAL().getText();
+        }
     }
 
     @Override

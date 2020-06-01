@@ -2,7 +2,6 @@ package cn.edu.thssdb.type;
 
 import cn.edu.thssdb.utils.Global;
 
-import javax.xml.bind.annotation.XmlElementDecl;
 import java.io.DataOutputStream;
 import java.io.IOException;
 

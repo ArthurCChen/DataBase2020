@@ -1,8 +1,6 @@
 package cn.edu.thssdb.type;
 
-import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.utils.Global;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 
 public abstract class NumberValue implements ColumnValue{
     private static final long serialVersionUID = 1L;

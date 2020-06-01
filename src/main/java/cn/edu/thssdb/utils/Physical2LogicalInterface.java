@@ -1,7 +1,9 @@
 package cn.edu.thssdb.utils;
 
 import cn.edu.thssdb.adapter.LogicalTable;
-import cn.edu.thssdb.schema.*;
+import cn.edu.thssdb.schema.Column;
+import cn.edu.thssdb.schema.Entry;
+import cn.edu.thssdb.schema.Row;
 
 import java.util.ArrayList;
 

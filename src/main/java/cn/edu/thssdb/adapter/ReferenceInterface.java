@@ -1,11 +1,10 @@
 package cn.edu.thssdb.adapter;
 
 import cn.edu.thssdb.schema.*;
-
-import java.util.ArrayList;
-
 import cn.edu.thssdb.storage.FileIterator;
 import cn.edu.thssdb.utils.Physical2LogicalInterface;
+
+import java.util.ArrayList;
 
 // TODO:这个实现用来展现如何使用
 // TODO:实现事务

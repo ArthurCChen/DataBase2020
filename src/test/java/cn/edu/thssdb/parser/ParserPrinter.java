@@ -3,6 +3,7 @@ package cn.edu.thssdb.parser;
 import cn.edu.thssdb.predicate.Operand;
 import cn.edu.thssdb.predicate.base.Predicate;
 import cn.edu.thssdb.query.QueryManagerInterface;
+import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.VirtualTable;
 
 import java.util.ArrayList;
@@ -64,7 +65,7 @@ public class ParserPrinter implements QueryManagerInterface {
     }
 
     @Override
-    public void insertRow(String tableName, ArrayList<Column> columns, ArrayList<Row> entries) {
+    public void insertRow(String tableName, ArrayList<Column> columns, ArrayList<ArrayList<String>> entries) {
         result = String.format("insertEntry called, table name: %s, columns: %s, entries: %s", tableName, columns, entries);
     }
 

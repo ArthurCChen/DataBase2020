@@ -1,7 +1,5 @@
 package cn.edu.thssdb.type;
 
-import com.sun.org.apache.xpath.internal.operations.Number;
-
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.Serializable;

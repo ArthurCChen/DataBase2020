@@ -1,7 +1,7 @@
+import cn.edu.thssdb.adapter.LogicalTable;
 import cn.edu.thssdb.adapter.ReferenceInterface;
 import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Entry;
-import cn.edu.thssdb.adapter.LogicalTable;
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.RowDesc;
 import cn.edu.thssdb.type.ColumnType;
@@ -10,7 +10,6 @@ import cn.edu.thssdb.utils.Physical2LogicalInterface;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 

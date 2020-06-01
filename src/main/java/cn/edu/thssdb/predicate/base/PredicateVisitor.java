@@ -1,8 +1,8 @@
 package cn.edu.thssdb.predicate.base;
 
+import cn.edu.thssdb.predicate.compare.*;
 import cn.edu.thssdb.predicate.logical.AndPredicate;
 import cn.edu.thssdb.predicate.logical.OrPredicate;
-import cn.edu.thssdb.predicate.compare.*;
 
 /**
  * An interface for predicate tree visitor.

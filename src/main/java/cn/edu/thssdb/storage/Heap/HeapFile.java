@@ -3,14 +3,13 @@ package cn.edu.thssdb.storage.Heap;
 
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.RowDesc;
-import cn.edu.thssdb.storage.*;
-import cn.edu.thssdb.storage.Heap.HeapFileIterator;
-import cn.edu.thssdb.storage.Heap.HeapPage;
-import cn.edu.thssdb.storage.Heap.HeapPageId;
+import cn.edu.thssdb.storage.FileHandler;
+import cn.edu.thssdb.storage.FileIterator;
+import cn.edu.thssdb.storage.Page;
+import cn.edu.thssdb.storage.PageId;
 import cn.edu.thssdb.type.ColumnValue;
 import cn.edu.thssdb.utils.Global;
 import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
-import sun.security.action.GetLongAction;
 
 import java.io.File;
 import java.io.IOException;

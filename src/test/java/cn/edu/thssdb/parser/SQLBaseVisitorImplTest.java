@@ -55,9 +55,8 @@ public class SQLBaseVisitorImplTest {
                 buffer.get());
         // correct
         parse("create table test1(i int, j int not null, primary key (i))");
-        assertEquals("createTable called, table name: test1, columns: " +
-                        "[Column:{name: i, type: INT, primary: true, notNull: true, maxLength: 0}, " +
-                        "Column:{name: j, type: INT, primary: false, notNull: true, maxLength: 0}]",
+        assertEquals("createTable called, table name: " +
+                        "test1, columns: [i(INT), j(INT not null)]",
                 printer.getResult());
     }
 
@@ -101,10 +100,8 @@ public class SQLBaseVisitorImplTest {
                 buffer.get());
         // correct number of values
         parse("insert into table1(a, b) values (1, 2)");
-        assertEquals("insertEntry called, table name: table1, columns: " +
-                        "[Column:{name: a, type: null, primary: false, notNull: false, maxLength: 0}, " +
-                        "Column:{name: b, type: null, primary: false, notNull: false, maxLength: 0}], " +
-                        "entries: [1, 2]",
+        assertEquals("insertEntry called, table name: table1, " +
+                        "columns: [a(null), b(null)], entries: [[1, 2]]",
                 printer.getResult());
         // wrong field
         parse("insert into table1 values (1,2,3,ha)");
@@ -114,7 +111,7 @@ public class SQLBaseVisitorImplTest {
         parse("insert into table1 values (1,2,3,'ha')");
         assertEquals("insertEntry called, table name: table1, " +
                         "columns: null, " +
-                        "entries: [1, 2, 3, 'ha']",
+                        "entries: [[1, 2, 3, 'ha']]",
                 printer.getResult());
     }
 
@@ -122,8 +119,7 @@ public class SQLBaseVisitorImplTest {
     public void select() throws ManagerNotReadyException {
         // correct
         parse("select a from table1");
-        assertEquals("select called, result columns: " +
-                "[Column:{name: a, type: null, primary: false, notNull: false, maxLength: 0}]," +
+        assertEquals("select called, result columns: [a(null)]," +
                 " virtual table: VirtualTable: {tables: [table1], condition: null}, " +
                 "conditions: null",
                 printer.getResult());
@@ -135,11 +131,9 @@ public class SQLBaseVisitorImplTest {
         assertEquals("NotImplementError: 'all' not implemented.", buffer.get());
         // multiple columns
         parse("select a, b from table1");
-        assertEquals("select called, result columns: " +
-                "[Column:{name: a, type: null, primary: false, notNull: false, maxLength: 0}, " +
-                "Column:{name: b, type: null, primary: false, notNull: false, maxLength: 0}], " +
-                "virtual table: VirtualTable: {tables: [table1], condition: null}, " +
-                "conditions: null", printer.getResult());
+        assertEquals("select called, result columns: [a(null), b(null)], " +
+                "virtual table: VirtualTable: {tables: [table1], " +
+                "condition: null}, conditions: null", printer.getResult());
         // multiple query tables
         parse("select a from table1, table2");
         assertEquals("NotImplementError: query from more than one table not implemented.",

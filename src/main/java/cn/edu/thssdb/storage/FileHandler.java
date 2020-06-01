@@ -1,7 +1,7 @@
 package cn.edu.thssdb.storage;
 
-import cn.edu.thssdb.storage.Page;
-import cn.edu.thssdb.schema.*;
+import cn.edu.thssdb.schema.Row;
+import cn.edu.thssdb.schema.RowDesc;
 
 import java.util.ArrayList;
 

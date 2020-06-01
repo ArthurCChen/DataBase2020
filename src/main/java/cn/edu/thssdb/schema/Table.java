@@ -5,8 +5,9 @@ import cn.edu.thssdb.storage.FileIterator;
 import cn.edu.thssdb.storage.Heap.HeapFile;
 import cn.edu.thssdb.utils.Global;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Table  {

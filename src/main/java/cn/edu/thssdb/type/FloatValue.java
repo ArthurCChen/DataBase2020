@@ -1,7 +1,5 @@
 package cn.edu.thssdb.type;
 
-import cn.edu.thssdb.schema.Column;
-
 import java.io.DataOutputStream;
 import java.io.IOException;
 

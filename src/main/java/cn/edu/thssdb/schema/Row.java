@@ -2,7 +2,6 @@ package cn.edu.thssdb.schema;
 
 import cn.edu.thssdb.storage.PageId;
 import cn.edu.thssdb.type.ColumnValue;
-import cn.edu.thssdb.type.StringValue;
 import cn.edu.thssdb.type.ValueFactory;
 
 import java.io.DataOutputStream;

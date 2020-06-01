@@ -1,10 +1,10 @@
 package cn.edu.thssdb.memory_db;
 
 import cn.edu.thssdb.adapter.LogicalTable;
-import cn.edu.thssdb.schema.*;
-import javafx.util.Pair;
+import cn.edu.thssdb.schema.Column;
+import cn.edu.thssdb.schema.Entry;
+import cn.edu.thssdb.schema.Row;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Iterator;
 
