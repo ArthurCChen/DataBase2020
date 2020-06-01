@@ -18,6 +18,7 @@ import org.junit.Test;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Scanner;
 import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
@@ -97,7 +98,7 @@ public class PipelineTest {
 
         // delete with wrong condition
         parse("delete from test1 where i = k;");
-        assertEquals("SemanticError: table test1 does not have column: k.", buffer.get());
+        assertEquals("SemanticError: table does not have column: k.", buffer.get());
 
         // delete with constant with different type
         parse("delete from test1 where 2.5 = 'ha';");
@@ -115,5 +116,33 @@ public class PipelineTest {
         parse("delete from test1 where j=4;show table test1;");
         assertEquals("", buffer.get());
 
+    }
+
+    @Test
+    public void select_test() throws ManagerNotReadyException {
+        // create a table, insert two rows, and show it
+        parse("create table test1(i int, j int not null, primary key (i));" +
+                "insert into test1 values (1, 2);" +
+                "insert into test1 (i, j) values (3,4);" +
+                "insert into test1 (i, j) values (2,4);" +
+                "insert into test1 values (5,5);" +
+                "show table test1;");
+        assertEquals("", buffer.get());
+
+        parse("create table test2(i int, j int not null, primary key (i));" +
+                "insert into test2 values (1, 2);" +
+                "insert into test2 (i, j) values (3,4);" +
+                "insert into test2 (i, j) values (2,4);" +
+                "insert into test2 values (5,5);" +
+                "show table test2;");
+        assertEquals("", buffer.get());
+
+        parse("select test1.i, test2.j from test1 join test2 on test1.i = test2.i;");
+        assertEquals("", buffer.get());
+    }
+
+    @Test
+    public void show() {
+//        Scanner myObj = new Scanner(System.in);
     }
 }

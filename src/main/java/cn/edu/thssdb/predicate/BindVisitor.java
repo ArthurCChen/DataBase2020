@@ -8,6 +8,7 @@ import cn.edu.thssdb.predicate.logical.AndPredicate;
 import cn.edu.thssdb.predicate.logical.OrPredicate;
 import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Entry;
+import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.type.ColumnType;
 import cn.edu.thssdb.type.ValueFactory;
 import cn.edu.thssdb.utils.LogBuffer;
@@ -36,14 +37,13 @@ public class BindVisitor implements PredicateVisitor {
     // from column name to the type
     private HashMap<String, ColumnType> column_type_map;
 
-    public BindVisitor(LogBuffer buffer, ArrayList<Column> columns, String table_name) {
+    public BindVisitor(LogBuffer buffer, ArrayList<Column> columns) {
         this.buffer = buffer;
         this.column_name_map = new HashMap<>();
         this.column_type_map = new HashMap<>();
-        this.table_name = table_name;
         for (int i = 0; i < columns.size(); i++) {
-            this.column_name_map.put(table_name + "." + columns.get(i).getName(), i);
-            this.column_type_map.put(table_name + "." + columns.get(i).getName(),
+            this.column_name_map.put(columns.get(i).getFullName(), i);
+            this.column_type_map.put(columns.get(i).getFullName(),
                     columns.get(i).getType());
             if (column_name_map.containsKey(columns.get(i).getName())) {
                 // has conflict
@@ -61,6 +61,14 @@ public class BindVisitor implements PredicateVisitor {
             }
         }
         has_semantic_error = false;
+    }
+
+    public Row collect(ArrayList<Column> columns, Row original) {
+        ArrayList<Entry> result = new ArrayList<>();
+        for (Column column : columns) {
+            result.add(original.getEntries().get(column_name_map.get(column.getFullName())));
+        }
+        return new Row(result);
     }
 
     public boolean has_error() {
@@ -97,8 +105,8 @@ public class BindVisitor implements PredicateVisitor {
                 type = get_column_type(lhs.get_full_name());
             }
             else {
-                this.buffer.write(String.format("SemanticError: table %s does not have column: %s or has conflict.",
-                        this.table_name, lhs.get_full_name()));
+                this.buffer.write(String.format("SemanticError: table does not have column: %s or has conflict.",
+                        lhs.get_full_name()));
                 has_semantic_error = true;
             }
         }
@@ -118,8 +126,8 @@ public class BindVisitor implements PredicateVisitor {
                 }
             }
             else {
-                this.buffer.write(String.format("SemanticError: table %s does not have column: %s.",
-                        this.table_name, rhs.get_full_name()));
+                this.buffer.write(String.format("SemanticError: table does not have column: %s.",
+                        rhs.get_full_name()));
                 has_semantic_error = true;
             }
         }

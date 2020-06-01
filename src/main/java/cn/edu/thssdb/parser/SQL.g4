@@ -225,6 +225,8 @@ K_USER : U S E R;
 K_VALUES : V A L U E S;
 K_VIEW : V I E W;
 K_WHERE : W H E R E;
+//K_START : S T A R T;
+//K_TRANSACTION : T R A N S A C T I O N;
 
 IDENTIFIER :
     [a-zA-Z_] [a-zA-Z_0-9]* ;

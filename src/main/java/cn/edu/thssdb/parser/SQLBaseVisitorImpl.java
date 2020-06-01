@@ -89,7 +89,9 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
             if (object == null) {
                 return null;
             }
-            columns.add((Column) object);
+            Column c = (Column) object;
+            c.setTableName(table_name);
+            columns.add(c);
         }
         // when primary key is specified at the end of command
         if (ctx.table_constraint() != null) {

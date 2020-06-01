@@ -16,8 +16,12 @@ public class Row implements Serializable {
   private PageId pageId;
   private int rowId;
 
-  private Row(Entry[] entries) {
+  public Row(Entry[] entries) {
     this.entries = new ArrayList<>(Arrays.asList(entries));
+  }
+
+  public Row(ArrayList<Entry> entries) {
+    this.entries = entries;
   }
 
   private Row(RowDesc desc){
