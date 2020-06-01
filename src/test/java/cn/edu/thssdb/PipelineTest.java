@@ -82,6 +82,8 @@ public class PipelineTest {
         parse("create table test1(i int, j int not null, primary key (i));" +
                 "insert into test1 values (1, 2);" +
                 "insert into test1 (i, j) values (3,4);" +
+                "insert into test1 (i, j) values (2,4);" +
+                "insert into test1 values (5,5);" +
                 "show table test1;");
         assertEquals("", buffer.get());
 
@@ -92,5 +94,26 @@ public class PipelineTest {
         // insert duplicate row
         parse("insert into test1 values (1, 2);");
         assertEquals("SemanticError: fail to insert row 1, 2 into table test1.", buffer.get());
+
+        // delete with wrong condition
+        parse("delete from test1 where i = k;");
+        assertEquals("SemanticError: table test1 does not have column: k.", buffer.get());
+
+        // delete with constant with different type
+        parse("delete from test1 where 2.5 = 'ha';");
+        assertEquals("SemanticError: 2.5 and 'ha' have different types.", buffer.get());
+
+        // delete row (1,2)
+        parse("delete from test1 where i=1 && j=2 && i<>2;");
+        assertEquals("", buffer.get());
+
+        // delete row (5,5)
+        parse("delete from test1 where i=j;");
+        assertEquals("", buffer.get());
+
+        // delete row (?,4)
+        parse("delete from test1 where j=4;show table test1;");
+        assertEquals("", buffer.get());
+
     }
 }

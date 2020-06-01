@@ -101,7 +101,7 @@ public class SQLBaseVisitorImplTest {
         // correct number of values
         parse("insert into table1(a, b) values (1, 2)");
         assertEquals("insertEntry called, table name: table1, " +
-                        "columns: [a(null), b(null)], entries: [[1, 2]]",
+                        "columns: [a, b], entries: [[1, 2]]",
                 printer.getResult());
         // wrong field
         parse("insert into table1 values (1,2,3,ha)");
@@ -148,6 +148,10 @@ public class SQLBaseVisitorImplTest {
 
     @Test
     public void condition() throws ManagerNotReadyException {
+        // compare with number
+        parse("update table1 set a = 2 where b <> 2");
+        assertEquals("update called, table name: table1, value: a, " +
+                "condition: (Column operand: b!=Constant operand: 2)", printer.getResult());
         // logical
         parse("update table1 set a = 2 where a = b && b = c && c = d || d = e");
         assertEquals("update called, table name: table1, value: a, " +

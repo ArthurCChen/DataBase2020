@@ -5,29 +5,36 @@ import cn.edu.thssdb.schema.Row;
 
 /**
  * Leaf node of the predicate tree
+ * When bind:
+ *     for constant:
+ *         set entry value
+ *     for column:
+ *         set index
  */
 public class Operand {
 
-    private int index = -1;
-
+    public int index = -1;
     public String value_str = null;
     public String name = null;
     public String table_name = null;
+
     public boolean bind = false;
     public Entry value = null;
-    public Boolean is_number = null;
     public boolean is_constant;
 
     public Operand(boolean is_constant) {
         this.is_constant = is_constant;
     }
 
-    public Entry getValue() {
-        return this.value;
-    }
 
     public void setIndex(int index) {
+        bind = true;
         this.index = index;
+    }
+
+    public void setEntry(Entry entry) {
+        bind = true;
+        this.value = entry;
     }
 
     Entry getValue(Row row) {
@@ -51,11 +58,19 @@ public class Operand {
 
     @Override
     public String toString() {
+        StringBuilder builder = new StringBuilder();
         if (is_constant) {
-            return String.format("Constant operand: %s", value.toString());
+            builder.append(String.format("Constant operand: %s", value_str));
+            if (bind) {
+                builder.append(" with value ").append(value.toString());
+            }
         }
         else {
-            return String.format("Column operand: %s", name);
+            builder.append(String.format("Column operand: %s", name));
+            if (bind) {
+                builder.append(" with index ").append(index);
+            }
         }
+        return builder.toString();
     }
 }

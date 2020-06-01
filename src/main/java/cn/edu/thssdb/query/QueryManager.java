@@ -1,6 +1,8 @@
 package cn.edu.thssdb.query;
 
 import cn.edu.thssdb.adapter.LogicalTable;
+import cn.edu.thssdb.predicate.BindVisitor;
+import cn.edu.thssdb.predicate.EvaluateVisitor;
 import cn.edu.thssdb.predicate.Operand;
 import cn.edu.thssdb.predicate.base.Predicate;
 import cn.edu.thssdb.schema.*;
@@ -188,6 +190,39 @@ public class QueryManager implements QueryManagerInterface {
         if (has_semantic_error) {
             return;
         }
+        java.util.function.Predicate<LogicalTable> func = (LogicalTable table) -> {
+            BindVisitor binder = new BindVisitor(logBuffer, table.get_columns(), tableName);
+            predicate.accept(binder);
+            if (binder.has_error()) {
+                handle_error("");
+                return true;
+            }
+            EvaluateVisitor evaluator = new EvaluateVisitor();
+            // a list of primary to be deleted
+            ArrayList<Entry> primary = new ArrayList<>();
+            ArrayList<Column> columns = table.get_columns();
+            int primary_index = -1;
+            for (int i = 0; i < columns.size(); i++) {
+                if (columns.get(i).getPrimary()) {
+                    primary_index = i;
+                    break;
+                }
+            }
+            for (Row row : table) {
+                evaluator.bindRow(row);
+                predicate.accept(evaluator);
+                if (evaluator.getAnswer()) {
+                    primary.add(row.getEntries().get(primary_index));
+                }
+            }
+            for (Entry p : primary) {
+                storage.delete_row(tableName, p, current_transaction_id);
+            }
+            return true;
+        };
+        String error_log = "SemanticError: can not find table " + tableName + ".";
+        BooleanSupplier task = build_task(tableName, func, false, error_log);
+        submit_task(task);
     }
 
     @Override
@@ -265,22 +300,19 @@ public class QueryManager implements QueryManagerInterface {
                 names = attr_names;
             }
             ArrayList<ArrayList<Object>> rows = new ArrayList<>();
-            boolean success = true;
             for (ArrayList<Object> entry : entries) {
                 try {
                     Row row = new Row(rowDesc, names, entry);
                     if (!storage.insert_row(tableName, row, current_transaction_id)) {
                         handle_error("SemanticError: fail to insert row " + row + " into table " + tableName + ".");
-                        success = false;
                         break;
                     }
                 } catch (Exception e) {
                     handle_error("SemanticError: convert fail.");
-                    success = false;
                     break;
                 }
             }
-            return success;
+            return true;
         };
         BooleanSupplier task = build_task(tableName, func, false, error_log);
         submit_task(task);
@@ -298,6 +330,7 @@ public class QueryManager implements QueryManagerInterface {
         if (has_semantic_error) {
             return;
         }
+        String error_log = "SemanticError: can not insert to a non-exist table.";
     }
 
     private void handle_error(String error) {
