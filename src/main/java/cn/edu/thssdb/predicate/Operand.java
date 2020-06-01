@@ -1,7 +1,6 @@
 package cn.edu.thssdb.predicate;
 
 import cn.edu.thssdb.schema.Entry;
-import cn.edu.thssdb.schema.Row;
 
 /**
  * Leaf node of the predicate tree

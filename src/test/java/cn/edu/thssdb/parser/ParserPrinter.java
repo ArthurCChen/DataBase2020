@@ -3,8 +3,6 @@ package cn.edu.thssdb.parser;
 import cn.edu.thssdb.predicate.Operand;
 import cn.edu.thssdb.predicate.base.Predicate;
 import cn.edu.thssdb.query.QueryManagerInterface;
-import cn.edu.thssdb.schema.Column;
-import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.VirtualTable;
 
 import java.util.ArrayList;

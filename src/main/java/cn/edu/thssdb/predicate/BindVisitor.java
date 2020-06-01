@@ -6,7 +6,6 @@ import cn.edu.thssdb.predicate.base.PredicateVisitor;
 import cn.edu.thssdb.predicate.logical.AndPredicate;
 import cn.edu.thssdb.predicate.logical.OrPredicate;
 import cn.edu.thssdb.predicate.compare.*;
-import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.type.ColumnType;
 import cn.edu.thssdb.utils.LogBuffer;
 

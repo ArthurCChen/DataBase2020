@@ -1,6 +1,5 @@
 package cn.edu.thssdb.query;
 
-import cn.edu.thssdb.schema.Row;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;

@@ -1,10 +1,8 @@
 package cn.edu.thssdb;
 
 import cn.edu.thssdb.memory_db.MDBManager;
-import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Entry;
 import cn.edu.thssdb.schema.LogicalTable;
-import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.type.ColumnType;
 import cn.edu.thssdb.utils.Physical2LogicalInterface;
 import org.junit.Before;

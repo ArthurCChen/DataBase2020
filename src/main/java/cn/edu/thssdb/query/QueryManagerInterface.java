@@ -2,9 +2,6 @@ package cn.edu.thssdb.query;
 
 import cn.edu.thssdb.predicate.Operand;
 import cn.edu.thssdb.predicate.base.Predicate;
-import cn.edu.thssdb.schema.Column;
-import cn.edu.thssdb.schema.Entry;
-import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.VirtualTable;
 import com.sun.istack.internal.NotNull;
 
