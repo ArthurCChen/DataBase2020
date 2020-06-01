@@ -217,51 +217,29 @@ public class QueryManager implements QueryManagerInterface {
         if (has_semantic_error) {
             return;
         }
-        BooleanSupplier task = () -> {
-            boolean over = false;
-            for (;;) {
-                if (has_semantic_error) {
-                    over = true;
-                    break;
-                }
-                LogicalTable table = storage.get_table(tableName, current_transaction_id);
-                if (table == null) {
-                    if (is_first_task()) {
-                        handle_error("SemanticError: can not show a non-exist table.");
-                        over = true;
-                    }
-                    break;
-                }
-                if (!require_shared_lock(table)) {
-                    over = false;
-                    break;
-                }
-                // now show by print it out
-                ArrayList<Column> columns = table.get_columns();
-                System.out.println("Show table: " + tableName);
-                StringBuilder header = new StringBuilder();
-                header.append("\t");
-                for (Column column : columns) {
-                    header.append(column.getName()).append("\t");
-                }
-                System.out.println(header);
-                for (Row row : table) {
-                    StringBuilder r = new StringBuilder();
-                    r.append("\t");
-                    for (Entry e : row.getEntries()) {
-                        r.append(e.value).append("\t");
-                    }
-                    System.out.println(r);
-                }
-                System.out.println("End table");
-                over = true;
-                break;
+        String error_log = "SemanticError: can not show a non-exist table.";
+        java.util.function.Predicate<LogicalTable> func = (LogicalTable table) -> {
+            // now show by print it out
+            ArrayList<Column> columns = table.get_columns();
+            System.out.println("Show table: " + tableName);
+            StringBuilder header = new StringBuilder();
+            header.append("\t");
+            for (Column column : columns) {
+                header.append(column.getName()).append("\t");
             }
-            if (over) {
-                finish_task();
+            System.out.println(header);
+            for (Row row : table) {
+                StringBuilder r = new StringBuilder();
+                r.append("\t");
+                for (Entry e : row.getEntries()) {
+                    r.append(e.value).append("\t");
+                }
+                System.out.println(r);
             }
-            return over;
+            System.out.println("End table");
+            return true;
         };
+        BooleanSupplier task = build_task(tableName, func, true, error_log);
         submit_task(task);
     }
 
@@ -270,8 +248,19 @@ public class QueryManager implements QueryManagerInterface {
         if (has_semantic_error) {
             return;
         }
-
-//        submit_task(task);
+        String error_log = "SemanticError: can not insert to a non-exist table.";
+        java.util.function.Predicate<LogicalTable> func = (LogicalTable table) -> {
+            ArrayList<Row> expanded_row;
+            if (columns == null) {
+                expanded_row = entries;
+            }
+            else {
+                
+            }
+            return true;
+        };
+        BooleanSupplier task = build_task(tableName, func, false, error_log);
+        submit_task(task);
     }
 
     @Override
