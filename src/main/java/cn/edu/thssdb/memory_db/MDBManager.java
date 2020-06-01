@@ -49,7 +49,7 @@ public class MDBManager implements Physical2LogicalInterface {
     boolean primary_key_ok(ArrayList<Column> columns) {
         boolean has_primary = false;
         for (Column column : columns) {
-            if (column.isPrimary()) {
+            if (column.getPrimary()) {
                 if (has_primary) {
                     // multiple primary key
                     return false;

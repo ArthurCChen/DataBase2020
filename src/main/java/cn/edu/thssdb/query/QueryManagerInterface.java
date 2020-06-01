@@ -2,6 +2,8 @@ package cn.edu.thssdb.query;
 
 import cn.edu.thssdb.predicate.Operand;
 import cn.edu.thssdb.predicate.base.Predicate;
+import cn.edu.thssdb.schema.Column;
+import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.VirtualTable;
 import com.sun.istack.internal.NotNull;
 
@@ -43,7 +45,7 @@ public interface QueryManagerInterface {
 
     public void showTable(@NotNull String tableName);
 
-    public void insertRow(@NotNull String tableName, @NotNull ArrayList<Column> columns, @NotNull ArrayList<Row> entries);
+    public void insertRow(@NotNull String tableName, @NotNull ArrayList<Column> columns, @NotNull ArrayList<ArrayList<String>> entries);
 
     public void select(@NotNull ArrayList<Column> result_columns, @NotNull VirtualTable vt, @NotNull Predicate conditions);
 

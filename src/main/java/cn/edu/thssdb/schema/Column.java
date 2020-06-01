@@ -95,6 +95,14 @@ public class Column implements Comparable<Column>, Serializable {
     return name;
   }
 
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public void setNotNull(boolean notnull) {
+    this.notNull = notnull;
+  }
+
   public String getFullName(){
     if(tableName != null){
       return tableName + "." + name;
@@ -127,9 +135,15 @@ public class Column implements Comparable<Column>, Serializable {
     return isName(columnName) && isTableName(tableName);
   }
 
+  public String getTable_name() {
+    return tableName;
+  }
+
   public void setTableName(String tableName) {
     this.tableName = tableName;
   }
+
+
 
   public int getMaxLength() {
     return maxLength;

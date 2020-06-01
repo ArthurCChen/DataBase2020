@@ -3,6 +3,8 @@ package cn.edu.thssdb.query;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
+import cn.edu.thssdb.schema.Row;
 import javafx.scene.control.Cell;
 
 public class QueryResult {

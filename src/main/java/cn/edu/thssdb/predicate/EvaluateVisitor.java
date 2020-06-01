@@ -7,6 +7,7 @@ import cn.edu.thssdb.predicate.logical.AndPredicate;
 import cn.edu.thssdb.predicate.logical.OrPredicate;
 import cn.edu.thssdb.predicate.compare.*;
 import cn.edu.thssdb.schema.Entry;
+import cn.edu.thssdb.schema.Row;
 
 /**
  * This is a predicate evaluator.

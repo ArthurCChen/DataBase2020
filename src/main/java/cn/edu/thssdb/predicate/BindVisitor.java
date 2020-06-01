@@ -6,6 +6,7 @@ import cn.edu.thssdb.predicate.base.PredicateVisitor;
 import cn.edu.thssdb.predicate.logical.AndPredicate;
 import cn.edu.thssdb.predicate.logical.OrPredicate;
 import cn.edu.thssdb.predicate.compare.*;
+import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.type.ColumnType;
 import cn.edu.thssdb.utils.LogBuffer;
 
@@ -35,7 +36,8 @@ public class BindVisitor implements PredicateVisitor {
 
     public BindVisitor(LogBuffer buffer, ArrayList<Column> columns, String table_name) {
         this.buffer = buffer;
-        this.column_name_map = new HashMap<String, Integer>();
+        this.column_name_map = new HashMap<>();
+        this.column_type_map = new HashMap<>();
         this.table_name = table_name;
         for (int i = 0; i < columns.size(); i++) {
             this.column_name_map.put(table_name + "." + columns.get(i).getName(), i);
@@ -76,30 +78,30 @@ public class BindVisitor implements PredicateVisitor {
 
         // check lhs
         if (!lhs.is_constant) {
-            if (column_check(lhs.name)) {
-                lhs.setIndex(column_name_map.get(lhs.name));
+            if (column_check(lhs.get_full_name())) {
+                lhs.setIndex(column_name_map.get(lhs.get_full_name()));
             }
             else {
                 this.buffer.write(String.format("SemanticError: table %s does not have column: %s or has conflict.",
-                        this.table_name, lhs.name));
+                        this.table_name, lhs.get_full_name()));
                 has_semantic_error = true;
             }
         }
         // check rhs
         if (!rhs.is_constant) {
-            if (column_check(rhs.name)) {
-                rhs.setIndex(column_name_map.get(rhs.name));
+            if (column_check(rhs.get_full_name())) {
+                rhs.setIndex(column_name_map.get(rhs.get_full_name()));
             }
             else {
                 this.buffer.write(String.format("SemanticError: table %s does not have column: %s.",
-                        this.table_name, rhs.name));
+                        this.table_name, rhs.get_full_name()));
                 has_semantic_error = true;
             }
         }
         // check type consistency
-        if (this.get_column_type(lhs.name) != this.get_column_type(rhs.name)) {
+        if (this.get_column_type(lhs.get_full_name()) != this.get_column_type(rhs.get_full_name())) {
             this.buffer.write(String.format("SemanticError: %s and %s have different type.",
-                    rhs.name, lhs.name));
+                    rhs.get_full_name(), lhs.get_full_name()));
             has_semantic_error = true;
         }
     }

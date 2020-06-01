@@ -19,7 +19,9 @@ import cn.edu.thssdb.predicate.compare.*;
 import cn.edu.thssdb.predicate.logical.AndPredicate;
 import cn.edu.thssdb.predicate.logical.OrPredicate;
 import cn.edu.thssdb.query.QueryManagerInterface;
+import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Entry;
+import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.VirtualTable;
 import cn.edu.thssdb.type.ColumnType;
 import cn.edu.thssdb.utils.LogBuffer;
@@ -160,7 +162,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
     @Override
     public Object visitInsert_stmt(SQLParser.Insert_stmtContext ctx) {
         ArrayList<Column> columns = new ArrayList<Column>();
-        ArrayList<Row> entries = new ArrayList<Row>();
+        ArrayList<ArrayList<String>> entries = new ArrayList<>();
         int row_length = 0;
         // if column name is provided
         if (ctx.column_name() != null && ctx.column_name().size() != 0) {
@@ -174,13 +176,13 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
         }
         // one element is a row
         for (SQLParser.Value_entryContext entry : ctx.value_entry()) {
-            entries.add((Row) visitValue_entry(entry));
+            entries.add((ArrayList<String>) visitValue_entry(entry));
         }
         // if column names not specified, take the length of the first entry as row length
         if (row_length == 0) {
             row_length = entries.get(0).size();
         }
-        for (Row entry : entries) {
+        for (ArrayList<String> entry : entries) {
             if (entry.size() != row_length) {
                 logBuffer.write("SyntaxError: rows should have the same size as schema size.");
                 hasSyntaxError = true;
@@ -192,12 +194,12 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
 
     @Override
     public Object visitValue_entry(SQLParser.Value_entryContext ctx) {
-        ArrayList<Entry> entries = new ArrayList<Entry>();
+        ArrayList<String> values = new ArrayList<String>();
         // add each literal
         for (SQLParser.Literal_valueContext entry : ctx.literal_value()) {
-            entries.add(((Operand)visitLiteral_value(entry)).getValue());
+            values.add(((String)visitLiteral_value(entry)));
         }
-        return new Row(entries);
+        return values;
     }
 
     @Override
@@ -322,14 +324,13 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
             operand = new Operand(false);
             Column column = (Column)visitColumn_full_name(ctx.column_full_name());
             if (column.getTable_name() != null) {
-                operand.setName(column.getTable_name() + "." + column.getName());
+                operand.table_name = column.getTable_name();
             }
-            else {
-                operand.setName(column.getName());
-            }
+            operand.name = column.getName();
         }
         else {
-            operand = (Operand)visitLiteral_value(ctx.literal_value());
+            operand = new Operand(true);
+            operand.value_str = (String)visitLiteral_value(ctx.literal_value());
         }
         return operand;
     }
@@ -395,17 +396,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
     // return a string if not null
     @Override
     public Object visitLiteral_value(SQLParser.Literal_valueContext ctx) {
-        Operand operand = new Operand(true);
-        if (ctx.NUMERIC_LITERAL() != null) {
-            operand.setValue(new Entry(ctx.NUMERIC_LITERAL().getText()));
-        }
-        else if (ctx.STRING_LITERAL() != null) {
-            operand.setValue(new Entry(ctx.STRING_LITERAL().getText()));
-        }
-        else {
-            operand.setValue(new Entry(null));
-        }
-        return operand;
+        return ctx.NUMERIC_LITERAL().getText();
     }
 
     @Override
@@ -413,7 +404,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
         String column_name = ctx.column_name().getText();
         Column column = new Column(column_name, null, false, false, 0);
         if (ctx.table_name() != null) {
-            column.setTable_name(ctx.table_name().getText());
+            column.setTableName(ctx.table_name().getText());
         }
         return column;
     }

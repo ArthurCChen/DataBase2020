@@ -1,5 +1,6 @@
 package cn.edu.thssdb.memory_db;
 
+import cn.edu.thssdb.adapter.LogicalTable;
 import cn.edu.thssdb.schema.*;
 import javafx.util.Pair;
 
@@ -25,7 +26,7 @@ public class MTable implements LogicalTable {
         this.table_name = table_name;
         this.columns = columns;
         for (int i = 0; i < columns.size(); i++) {
-            if (columns.get(i).isPrimary()) {
+            if (columns.get(i).getPrimary()) {
                 this.primary_index = i;
             }
         }
@@ -40,7 +41,7 @@ public class MTable implements LogicalTable {
     @Override
     public boolean insert(Row row) {
         // skip type check here
-        Comparable value = row.getEntries().get(primary_index);
+        Entry value = row.getEntries().get(primary_index);
         // sanity check
         for (Row r : rows) {
             if (r.getEntries().get(primary_index).equals(value)) {

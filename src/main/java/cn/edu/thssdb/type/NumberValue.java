@@ -14,10 +14,10 @@ public abstract class NumberValue implements ColumnValue{
         this(value, type, true);
     }
 
-    public NumberValue(Number value, ColumnType type, Boolean isNull){
+    public NumberValue(Number value, ColumnType type, Boolean isNotNull){
         this.value = value;
         this.type = type;
-        this.isNotNull = isNull;
+        this.isNotNull = isNotNull;
     }
 
     @Override

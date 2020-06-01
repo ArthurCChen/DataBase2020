@@ -1,28 +1,28 @@
 package cn.edu.thssdb.predicate;
 
+import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Entry;
+import cn.edu.thssdb.schema.Row;
+import cn.edu.thssdb.type.ColumnType;
+import cn.edu.thssdb.type.ColumnValue;
 
 /**
  * Leaf node of the predicate tree
  */
 public class Operand {
 
-    public String name = null;
-    public boolean is_constant;
-    private Entry value = null;
-    // if this is a
     private int index = -1;
+
+    public String value_str = null;
+    public String name = null;
+    public String table_name = null;
+    public boolean bind = false;
+    public Entry value = null;
+    public Boolean is_number = null;
+    public boolean is_constant;
 
     public Operand(boolean is_constant) {
         this.is_constant = is_constant;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setValue(Entry value) {
-        this.value = value;
     }
 
     public Entry getValue() {
@@ -35,10 +35,20 @@ public class Operand {
 
     Entry getValue(Row row) {
         if (this.is_constant) {
+            assert(bind);
             return this.value;
         }
         else {
             return row.getEntries().get(this.index);
+        }
+    }
+
+    String get_full_name() {
+        if (table_name == null) {
+            return name;
+        }
+        else {
+            return table_name + "." + name;
         }
     }
 

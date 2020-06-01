@@ -1,5 +1,6 @@
 package cn.edu.thssdb.query;
 
+import cn.edu.thssdb.adapter.LogicalTable;
 import cn.edu.thssdb.predicate.Operand;
 import cn.edu.thssdb.predicate.base.Predicate;
 import cn.edu.thssdb.schema.*;
@@ -244,7 +245,7 @@ public class QueryManager implements QueryManagerInterface {
     }
 
     @Override
-    public void insertRow(String tableName, ArrayList<Column> columns, ArrayList<Row> entries) {
+    public void insertRow(String tableName, ArrayList<Column> columns, ArrayList<ArrayList<String>> entries) {
         if (has_semantic_error) {
             return;
         }
@@ -252,7 +253,7 @@ public class QueryManager implements QueryManagerInterface {
         java.util.function.Predicate<LogicalTable> func = (LogicalTable table) -> {
             ArrayList<Row> expanded_row;
             if (columns == null) {
-                expanded_row = entries;
+//                expanded_row = entries;
             }
             else {
                 
