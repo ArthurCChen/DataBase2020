@@ -34,26 +34,53 @@ public class PipelineTest {
     private QueryManager executor;
 
     private SQLParser parse(String s) throws ManagerNotReadyException {
+        long t1 = System.currentTimeMillis();
         SQLLexer lexer = new SQLLexer(CharStreams.fromString(s));
+        long t2 = System.currentTimeMillis();
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+        long t3 = System.currentTimeMillis();
         SQLParser parser = new SQLParser(tokenStream);
+        long t4 = System.currentTimeMillis();
         parser.removeErrorListeners();
+        long t5 = System.currentTimeMillis();
         parser.addErrorListener(buffer);
+        long t6 = System.currentTimeMillis();
 
         ParseTree tree = parser.parse();
+        long t7 = System.currentTimeMillis();
         SQLBaseVisitorImpl visitor = new SQLBaseVisitorImpl();
+        long t8 = System.currentTimeMillis();
         executor.reset();
+        long t9 = System.currentTimeMillis();
         visitor.bindQueryManager(executor, buffer);
+        long t10 = System.currentTimeMillis();
         visitor.visit(tree);
+        long t11 = System.currentTimeMillis();
+        StringBuilder sb = new StringBuilder();
+        sb.append(t2-t1).append(" "); //!
+        sb.append(t3-t2).append(" ");
+        sb.append(t4-t3).append(" "); //!
+        sb.append(t5-t4).append(" ");
+        sb.append(t6-t5).append(" ");
+        sb.append(t7-t6).append(" "); // !!
+        sb.append(t8-t7).append(" ");
+        sb.append(t9-t8).append(" ");
+        sb.append(t10-t9).append(" ");
+        sb.append(t11-t10).append(" "); //!!
+        System.out.println(sb.toString());
         return parser;
+
     }
 
     @Before
     public void setUp() throws IOException {
+        long t1 = System.currentTimeMillis();
         BufferedWriter log = new BufferedWriter(new FileWriter("./SQLBaseVisitorImplTest.log"));
         buffer = new LogBuffer(log);
         storage = new MDBManager();
         executor = new QueryManager(storage, buffer);
+        long t2 = System.currentTimeMillis();
+        System.out.println(t2-t1);
     }
 
     @Test
@@ -120,6 +147,7 @@ public class PipelineTest {
 
     @Test
     public void select_test() throws ManagerNotReadyException {
+        long t1 = System.currentTimeMillis();
         // create a table, insert two rows, and show it
         parse("create table test1(i int, j int not null, primary key (i));" +
                 "insert into test1 values (1, 2);" +
@@ -128,17 +156,39 @@ public class PipelineTest {
                 "insert into test1 values (5,5);" +
                 "show table test1;");
         assertEquals("", buffer.get());
+        long t2 = System.currentTimeMillis();
 
         parse("create table test2(i int, j int not null, primary key (i));" +
                 "insert into test2 values (1, 2);" +
                 "insert into test2 (i, j) values (3,4);" +
                 "insert into test2 (i, j) values (2,4);" +
+                "insert into test2 (i, j) values (6,4);" +
+                "insert into test2 (i, j) values (7,4);" +
+                "insert into test2 (i, j) values (8,4);" +
+                "insert into test2 (i, j) values (9,4);" +
+                "insert into test2 (i, j) values (10,4);" +
+                "insert into test2 (i, j) values (11,4);" +
+                "insert into test2 (i, j) values (12,4);" +
+                "insert into test2 (i, j) values (13,4);" +
+                "insert into test2 (i, j) values (14,4);" +
+                "insert into test2 (i, j) values (15,4);" +
+                "insert into test2 (i, j) values (16,4);" +
+                "insert into test2 (i, j) values (17,4);" +
+                "insert into test2 (i, j) values (18,4);" +
+                "insert into test2 (i, j) values (19,4);" +
+                "insert into test2 (i, j) values (30,4);" +
+                "insert into test2 (i, j) values (21,4);" +
+                "insert into test2 (i, j) values (22,4);" +
+                "insert into test2 (i, j) values (23,4);" +
                 "insert into test2 values (5,5);" +
                 "show table test2;");
         assertEquals("", buffer.get());
+        long t3 = System.currentTimeMillis();
 
         parse("select test1.i, test2.j from test1 join test2 on test1.i = test2.i;");
         assertEquals("", buffer.get());
+        long t4 = System.currentTimeMillis();
+//        System.out.println(String.format("%d %d %d", t2-t1, 0, 0));
     }
 
     @Test

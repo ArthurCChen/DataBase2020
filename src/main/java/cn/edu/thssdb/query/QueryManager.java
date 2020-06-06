@@ -11,6 +11,7 @@ import cn.edu.thssdb.utils.LogBuffer;
 import cn.edu.thssdb.utils.Physical2LogicalInterface;
 import com.google.common.collect.ObjectArrays;
 import com.sun.istack.internal.NotNull;
+import sun.nio.cs.Surrogate;
 import sun.security.util.ArrayUtil;
 
 import java.util.ArrayList;
@@ -212,7 +213,7 @@ public class QueryManager implements QueryManagerInterface {
                 }
             }
             for (Row row : table) {
-                evaluator.bindRow(row);
+                evaluator.bindRow(new MultiRow(row));
                 predicate.accept(evaluator);
                 if (evaluator.getAnswer()) {
                     primary.add(row.getEntries().get(primary_index));
@@ -333,66 +334,86 @@ public class QueryManager implements QueryManagerInterface {
                     over = true;
                     break;
                 }
-                LogicalTable table1 = storage.get_table(vt.tables.get(0), current_transaction_id);
-                LogicalTable table2 = storage.get_table(vt.tables.get(1), current_transaction_id);
-                if (table1 == null || table2 == null) {
-                    if (is_first_task()) {
+                // get all related tables
+                ArrayList<LogicalTable> tables = new ArrayList<>();
+                for (String table_name : vt.tables) {
+                    LogicalTable table = storage.get_table(table_name, current_transaction_id);
+                    if (table == null) {
                         handle_error("SemanticError: table name not found.");
                         over = true;
+                        break;
                     }
+                    tables.add(table);
+                }
+                // fail to fetch some tables
+                if (tables.size() != vt.tables.size()) {
                     break;
                 }
-                if (require_shared_lock(table1) && require_shared_lock(table2)) {
-                    Predicate all_condition;
-                    if (conditions != null && vt.condition != null) {
-                        all_condition = new AndPredicate(conditions, vt.condition);
-                    }
-                    else if (conditions != null) {
-                        all_condition = conditions;
-                    }
-                    else {
-                        all_condition = vt.condition;
-                    }
-                    ArrayList<Column> columns = table1.get_columns();
-                    columns.addAll(table2.get_columns());
-                    BindVisitor bind = new BindVisitor(logBuffer, columns);
-
-                    all_condition.accept(bind);
-                    if (bind.has_error()) {
-                        handle_error("");
-                        return true;
-                    }
-                    EvaluateVisitor evaluator = new EvaluateVisitor();
-                    ArrayList<Row> rows = new ArrayList<>();
-                    for (Row row1 : table1) {
-                        for (Row row2 : table2) {
-                            ArrayList<Entry> all = new ArrayList<>(row1.getEntries());
-                            all.addAll(row2.getEntries());
-                            Row temp = new Row(all);
-                            evaluator.bindRow(temp);
-                            all_condition.accept(evaluator);
-                            if (evaluator.getAnswer()) {
-                                rows.add(bind.collect(result_columns, temp));
-                            }
+                // try lock all related tables
+                boolean locked = true;
+                for (int i = 0; i < tables.size(); i++) {
+                    if (!require_shared_lock(tables.get(i))) {
+                        for (int j = 0; j < i; j++) {
+                            tables.get(j).unlock();
                         }
+                        locked = false;
+                        break;
                     }
-                    System.out.println("Select result: ");
-                    StringBuilder builder = new StringBuilder().append("\t");
-                    for (Column column : result_columns){
-                        builder.append(column.getName()).append("\t");
+                }
+                if (!locked) {
+                    break;
+                }
+                // get all conditions
+                Predicate all_condition;
+                if (conditions != null && vt.condition != null) {
+                    all_condition = new AndPredicate(conditions, vt.condition);
+                }
+                else if (conditions != null) {
+                    all_condition = conditions;
+                }
+                else {
+                    all_condition = vt.condition;
+                }
+                // bind the predicate tree to the schema
+                ArrayList<Column> columns = new ArrayList<>();
+                for (LogicalTable table : tables) {
+                    columns.addAll(table.get_columns());
+                }
+                BindVisitor bind = new BindVisitor(logBuffer, columns);
+                all_condition.accept(bind);
+                if (bind.has_error()) {
+                    handle_error("");
+                    break;
+                }
+                // traverse
+                EvaluateVisitor evaluator = new EvaluateVisitor();
+                JoinIterator iterator = new JoinIterator(tables);
+                ArrayList<Row> rows = new ArrayList<>();
+                while (iterator.get_multi_row() != null) {
+                    evaluator.bindRow(iterator.get_multi_row());
+                    all_condition.accept(evaluator);
+                    if (evaluator.getAnswer()) {
+                        rows.add(bind.collect(result_columns, iterator.get_multi_row()));
+                    }
+                    iterator.next();
+                }
+                // print out the result
+                System.out.println("Select result: ");
+                StringBuilder builder = new StringBuilder().append("\t");
+                for (Column column : result_columns){
+                    builder.append(column.getName()).append("\t");
+                }
+                builder.append("\n");
+                for (Row row : rows) {
+                    builder.append("\t");
+                    for (Entry entry : row.getEntries()) {
+                        builder.append(entry.value).append("\t");
                     }
                     builder.append("\n");
-                    for (Row row : rows) {
-                        builder.append("\t");
-                        for (Entry entry : row.getEntries()) {
-                            builder.append(entry.value).append("\t");
-                        }
-                        builder.append("\n");
-                    }
-                    builder.append("End");
-                    System.out.println(builder);
-                    over = true;
                 }
+                builder.append("End");
+                System.out.println(builder);
+                over = true;
                 break;
             }
             if (over) {
