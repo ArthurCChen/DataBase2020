@@ -9,10 +9,10 @@ public class MultiRow {
 
     // case1: more than one row
     private ArrayList<Row> rows = null;
-    HashMap<Integer, Pair<Integer, Integer>> table = null;
+    private HashMap<Integer, Pair<Integer, Integer>> table = null;
 
     // case2: one row
-    ArrayList<Entry> row = null;
+    private ArrayList<Entry> row = null;
 
     public static HashMap<Integer, Pair<Integer, Integer>> make_map(ArrayList<Row> rows) {
         HashMap<Integer, Pair<Integer, Integer>> table = new HashMap<>();
@@ -48,8 +48,11 @@ public class MultiRow {
     }
 
     public void update(int i, Row row) {
-        assert(rows != null);
-        assert(i < rows.size());
-        rows.set(i, row);
+        if (rows == null) {
+            this.row = row.getEntries();
+        }
+        else {
+            rows.set(i, row);
+        }
     }
 }

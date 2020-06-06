@@ -29,6 +29,24 @@ public interface SQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitSql_stmt(SQLParser.Sql_stmtContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link SQLParser#start_transaction}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStart_transaction(SQLParser.Start_transactionContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SQLParser#commit}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCommit(SQLParser.CommitContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SQLParser#rollback}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRollback(SQLParser.RollbackContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link SQLParser#create_db_stmt}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

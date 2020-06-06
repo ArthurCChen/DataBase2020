@@ -11,13 +11,9 @@ import cn.edu.thssdb.type.ColumnType;
 import cn.edu.thssdb.type.ValueFactory;
 import cn.edu.thssdb.utils.LogBuffer;
 import cn.edu.thssdb.utils.Physical2LogicalInterface;
-import com.google.common.collect.ObjectArrays;
 import com.sun.istack.internal.NotNull;
-import sun.nio.cs.Surrogate;
-import sun.security.util.ArrayUtil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.function.BooleanSupplier;
 
@@ -114,11 +110,19 @@ public class QueryManager implements QueryManagerInterface {
                     over = true;
                     break;
                 }
+                if (current_transaction_id == -1) {
+                    handle_error("RuntimeError: you are not in a transaction.");
+                    over = true;
+                    break;
+                }
                 LogicalTable table = storage.get_table(tableName, current_transaction_id);
                 if (table == null) {
                     if (is_first_task()) {
                         handle_error(error_log);
                         over = true;
+                    }
+                    else{
+                        System.out.println(stacked_tasks);
                     }
                     break;
                 }
@@ -179,6 +183,10 @@ public class QueryManager implements QueryManagerInterface {
         if (has_semantic_error) {
             return;
         }
+        if (current_transaction_id == -1) {
+            handle_error("RuntimeError: you are not in a transaction.");
+            return;
+        }
         // carry out the task in current thread, since it do not have conflict
         if (this.storage.get_table(tableName, current_transaction_id) == null) {
             this.storage.create_table(tableName, columns, current_transaction_id);
@@ -236,9 +244,7 @@ public class QueryManager implements QueryManagerInterface {
         if (has_semantic_error) {
             return;
         }
-        java.util.function.Predicate<LogicalTable> func = (LogicalTable table) -> {
-            return storage.drop_table(tableName, current_transaction_id);
-        };
+        java.util.function.Predicate<LogicalTable> func = (LogicalTable table) -> storage.drop_table(tableName, current_transaction_id);
         String error_log = "SemanticError: can not drop a non-exist table.";
         BooleanSupplier task = build_task(tableName, func, true, error_log);
         submit_task(task);
@@ -333,6 +339,11 @@ public class QueryManager implements QueryManagerInterface {
             boolean over = false;
             for (;;) {
                 if (has_semantic_error) {
+                    over = true;
+                    break;
+                }
+                if (current_transaction_id == -1) {
+                    handle_error("RuntimeError: you are not in a transaction.");
                     over = true;
                     break;
                 }
@@ -470,6 +481,8 @@ public class QueryManager implements QueryManagerInterface {
                 }
             }
             for (Entry p : primary) {
+                System.out.println(p);
+                System.out.println(inserts);
                 storage.delete_row(table_name, p, current_transaction_id);
             }
             for (Row row : inserts) {

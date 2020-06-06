@@ -69,7 +69,6 @@ public class PipelineTest {
         sb.append(t11-t10).append(" "); //!!
 //        System.out.println(sb.toString());
         return parser;
-
     }
 
     @Before

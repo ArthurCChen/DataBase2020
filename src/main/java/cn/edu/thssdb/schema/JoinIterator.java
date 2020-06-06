@@ -3,7 +3,6 @@ package cn.edu.thssdb.schema;
 import cn.edu.thssdb.adapter.LogicalTable;
 import javafx.util.Pair;
 
-import javax.swing.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -53,7 +52,10 @@ public class JoinIterator {
                 break;
             }
             else {
-                current.set(i, sources.get(i).iterator());
+                Iterator<Row> first = sources.get(i).iterator();
+                Row first_row = first.next();
+                current.set(i, first);
+                multiRow.update(i, first_row);
                 if (i == current.size() - 1) {
                     multiRow = null;
                     break;

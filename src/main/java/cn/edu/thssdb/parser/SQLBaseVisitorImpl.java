@@ -32,6 +32,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
     private QueryManagerInterface queryManager = null;
     private LogBuffer logBuffer = null;
     public boolean hasSyntaxError = false;
+    public boolean auto_commit = true;
 
 
     // Bind to a query manager. All sql command is executed by the manager.
@@ -53,15 +54,38 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
         if (logBuffer.hasSyntaxError) {
             return null;
         }
-        queryManager.startTransaction();
-        super.visitParse(ctx);
-        // submit the transaction if no syntax error is found
-        if (hasSyntaxError) {
-            queryManager.rollback();
+        if (auto_commit) {
+            queryManager.startTransaction();
+            super.visitParse(ctx);
+            // submit the transaction if no syntax error is found
+            if (hasSyntaxError) {
+                queryManager.rollback();
+            }
+            else {
+                queryManager.commit();
+            }
         }
         else {
-            queryManager.commit();
+            super.visitParse(ctx);
         }
+        return null;
+    }
+
+    @Override
+    public Object visitStart_transaction(SQLParser.Start_transactionContext ctx) {
+        queryManager.startTransaction();
+        return null;
+    }
+
+    @Override
+    public Object visitCommit(SQLParser.CommitContext ctx) {
+        queryManager.commit();
+        return null;
+    }
+
+    @Override
+    public Object visitRollback(SQLParser.RollbackContext ctx) {
+        queryManager.rollback();
         return null;
     }
 
