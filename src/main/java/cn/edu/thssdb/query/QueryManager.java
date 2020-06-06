@@ -7,6 +7,8 @@ import cn.edu.thssdb.predicate.Operand;
 import cn.edu.thssdb.predicate.base.Predicate;
 import cn.edu.thssdb.predicate.logical.AndPredicate;
 import cn.edu.thssdb.schema.*;
+import cn.edu.thssdb.type.ColumnType;
+import cn.edu.thssdb.type.ValueFactory;
 import cn.edu.thssdb.utils.LogBuffer;
 import cn.edu.thssdb.utils.Physical2LogicalInterface;
 import com.google.common.collect.ObjectArrays;
@@ -429,7 +431,58 @@ public class QueryManager implements QueryManagerInterface {
         if (has_semantic_error) {
             return;
         }
+        java.util.function.Predicate<LogicalTable> func = (LogicalTable table) -> {
+            BindVisitor binder = new BindVisitor(logBuffer, table.get_columns());
+            condition.accept(binder);
+            if (binder.has_error()) {
+                handle_error("");
+                return true;
+            }
+            EvaluateVisitor evaluator = new EvaluateVisitor();
+            // a list of primary to be deleted
+            ArrayList<Entry> primary = new ArrayList<>();
+            ArrayList<Column> columns = table.get_columns();
+            ArrayList<Row> inserts = new ArrayList<>();
+            int primary_index = -1;
+            int update = -1;
+            for (int i = 0; i < columns.size(); i++) {
+                if (columns.get(i).getPrimary()) {
+                    primary_index = i;
+                }
+                if (columns.get(i).getName().equals(column_name)) {
+                    update = i;
+                }
+            }
+            // when field name not found
+            if (update == -1) {
+                handle_error(String.format("SemanticError: column %s not found.", column_name));
+                return true;
+            }
+            for (Row row : table) {
+                evaluator.bindRow(new MultiRow(row));
+                condition.accept(evaluator);
+                if (evaluator.getAnswer()) {
+                    primary.add(row.getEntries().get(primary_index));
+                    ColumnType type = row.getEntries().get(update).value.getType();
+                    Entry v = new Entry(ValueFactory.getValue(value.value_str, type, value.value_str.length()));
+                    row.getEntries().set(update, v);
+                    inserts.add(row);
+                }
+            }
+            for (Entry p : primary) {
+                storage.delete_row(table_name, p, current_transaction_id);
+            }
+            for (Row row : inserts) {
+                if (!storage.insert_row(table_name, row, current_transaction_id)) {
+                    handle_error("RuntimeError: fail to update all the rows.");
+                    return true;
+                }
+            }
+            return true;
+        };
         String error_log = "SemanticError: can not insert to a non-exist table.";
+        BooleanSupplier task = build_task(table_name, func, false, error_log);
+        submit_task(task);
     }
 
     private void handle_error(String error) {

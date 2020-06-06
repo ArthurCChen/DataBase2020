@@ -67,7 +67,7 @@ public class PipelineTest {
         sb.append(t9-t8).append(" ");
         sb.append(t10-t9).append(" ");
         sb.append(t11-t10).append(" "); //!!
-        System.out.println(sb.toString());
+//        System.out.println(sb.toString());
         return parser;
 
     }
@@ -162,24 +162,6 @@ public class PipelineTest {
                 "insert into test2 values (1, 2);" +
                 "insert into test2 (i, j) values (3,4);" +
                 "insert into test2 (i, j) values (2,4);" +
-                "insert into test2 (i, j) values (6,4);" +
-                "insert into test2 (i, j) values (7,4);" +
-                "insert into test2 (i, j) values (8,4);" +
-                "insert into test2 (i, j) values (9,4);" +
-                "insert into test2 (i, j) values (10,4);" +
-                "insert into test2 (i, j) values (11,4);" +
-                "insert into test2 (i, j) values (12,4);" +
-                "insert into test2 (i, j) values (13,4);" +
-                "insert into test2 (i, j) values (14,4);" +
-                "insert into test2 (i, j) values (15,4);" +
-                "insert into test2 (i, j) values (16,4);" +
-                "insert into test2 (i, j) values (17,4);" +
-                "insert into test2 (i, j) values (18,4);" +
-                "insert into test2 (i, j) values (19,4);" +
-                "insert into test2 (i, j) values (30,4);" +
-                "insert into test2 (i, j) values (21,4);" +
-                "insert into test2 (i, j) values (22,4);" +
-                "insert into test2 (i, j) values (23,4);" +
                 "insert into test2 values (5,5);" +
                 "show table test2;");
         assertEquals("", buffer.get());
@@ -187,12 +169,13 @@ public class PipelineTest {
 
         parse("select test1.i, test2.j from test1 join test2 on test1.i = test2.i;");
         assertEquals("", buffer.get());
+
+        parse("update test1 set f = 100 where j = 4; show table test1;");
+        assertEquals("SemanticError: column f not found.", buffer.get());
+
+        parse("update test1 set j = 100 where j = 4; show table test1;");
+        assertEquals("", buffer.get());
         long t4 = System.currentTimeMillis();
 //        System.out.println(String.format("%d %d %d", t2-t1, 0, 0));
-    }
-
-    @Test
-    public void show() {
-//        Scanner myObj = new Scanner(System.in);
     }
 }
