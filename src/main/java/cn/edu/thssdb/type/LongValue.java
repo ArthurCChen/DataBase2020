@@ -30,7 +30,11 @@ public class LongValue extends  NumberValue{
 
     @Override
     public boolean equals(Object obj) {
-        return getValue() == ((LongValue)obj).getValue();
+        // to: LI SIYU
+        // the line is previously:
+        //     return getValue() == ((LongValue)obj).getValue();
+        // which is a bug, since == only works for primitive types, please take care when merge.
+        return getValue().equals(((LongValue) obj).getValue());
     }
 
     public Long getValue(){

@@ -481,8 +481,6 @@ public class QueryManager implements QueryManagerInterface {
                 }
             }
             for (Entry p : primary) {
-                System.out.println(p);
-                System.out.println(inserts);
                 storage.delete_row(table_name, p, current_transaction_id);
             }
             for (Row row : inserts) {

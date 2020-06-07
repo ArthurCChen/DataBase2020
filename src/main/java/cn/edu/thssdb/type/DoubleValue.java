@@ -32,7 +32,11 @@ public class DoubleValue extends NumberValue{
 
     @Override
     public boolean equals(Object obj) {
-        return this.value == ((DoubleValue)obj).getValue();
+        // to: LI SIYU
+        // the line is previously:
+        //     return getValue() == ((LongValue)obj).getValue();
+        // which is a bug, since == only works for primitive types, please take care when merge.
+        return this.value.equals(((DoubleValue) obj).getValue());
     }
 
     public Double getValue(){
