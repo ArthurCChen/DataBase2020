@@ -32,7 +32,7 @@ public class Global {
   public static final String DATA_FORMAT = "%s.data";
   public static final String META_FORMAT = "%s.meta";
   public static final String SCRIPT_FORMAT = "%s.script";
-  public static final String LOG_FORMAT = "%s.log";
+  public static final String LOG_FORMAT = "%s-%s.log";
 
   public static final String DEFAULT_SQLPATH = "data/";
   public static final String DEFAULT_METAPATH = "catlog.meta";
