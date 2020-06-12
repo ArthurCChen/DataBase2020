@@ -102,6 +102,10 @@ public class BufferPool {
     }
 
     public void discardPage(PageId id){
+        Page page = pageMap.get(id);
+        if(page.isDirty()){
+            unMarkPageDirty(page);
+        }
         pageMap.remove(id);
     }
 
@@ -133,6 +137,18 @@ public class BufferPool {
         }
         tablesDirtyPages.remove(tid);
     }
+
+    public void discardPagesOfTables(int tid){
+        HashSet<PageId> pageIds = tablesDirtyPages.getOrDefault(tid, null);
+        if (pageIds != null){
+            HashSet<PageId> clone = (HashSet<PageId>) pageIds.clone();
+            for(PageId pid: clone){
+                discardPage(pid);
+            }
+        }
+        tablesDirtyPages.remove(tid);
+    }
+
 
     private void markPageDirty(Page page){
         page.markDirty(true);
