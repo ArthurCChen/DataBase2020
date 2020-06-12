@@ -1,6 +1,7 @@
 package cn.edu.thssdb.memory_db;
 
 import cn.edu.thssdb.adapter.LogicalTable;
+import cn.edu.thssdb.rpc.thrift.ExecuteStatementResp;
 import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Entry;
 import cn.edu.thssdb.schema.Row;

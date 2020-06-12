@@ -6,6 +6,7 @@ import cn.edu.thssdb.predicate.EvaluateVisitor;
 import cn.edu.thssdb.predicate.Operand;
 import cn.edu.thssdb.predicate.base.Predicate;
 import cn.edu.thssdb.predicate.logical.AndPredicate;
+import cn.edu.thssdb.rpc.thrift.ExecuteStatementResp;
 import cn.edu.thssdb.schema.*;
 import cn.edu.thssdb.type.ColumnType;
 import cn.edu.thssdb.type.ValueFactory;
@@ -15,6 +16,7 @@ import com.sun.istack.internal.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.function.BooleanSupplier;
 
 public class QueryManager implements QueryManagerInterface {
@@ -27,6 +29,7 @@ public class QueryManager implements QueryManagerInterface {
     private boolean has_semantic_error;
     // the number of tasks in the queue and not executed
     private Integer stacked_tasks;
+    private ExecuteStatementResp resp;
 
 
     public QueryManager(@NotNull Physical2LogicalInterface storage, @NotNull LogBuffer buffer) {
@@ -37,6 +40,10 @@ public class QueryManager implements QueryManagerInterface {
         this.current_transaction_id = -1;
         this.has_semantic_error = false;
         this.stacked_tasks = 0;
+    }
+
+    public void bind_resp(ExecuteStatementResp resp) {
+        this.resp = resp;
     }
 
     public void reset() {
@@ -97,6 +104,7 @@ public class QueryManager implements QueryManagerInterface {
 
     private void finish_task() {
         stacked_tasks -= 1;
+        resp.notify();
     }
 
     // to simplify the code
@@ -410,22 +418,22 @@ public class QueryManager implements QueryManagerInterface {
                     }
                     iterator.next();
                 }
-                // print out the result
-                System.out.println("Select result: ");
-                StringBuilder builder = new StringBuilder().append("\t");
+                // build the result
+                List<String> column_names = new ArrayList<>();
                 for (Column column : result_columns){
-                    builder.append(column.getName()).append("\t");
+                    column_names.add(column.getName());
                 }
-                builder.append("\n");
+                resp.setColumnsList(column_names);
+                List<List<String>> row_list = new ArrayList<>();
                 for (Row row : rows) {
-                    builder.append("\t");
+                    ArrayList<String> row_str = new ArrayList<>();
                     for (Entry entry : row.getEntries()) {
-                        builder.append(entry.value).append("\t");
+                        row_str.add(entry.value.toString());
                     }
-                    builder.append("\n");
+                    row_list.add(row_str);
                 }
-                builder.append("End");
-                System.out.println(builder);
+                resp.setRowList(row_list);
+                resp.setHasResult(true);
                 over = true;
                 break;
             }
@@ -500,5 +508,6 @@ public class QueryManager implements QueryManagerInterface {
         logBuffer.write(error);
         has_semantic_error = true;
         rollback();
+        resp.setIsAbort(true);
     }
 }

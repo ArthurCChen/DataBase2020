@@ -18,10 +18,14 @@ import cn.edu.thssdb.predicate.base.Predicate;
 import cn.edu.thssdb.predicate.compare.*;
 import cn.edu.thssdb.predicate.logical.AndPredicate;
 import cn.edu.thssdb.predicate.logical.OrPredicate;
+import cn.edu.thssdb.query.QueryManager;
 import cn.edu.thssdb.query.QueryManagerInterface;
+import cn.edu.thssdb.rpc.thrift.ExecuteStatementResp;
+import cn.edu.thssdb.rpc.thrift.Status;
 import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.VirtualTable;
 import cn.edu.thssdb.type.ColumnType;
+import cn.edu.thssdb.utils.Global;
 import cn.edu.thssdb.utils.LogBuffer;
 import com.sun.istack.internal.NotNull;
 
@@ -29,14 +33,15 @@ import java.util.ArrayList;
 
 public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
 
-    private QueryManagerInterface queryManager = null;
+    private QueryManager queryManager = null;
     private LogBuffer logBuffer = null;
     public boolean hasSyntaxError = false;
     public boolean auto_commit = true;
+    private ExecuteStatementResp resp;
 
 
     // Bind to a query manager. All sql command is executed by the manager.
-    public void bindQueryManager(@NotNull QueryManagerInterface manager, @NotNull LogBuffer buffer) throws ManagerNotReadyException {
+    public void bindQueryManager(@NotNull QueryManager manager, @NotNull LogBuffer buffer) throws ManagerNotReadyException {
         if (manager.ready()) {
             this.queryManager = manager;
             this.logBuffer = buffer;
@@ -46,7 +51,18 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
         }
     }
 
-    // Assume the input has a correct grammar.
+    public void bind_resp(ExecuteStatementResp resp) {
+        this.resp = resp;
+        queryManager.bind_resp(resp);
+    }
+
+    private void handle_error(String msg) {
+        logBuffer.write(msg);
+        hasSyntaxError = true;
+        queryManager.rollback();
+        resp.setIsAbort(true);
+    }
+
     @Override
     public Object visitParse(SQLParser.ParseContext ctx) {
         hasSyntaxError = false;
@@ -120,8 +136,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
         // when primary key is specified at the end of command
         if (ctx.table_constraint() != null) {
             if (ctx.table_constraint().column_name().size() != 1) {
-                logBuffer.write("NotImplementError: Primary key for more than one attribute not supported (for now).");
-                hasSyntaxError = true;
+                handle_error("NotImplementError: Primary key for more than one attribute not supported (for now).");
                 return null;
             }
             else {
@@ -135,15 +150,13 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
                     }
                 }
                 if (!primary_key_set) {
-                    logBuffer.write("SyntaxError: specified primary key not found.");
-                    hasSyntaxError = true;
+                    handle_error("SyntaxError: specified primary key not found.");
                     return null;
                 }
             }
         }
         else {
-            logBuffer.write("SyntaxError: you need to specify a primary key.");
-            hasSyntaxError = true;
+            handle_error("SyntaxError: you need to specify a primary key.");
             return null;
         }
         queryManager.createTable(table_name, columns);
@@ -163,8 +176,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
     @Override
     public Object visitDrop_table_stmt(SQLParser.Drop_table_stmtContext ctx) {
         if (ctx.K_IF() != null) {
-            logBuffer.write("NotImplementError: if exists not implemented.");
-            hasSyntaxError = true;
+            handle_error("NotImplementError: if exists not implemented.");
             return null;
         }
         queryManager.dropTable(ctx.table_name().getText());
@@ -208,8 +220,8 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
         }
         for (ArrayList<Object> entry : entries) {
             if (entry.size() != row_length) {
-                logBuffer.write("SyntaxError: rows should have the same size as schema size.");
-                hasSyntaxError = true;
+                handle_error("SyntaxError: rows should have the same size as schema size.");
+                return null;
             }
         }
         queryManager.insertRow(ctx.table_name().getText(), columns, entries);
@@ -229,18 +241,15 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
     @Override
     public Object visitSelect_stmt(SQLParser.Select_stmtContext ctx) {
         if (ctx.K_DISTINCT() != null) {
-            logBuffer.write("NotImplementError: 'distinct' not implemented.");
-            hasSyntaxError = true;
+            handle_error("NotImplementError: 'distinct' not implemented.");
             return null;
         }
         if (ctx.K_ALL() != null) {
-            logBuffer.write("NotImplementError: 'all' not implemented.");
-            hasSyntaxError = true;
+            handle_error("NotImplementError: 'all' not implemented.");
             return null;
         }
         if (ctx.table_query().size() > 1) {
-            logBuffer.write("NotImplementError: query from more than one table not implemented.");
-            hasSyntaxError = true;
+            handle_error("NotImplementError: query from more than one table not implemented.");
             return null;
         }
 
@@ -286,8 +295,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
         column.setName(name);
         for (SQLParser.Column_constraintContext constraint : ctx.column_constraint()) {
             if (constraint.K_PRIMARY() != null) {
-                logBuffer.write("NotImplementError: primary key can only be set at the end of statement.");
-                hasSyntaxError = true;
+                handle_error("NotImplementError: primary key can only be set at the end of statement.");
                 return null;
             }
             if (constraint.K_NOT() != null) {
@@ -384,8 +392,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
     @Override
     public Object visitExpression(SQLParser.ExpressionContext ctx) {
         if (ctx.ADD() != null || ctx.SUB() != null || ctx.DIV() != null || ctx.MUL() != null || ctx.comparer() == null) {
-            logBuffer.write("NotImplementError: arithmetic expression not implemented.(for now)");
-            hasSyntaxError = true;
+            handle_error("NotImplementError: arithmetic expression not implemented.(for now)");
             return null;
         }
         return (Operand)visitComparer(ctx.comparer());
@@ -394,8 +401,7 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
     @Override
     public Object visitResult_column(SQLParser.Result_columnContext ctx) {
         if (ctx.MUL() != null || ctx.table_name() != null) {
-            logBuffer.write("NotImplementError: * and table_name.* not implemented.");
-            hasSyntaxError = true;
+            handle_error("NotImplementError: * and table_name.* not implemented.");
             return null;
         }
         return (Column)visitColumn_full_name(ctx.column_full_name());
@@ -473,120 +479,103 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
 
     @Override
     public Object visitShow_table_stmt(SQLParser.Show_table_stmtContext ctx) {
-        logBuffer.write("NotImplementError: show database not implemented.");
-        hasSyntaxError = true;
+        handle_error("NotImplementError: show database not implemented.");
         return null;
     }
 
     @Override
     public Object visitCreate_db_stmt(SQLParser.Create_db_stmtContext ctx) {
-        logBuffer.write("NotImplementError: create database not implemented.");
-        hasSyntaxError = true;
+        handle_error("NotImplementError: create database not implemented.");
         return null;
     }
 
     @Override
     public Object visitDrop_db_stmt(SQLParser.Drop_db_stmtContext ctx) {
-        logBuffer.write("NotImplementError: drop database not implemented.");
-        hasSyntaxError = true;
+        handle_error("NotImplementError: drop database not implemented.");
         return null;
     }
 
     @Override
     public Object visitCreate_user_stmt(SQLParser.Create_user_stmtContext ctx) {
-        logBuffer.write("NotImplementError: create user not implemented.");
-        hasSyntaxError = true;
+        handle_error("NotImplementError: create user not implemented.");
         return null;
     }
 
     @Override
     public Object visitDrop_user_stmt(SQLParser.Drop_user_stmtContext ctx) {
-        logBuffer.write("NotImplementError: drop user not implemented.");
-        hasSyntaxError = true;
+        handle_error("NotImplementError: drop user not implemented.");
         return null;
     }
 
     @Override
     public Object visitGrant_stmt(SQLParser.Grant_stmtContext ctx) {
-        logBuffer.write("NotImplementError: grant not implemented.");
-        hasSyntaxError = true;
+        handle_error("NotImplementError: grant not implemented.");
         return null;
     }
 
     @Override
     public Object visitRevoke_stmt(SQLParser.Revoke_stmtContext ctx) {
-        logBuffer.write("NotImplementError: revoke not implemented.");
-        hasSyntaxError = true;
+        handle_error("NotImplementError: revoke not implemented.");
         return null;
     }
 
     @Override
     public Object visitUse_db_stmt(SQLParser.Use_db_stmtContext ctx) {
-        logBuffer.write("NotImplementError: use database not implemented.");
-        hasSyntaxError = true;
+        handle_error("NotImplementError: use database not implemented.");
         return null;
     }
 
     @Override
     public Object visitShow_db_stmt(SQLParser.Show_db_stmtContext ctx) {
-        logBuffer.write("NotImplementError: show database not implemented.");
-        hasSyntaxError = true;
+        handle_error("NotImplementError: show database not implemented.");
         return null;
     }
 
     @Override
     public Object visitCreate_view_stmt(SQLParser.Create_view_stmtContext ctx) {
-        logBuffer.write("NotImplementError: create view not implemented.");
-        hasSyntaxError = true;
+        handle_error("NotImplementError: create view not implemented.");
         return null;
     }
 
     @Override
     public Object visitDrop_view_stmt(SQLParser.Drop_view_stmtContext ctx) {
-        logBuffer.write("NotImplementError: drop view not implemented.");
-        hasSyntaxError = true;
+        handle_error("NotImplementError: drop view not implemented.");
         return null;
     }
 
     @Override
     public Object visitTable_constraint(SQLParser.Table_constraintContext ctx) {
-        logBuffer.write("NotImplementError: multiple primary key not implemented.");
-        hasSyntaxError = true;
+        handle_error("NotImplementError: multiple primary key not implemented.");
         return null;
     }
 
     @Override
     public Object visitAuth_level(SQLParser.Auth_levelContext ctx) {
-        logBuffer.write("NotImplementError: auth level not implemented.");
-        hasSyntaxError = true;
+        handle_error("NotImplementError: auth level not implemented.");
         return null;
     }
 
     @Override
     public Object visitDatabase_name(SQLParser.Database_nameContext ctx) {
-        logBuffer.write("NotImplementError: database name not implemented.");
-        hasSyntaxError = true;
+        handle_error("NotImplementError: database name not implemented.");
         return null;
     }
 
     @Override
     public Object visitUser_name(SQLParser.User_nameContext ctx) {
-        logBuffer.write("NotImplementError: user name not implemented.");
-        hasSyntaxError = true;
+        handle_error("NotImplementError: user name not implemented.");
         return null;
     }
 
     @Override
     public Object visitView_name(SQLParser.View_nameContext ctx) {
-        logBuffer.write("NotImplementError: view name not implemented.");
-        hasSyntaxError = true;
+        handle_error("NotImplementError: view name not implemented.");
         return null;
     }
 
     @Override
     public Object visitPassword(SQLParser.PasswordContext ctx) {
-        logBuffer.write("NotImplementError: password not implemented.");
-        hasSyntaxError = true;
+        handle_error("NotImplementError: password not implemented.");
         return null;
     }
 }

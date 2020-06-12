@@ -10,7 +10,6 @@ import java.util.ArrayList;
 
 public class LogBuffer extends BaseErrorListener {
     private ArrayList<String> buffer;
-    private BufferedWriter output;
     public boolean hasSyntaxError = false;
 
     @Override
@@ -21,26 +20,13 @@ public class LogBuffer extends BaseErrorListener {
         hasSyntaxError = true;
     }
 
-    public LogBuffer(BufferedWriter output) {
+    public LogBuffer() {
         buffer = new ArrayList<>();
-        this.output = output;
     }
 
     public void write(String message) {
         buffer.add(message);
         hasSyntaxError = true;
-    }
-
-    public void flush() {
-        try {
-            for (String message : buffer) {
-                output.write(message);
-                output.newLine();
-            }
-            buffer.clear();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public String get() {

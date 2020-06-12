@@ -39,8 +39,7 @@ public class CMDTest {
     }
 
     public CMDTest() throws IOException {
-        BufferedWriter log = new BufferedWriter(new FileWriter("./SQLBaseVisitorImplTest.log"));
-        buffer = new LogBuffer(log);
+        buffer = new LogBuffer();
         storage = new TransactionManager();
         executor = new QueryManager(storage, buffer);
     }
