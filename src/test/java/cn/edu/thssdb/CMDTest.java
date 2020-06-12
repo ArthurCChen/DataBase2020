@@ -1,7 +1,7 @@
 package cn.edu.thssdb;
 
 import cn.edu.thssdb.exception.ManagerNotReadyException;
-import cn.edu.thssdb.memory_db.MDBManager;
+import cn.edu.thssdb.memory_db.TransactionManager;
 import cn.edu.thssdb.parser.SQLBaseVisitorImpl;
 import cn.edu.thssdb.parser.SQLLexer;
 import cn.edu.thssdb.parser.SQLParser;
@@ -41,13 +41,14 @@ public class CMDTest {
     public CMDTest() throws IOException {
         BufferedWriter log = new BufferedWriter(new FileWriter("./SQLBaseVisitorImplTest.log"));
         buffer = new LogBuffer(log);
-        storage = new MDBManager();
+        storage = new TransactionManager();
         executor = new QueryManager(storage, buffer);
     }
 
     public static void main(String[] args) throws IOException, ManagerNotReadyException {
         CMDTest test = new CMDTest();
         Scanner myObj = new Scanner(System.in);
+        System.out.println("Running mode: " + System.getProperty("java.vm.name"));
         while (true) {
             String cmd = "";
             while (cmd.equals("")) {

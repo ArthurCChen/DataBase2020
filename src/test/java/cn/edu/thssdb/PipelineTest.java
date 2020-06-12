@@ -1,8 +1,7 @@
 package cn.edu.thssdb;
 
 import cn.edu.thssdb.exception.ManagerNotReadyException;
-import cn.edu.thssdb.memory_db.MDBManager;
-import cn.edu.thssdb.parser.ParserPrinter;
+import cn.edu.thssdb.memory_db.TransactionManager;
 import cn.edu.thssdb.parser.SQLBaseVisitorImpl;
 import cn.edu.thssdb.parser.SQLLexer;
 import cn.edu.thssdb.parser.SQLParser;
@@ -18,8 +17,6 @@ import org.junit.Test;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Scanner;
-import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
 
@@ -33,7 +30,7 @@ public class PipelineTest {
     Physical2LogicalInterface storage;
     private QueryManager executor;
 
-    private SQLParser parse(String s) throws ManagerNotReadyException {
+    private void parse(String s) throws ManagerNotReadyException {
         long t1 = System.currentTimeMillis();
         SQLLexer lexer = new SQLLexer(CharStreams.fromString(s));
         long t2 = System.currentTimeMillis();
@@ -68,7 +65,6 @@ public class PipelineTest {
         sb.append(t10-t9).append(" ");
         sb.append(t11-t10).append(" "); //!!
 //        System.out.println(sb.toString());
-        return parser;
     }
 
     @Before
@@ -76,7 +72,7 @@ public class PipelineTest {
         long t1 = System.currentTimeMillis();
         BufferedWriter log = new BufferedWriter(new FileWriter("./SQLBaseVisitorImplTest.log"));
         buffer = new LogBuffer(log);
-        storage = new MDBManager();
+        storage = new TransactionManager();
         executor = new QueryManager(storage, buffer);
         long t2 = System.currentTimeMillis();
         System.out.println(t2-t1);
