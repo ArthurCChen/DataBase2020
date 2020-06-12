@@ -1,9 +1,14 @@
 package cn.edu.thssdb.client;
 
-import cn.edu.thssdb.rpc.thrift.GetTimeReq;
-import cn.edu.thssdb.rpc.thrift.IService;
+import cn.edu.thssdb.rpc.thrift.*;
 import cn.edu.thssdb.utils.Global;
 import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -14,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.PrintStream;
+import java.util.Collections;
 import java.util.Scanner;
 
 public class Client {
@@ -55,16 +61,24 @@ public class Client {
       while (true) {
         print(Global.CLI_PREFIX);
         String msg = SCANNER.nextLine();
+//        String msgLower = msg.trim().toLowerCase();
         long startTime = System.currentTimeMillis();
         switch (msg.trim()) {
           case Global.SHOW_TIME:
             getTime();
             break;
           case Global.QUIT:
+//            disconnect();
             open = false;
             break;
           default:
-            println("Invalid statements!");
+            String statement = msg.trim();
+              long sessionId = 0;
+            ExecuteStatementReq req = new ExecuteStatementReq(sessionId, statement);
+            ExecuteStatementResp resp = client.executeStatement(req);
+            if (resp.getStatus().code == Global.SUCCESS_CODE) {
+              println("Execute Successfully!");
+            }
             break;
         }
         long endTime = System.currentTimeMillis();
@@ -76,6 +90,8 @@ public class Client {
       transport.close();
     } catch (TTransportException e) {
       logger.error(e.getMessage());
+    } catch (TException e) {
+      e.printStackTrace();
     }
   }
 
@@ -87,6 +103,30 @@ public class Client {
       logger.error(e.getMessage());
     }
   }
+
+
+  private static long connect() throws TException {
+    String username = "username";
+    String password = "password";
+    ConnectReq req = new ConnectReq(username, password);
+    ConnectResp resp = client.connect(req);
+    if (resp.getStatus().code == Global.SUCCESS_CODE) {
+      println("Connect Successfully!");
+    }
+    return resp.getSessionId();
+  }
+
+//  private static void disconnect(long sessionId) throws TException{
+//    DisconnectResp req = new DisconnectResp();
+//    req.setSessionId(sessionId);
+//    try {
+//      client.disconnect(req);
+//      sessionId=-1;
+//      System.out.println("Sessionid:-1");
+//    } catch (TException e) {
+//      logger.error(e.getMessage());
+//    }
+//  }
 
   static Options createOptions() {
     Options options = new Options();
