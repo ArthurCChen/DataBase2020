@@ -278,22 +278,21 @@ public class QueryManager implements QueryManagerInterface {
         java.util.function.Predicate<LogicalTable> func = (LogicalTable table) -> {
             // now show by print it out
             ArrayList<Column> columns = table.get_columns();
-            System.out.println("Show table: " + tableName);
-            StringBuilder header = new StringBuilder();
-            header.append("\t");
+            List<String> column_list = new ArrayList<>();
             for (Column column : columns) {
-                header.append(column.getName()).append("\t");
+                column_list.add(column.getName());
             }
-            System.out.println(header);
+            resp.setColumnsList(column_list);
+            List<List<String>> rows_list = new ArrayList<>();
             for (Row row : table) {
-                StringBuilder r = new StringBuilder();
-                r.append("\t");
+                List<String> rows_str = new ArrayList<>();
                 for (Entry e : row.getEntries()) {
-                    r.append(e.value).append("\t");
+                    rows_str.add(e.value.toString());
                 }
-                System.out.println(r);
+                rows_list.add(rows_str);
             }
-            System.out.println("End table");
+            resp.setRowList(rows_list);
+            resp.setHasResult(true);
             return true;
         };
         BooleanSupplier task = build_task(tableName, func, true, error_log);
