@@ -2,6 +2,7 @@ package cn.edu.thssdb.recover;
 
 import cn.edu.thssdb.storage.BufferPool;
 import cn.edu.thssdb.storage.FileHandler;
+import cn.edu.thssdb.storage.Page;
 import cn.edu.thssdb.utils.Global;
 import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
 
@@ -71,4 +72,40 @@ public class WALManager {
 
 
     }
+
+    public void forceWAL(LSN lsn){
+
+    }
+
+
+    private void performRedo(RecoveryInfo recoveryInfo){
+
+    }
+
+    private void performUndo(RecoveryInfo recoveryInfo){
+
+    }
+
+    private LSN computeNextLsn(int fid, int fileOffset){
+
+    }
+
+    public LSN writeTxnRecord(WALType type, int txnId, LSN prevLsn){
+
+    }
+
+    public LSN writeTxnRecord(WALType){
+
+    }
+
+    public void applyRedo(WALType type, File file){
+
+    }
+
+    public byte[] applyUndoAndGenRedoOnlyData(File file){
+
+    }
+
+    public LSN writeRedoOnlyUpdateRecord(int txnId, LSN prevLsn, )
+
 }
