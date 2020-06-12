@@ -7,16 +7,16 @@ import cn.edu.thssdb.storage.operation.FileOperation;
 import cn.edu.thssdb.storage.operation.InsertOperation;
 import cn.edu.thssdb.storage.operation.UpdateOperation;
 import cn.edu.thssdb.utils.Global;
+import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.*;
 
 public class BufferPool {
     private static int pageSize = Global.pageSize;
     private int chunkSize = Global.bufferChunkSize;
 
     private HashMap<PageId, Page> pageMap;
+    private HashMap<Integer, HashSet<PageId>> tablesDirtyPages; // 用于保存当前table所有的脏页
     private class ReplaceAlgorithm{
         // 使用clock算法
         private LinkedList<PageId> idQueue;
@@ -59,6 +59,7 @@ public class BufferPool {
     public BufferPool(){
         this.pageMap = new HashMap<>();
         this.replaceAlgorithm = new ReplaceAlgorithm();
+        this.tablesDirtyPages = new HashMap<>();
     }
 
     public BufferPool(int chunkSize){
@@ -82,6 +83,7 @@ public class BufferPool {
     }
 
     private void evictPage(){
+//        throw new InternalException("evict page not supported");
         PageId id = replaceAlgorithm.evict();
         if(pageMap.get(id).isDirty()){
             flushPage(id);
@@ -101,7 +103,7 @@ public class BufferPool {
         }catch(Exception e){
 
         }
-        page.markDirty(false);
+        unMarkPageDirty(page);
 
     }
 
@@ -111,13 +113,43 @@ public class BufferPool {
         }
     }
 
+    public void flushPagesOfTable(int tid){
+        HashSet<PageId> pageIds = tablesDirtyPages.getOrDefault(tid, null);
+        if (pageIds != null){
+            HashSet<PageId> clone = (HashSet<PageId>) pageIds.clone();
+            for(PageId pid: clone){
+                flushPage(pid);
+            }
+        }
+        tablesDirtyPages.remove(tid);
+    }
+
+    private void markPageDirty(Page page){
+        page.markDirty(true);
+        PageId pageId = page.getId();
+        int tid = pageId.getTableId();
+        if(! this.tablesDirtyPages.containsKey(tid)){
+            this.tablesDirtyPages.put(tid, new HashSet<PageId>());
+        }
+        HashSet<PageId> pageIds = tablesDirtyPages.get(tid);
+        pageIds.add(pageId);
+    }
+
+    private void unMarkPageDirty(Page page){
+        page.markDirty(false);
+        PageId pageId = page.getId();
+        int tid = pageId.getTableId();
+        HashSet<PageId> pageIds = tablesDirtyPages.get(tid);
+        pageIds.remove(pageId);
+    }
+
     public boolean operateRow(Integer tid, Row row, FileOperation op){
         try {
             Table table = Global.getTableFromTid(tid);
             FileHandler file = table.getFileHandler();
             ArrayList<Page> dirtyPages = op.operate(file, row);
             for (Page page : dirtyPages) {
-                page.markDirty(true);
+                markPageDirty(page);
                 if (op instanceof InsertOperation) {
                     pageMap.put(page.getId(), page);
                 }
