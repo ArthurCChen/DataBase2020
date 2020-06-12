@@ -50,6 +50,9 @@ public class BufferPool {
 
                 PageId id = idQueue.removeFirst();
                 Boolean visited = whetherVisited.remove(id);
+                if(!pageMap.containsKey(id))
+                    continue;
+
                 if(visited){
                     idQueue.addLast(id);
                     whetherVisited.replace(id, false);
