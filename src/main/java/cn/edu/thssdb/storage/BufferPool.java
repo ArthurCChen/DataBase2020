@@ -1,5 +1,6 @@
 package cn.edu.thssdb.storage;
 
+import cn.edu.thssdb.exception.BufferException;
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.Table;
 import cn.edu.thssdb.storage.operation.DeleteOperation;
@@ -7,7 +8,6 @@ import cn.edu.thssdb.storage.operation.FileOperation;
 import cn.edu.thssdb.storage.operation.InsertOperation;
 import cn.edu.thssdb.storage.operation.UpdateOperation;
 import cn.edu.thssdb.utils.Global;
-import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
 
 import java.util.*;
 
@@ -186,6 +186,7 @@ public class BufferPool {
             }
             return true;
         }catch (Exception e){
+            System.out.println(e.getMessage());
             return false;
         }
     }

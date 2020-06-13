@@ -4,7 +4,9 @@ import cn.edu.thssdb.adapter.LogicalTable;
 import cn.edu.thssdb.adapter.ReferenceInterface;
 import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Entry;
+import cn.edu.thssdb.schema.Manager;
 import cn.edu.thssdb.schema.Row;
+import cn.edu.thssdb.utils.Global;
 import cn.edu.thssdb.utils.Physical2LogicalInterface;
 import sun.rmi.runtime.Log;
 
@@ -39,11 +41,13 @@ public class TransactionManager implements Physical2LogicalInterface {
             // an action to be executed after commit or abort
             this.transaction_pool.get(transaction_id).add((commit) -> {
                 if (commit) {
+                    Manager.getInstance().getCurrentDatabase().sync(true);
                     System.out.println("table " + table_name + " created in transaction " + transaction_id);
                 }
                 else {
                     // when abort, remove the table
-                    storage_manager.drop_table(table_name, -1);
+                    Manager.getInstance().getCurrentDatabase().sync(false);
+                    // storage_manager.drop_table(table_name, -1);
                 }
             });
         }
@@ -58,11 +62,13 @@ public class TransactionManager implements Physical2LogicalInterface {
             storage_manager.drop_table(table_name, -1);
             this.transaction_pool.get(transaction_id).add((success) -> {
                 if (success) {
+                    Manager.getInstance().getCurrentDatabase().sync(true);
                     System.out.println("drop table " + table_name);
                 }
                 else {
                     // when abort, add the table back again
-                    storage_manager.create_table(table_name, table.get_columns(), -1);
+                    Manager.getInstance().getCurrentDatabase().sync(false);
+//                    storage_manager.create_table(table_name, table.get_columns(), -1);
                 }
             });
         }

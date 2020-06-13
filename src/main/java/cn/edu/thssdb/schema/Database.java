@@ -17,6 +17,8 @@ public class Database {
   private HashMap<String, TableInfo>tablename2Info;
   ReentrantReadWriteLock lock;
   private HashMap<Integer, Table> idTableMap;
+
+//  private ArrayList<Table> dropTables;
   private static int gId = 0;
   public String path;
 
@@ -28,6 +30,7 @@ public class Database {
     this.tablename2Info = new HashMap<>();
     this.idTableMap = new HashMap<>();
     this.lock = new ReentrantReadWriteLock();
+//    dropTables = new ArrayList<>();
     recover();
   }
 
@@ -91,7 +94,7 @@ public class Database {
     File diskFile = new File(
             Global.synthFilePath(path, databaseName, String.format("%s.db", tableName)));
     Table table = new Table(gId, tableName, desc, diskFile, info);
-    name2Id.put(tableName, gId);
+
 
     idTableMap.put(gId, table);
   }
@@ -102,7 +105,8 @@ public class Database {
     if(table == null){
       throw new Exception("cannot found table");
     }else{
-      table.getDiskFile().delete();
+//      table.getDiskFile().delete(); // 惰性删除,仅在初始化的时候选择删除
+//      this.dropTables.add(table);
       Integer id = table.getId();
       idTableMap.remove(id);
       name2Id.remove(tableName);
@@ -112,6 +116,15 @@ public class Database {
 
     // TODO result
   }
+
+  public void sync(boolean isCommit){
+    if(!isCommit){
+      recover();
+    }else {
+      persist();
+    }
+  }
+
 
   public void dropAll() throws Exception{
     for(String tableName : this.tablename2Desc.keySet())
@@ -162,11 +175,14 @@ public class Database {
       ois.close();
       fis.close();
 
+      idTableMap = new HashMap<>();
       for(String name: tablename2Desc.keySet()){
         RowDesc desc = tablename2Desc.get(name);
         TableInfo info = tablename2Info.get(name);
         recoverCreate(name, desc, info);
       }
+
+
     }catch (Exception e){
       //TODO
       e.printStackTrace();

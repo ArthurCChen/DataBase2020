@@ -1,4 +1,4 @@
-package cn.edu.thssdb.storage;
+package cn.edu.thssdb.exception;
 
 public class BufferException  extends RuntimeException{
     String cause;
