@@ -15,6 +15,7 @@ import org.apache.thrift.TException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 public class IServiceHandler implements IService.Iface {
 
@@ -82,10 +83,10 @@ public class IServiceHandler implements IService.Iface {
 
   @Override
   public DisconnectResp disconnect(DisconnectReq req) throws TException {
+    execute(Global.COMMIT, req.sessionId);
     boolean success = remove_session(req.sessionId);
     DisconnectResp resp = new DisconnectResp();
     if (success) {
-      execute(Global.COMMIT, req.sessionId);
       resp.setStatus(new Status(Global.SUCCESS_CODE).setMsg("success"));
     }
     else {

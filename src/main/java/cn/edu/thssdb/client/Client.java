@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.PrintStream;
 import java.util.Collections;
+import java.util.List;
 import java.util.Scanner;
 
 public class Client {
@@ -94,8 +95,7 @@ public class Client {
             }
             //若成功，检查是否有需要展示的表格
             if (resp.hasResult) {
-              System.out.println(resp.getColumnsList());
-              System.out.println(resp.getRowList());
+              System.out.println(get_table(resp.getColumnsList(), resp.getRowList()));
             }
             break;
         }
@@ -111,6 +111,37 @@ public class Client {
     } catch (TException e) {
       e.printStackTrace();
     }
+  }
+
+  private static String get_table(List<String> column_list, List<List<String>> row_list) {
+    StringBuilder builder = new StringBuilder();
+    for (String column : column_list) {
+      builder.append(column).append("\t\t");
+    }
+    builder.append("\n");
+    if (row_list.size() <= 6) {
+      for (List<String> row : row_list) {
+        for (String entry : row) {
+          builder.append(entry).append("\t\t");
+        }
+        builder.append("\n");
+      }
+    }
+    else {
+      for (int i = 0; i < row_list.size(); i++) {
+        if (i < 3 || row_list.size() - i <= 3) {
+          for (String entry : row_list.get(i)) {
+            builder.append(entry).append("\t\t");
+          }
+          builder.append("\n");
+        }
+        else if (i == 3) {
+          builder.append("...\n");
+        }
+      }
+    }
+    builder.append("Totally ").append(row_list.size()).append(" rows.");
+    return builder.toString();
   }
 
   private static void getTime() {

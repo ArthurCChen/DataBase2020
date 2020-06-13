@@ -11,6 +11,7 @@ import cn.edu.thssdb.utils.Global;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.transport.TFramedTransport;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.slf4j.Logger;
@@ -39,7 +40,7 @@ public class ClientTA {
     try {
       transport = new TSocket(Global.DEFAULT_SERVER_HOST, Global.DEFAULT_SERVER_PORT);
       transport.open();
-      protocol = new TBinaryProtocol(transport);
+      protocol = new TBinaryProtocol(new TFramedTransport(transport));
       client = new IService.Client(protocol);
 
       List<String> insertStatements = loadInsertStatements();
