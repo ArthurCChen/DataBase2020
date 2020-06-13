@@ -3,12 +3,15 @@ package cn.edu.thssdb.recovery;
 import cn.edu.thssdb.storage.BufferPool;
 import cn.edu.thssdb.storage.FileHandler;
 import cn.edu.thssdb.storage.Heap.HeapFile;
+import cn.edu.thssdb.storage.Heap.HeapPage;
 import cn.edu.thssdb.storage.Page;
 import cn.edu.thssdb.utils.Global;
 import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class WALManager {
 
@@ -19,6 +22,8 @@ public class WALManager {
     private HeapFile dbTable;
 
     private ArrayList<RecoveryInfo> recoveryList;
+
+    private HashSet<Integer> validTxns;
 
     public WALManager(File walFile, HeapFile dbTable){
         this.walFile = walFile;
@@ -67,17 +72,41 @@ public class WALManager {
 
         //由于abort掉的日志存了但是磁盘文件并不会存储,所以不需要通过redo恢复日志
         //若完成checkpoint后,将会起作用
-        undo();
+        //undo();
 
     }
 
     private void analyze() {
+        for ( RecoveryInfo info : recoveryList){
+            if(info.walType == WALType.COMMIT_TXN)
+                validTxns.add(info.txnId);
+        }
     }
 
     private void undo() {
     }
 
+    //
     private void redo() {
+        ArrayList<RecoveryInfo> newRecover = new ArrayList<>();
+        for(RecoveryInfo info : recoveryList) {
+            if (validTxns.contains(info.txnId)) {
+                switch (info.walType) {
+                    case START_TXN:
+                    case COMMIT_TXN:
+                    case ABORT_TXN:
+                    case CHECKPOINT:
+                        break;
+                    case DELETE_ROW:
+                        dbTable.deleteIndex(info.pageNum, info.pageOffset);
+                        break;
+                    case INSERT_ROW:
+                        dbTable.insertIndex(info.pageNum, info.pageOffset);
+                        break;
+                }
+            }
+        }
+
     }
 
 

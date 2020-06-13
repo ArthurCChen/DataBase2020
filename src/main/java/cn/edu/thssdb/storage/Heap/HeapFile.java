@@ -67,6 +67,20 @@ public class HeapFile implements FileHandler {
     }
 
 
+
+    public void insertIndex(int pageNum, short pageOffset){
+        Row row = getRow(pageNum, pageOffset);
+        HeapIndexEntry entry = new HeapIndexEntry(row.getPrimaryValue(), row.getPageId().getPageNumber(), row.getPageOffset());
+        primaryIndex.put(row.getPrimaryValue(), entry);
+    }
+
+    public void deleteIndex(int pageNum, short pageOffset){
+        Row row = getRow(pageNum, pageOffset);
+        HeapIndexEntry entry = new HeapIndexEntry(row.getPrimaryValue(), row.getPageId().getPageNumber(), row.getPageOffset());
+        primaryIndex.remove(row.getPrimaryValue());
+    }
+
+
     public int getTid() {
         return this.tid;
     }
