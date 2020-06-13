@@ -41,13 +41,13 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
 
 
     // Bind to a query manager. All sql command is executed by the manager.
-    public void bindQueryManager(@NotNull QueryManager manager, @NotNull LogBuffer buffer) throws ManagerNotReadyException {
+    public void bindQueryManager(@NotNull QueryManager manager, @NotNull LogBuffer buffer) {
         if (manager.ready()) {
             this.queryManager = manager;
             this.logBuffer = buffer;
         }
         else {
-            throw new ManagerNotReadyException();
+            handle_error("InternalError: bind query manager fail due to manager not ready.");
         }
     }
 

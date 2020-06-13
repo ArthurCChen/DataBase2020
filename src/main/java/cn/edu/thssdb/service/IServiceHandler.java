@@ -72,7 +72,7 @@ public class IServiceHandler implements IService.Iface {
   }
 
   @Override
-  public ExecuteStatementResp executeStatement(ExecuteStatementReq req) throws TException, TApplicationException, ManagerNotReadyException {
+  public ExecuteStatementResp executeStatement(ExecuteStatementReq req) {
 
     //sessionId验证机制 + 权限
 //    if (!ThssDB.getUserState(req.sessionId)) {
