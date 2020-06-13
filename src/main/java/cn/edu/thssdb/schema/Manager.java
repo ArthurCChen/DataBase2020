@@ -48,6 +48,7 @@ public class Manager {
               path,
               databaseName);
       databases.put(databaseName, database);
+      persist();
     }finally {
       lock.writeLock().unlock();
     }
@@ -70,6 +71,19 @@ public class Manager {
       }
     }
   }
+
+  private void persistMeta(){
+    try{
+      lock.writeLock().lock();;
+      persist();
+      for(Database database: databases.values()){
+        database.quit();
+      }
+    }finally {
+      lock.writeLock().unlock();
+    }
+  }
+
 
   public void exit(){
     try{
@@ -122,13 +136,15 @@ public class Manager {
 
 
 
-  private void deleteDatabase(String databaseName) throws Exception{
+  public void deleteDatabase(String databaseName) throws Exception{
     // TODO
     try{
       lock.writeLock().lock();
       if(databases.containsKey(databaseName)){
-        databases.get(databaseName).dropAll();
+        databases.get(databaseName).dropSelf();
         databases.remove(databaseName);
+        this.currentDatabase = null;
+        persist();
       }
     }finally {
       lock.writeLock().unlock();

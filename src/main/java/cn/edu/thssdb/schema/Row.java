@@ -1,5 +1,6 @@
 package cn.edu.thssdb.schema;
 
+import cn.edu.thssdb.exception.ConstrainNotSatisfyException;
 import cn.edu.thssdb.storage.PageId;
 import cn.edu.thssdb.type.ColumnValue;
 import cn.edu.thssdb.type.ValueFactory;
@@ -78,7 +79,10 @@ public class Row implements Serializable {
           ColumnValue val = ValueFactory.getValue(hashMap.get(attr), desc.get(i).getType(), desc.get(i).getMaxLength());
           setValue(i, val);
         }else if(item.getPrimary() == Column.PRIMARY || item.isNotNull()){
-          throw new Exception("SemanticError: not satisfy primary key or not null constraint.");
+          if(item.getPrimary() == Column.PRIMARY )
+            throw new ConstrainNotSatisfyException(ConstrainNotSatisfyException.PRIMARY);
+          if(item.isNotNull())
+            throw new ConstrainNotSatisfyException(ConstrainNotSatisfyException.ISNOTNULL);
         }
       }
     }

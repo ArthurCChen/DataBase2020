@@ -103,7 +103,7 @@ public class MTable implements LogicalTable {
     }
 
     @Override
-    public void unlock() {
+    public void unlock(boolean isCommit) {
         if (lock_state > 0) {
             lock_state -= 1;
         }

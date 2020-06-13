@@ -479,20 +479,26 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
     }
 
     @Override
-    public Object visitShow_table_stmt(SQLParser.Show_table_stmtContext ctx) {
-        handle_error("NotImplementError: show database not implemented.");
-        return null;
-    }
-
-    @Override
     public Object visitCreate_db_stmt(SQLParser.Create_db_stmtContext ctx) {
-        handle_error("NotImplementError: create database not implemented.");
+        queryManager.create_database(ctx.database_name().getText());
         return null;
     }
 
     @Override
     public Object visitDrop_db_stmt(SQLParser.Drop_db_stmtContext ctx) {
-        handle_error("NotImplementError: drop database not implemented.");
+        queryManager.drop_database(ctx.database_name().getText());
+        return null;
+    }
+
+    @Override
+    public Object visitUse_db_stmt(SQLParser.Use_db_stmtContext ctx) {
+        queryManager.use_database(ctx.database_name().getText());
+        return null;
+    }
+
+    @Override
+    public Object visitShow_table_stmt(SQLParser.Show_table_stmtContext ctx) {
+        handle_error("NotImplementError: show database not implemented.");
         return null;
     }
 
@@ -517,12 +523,6 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
     @Override
     public Object visitRevoke_stmt(SQLParser.Revoke_stmtContext ctx) {
         handle_error("NotImplementError: revoke not implemented.");
-        return null;
-    }
-
-    @Override
-    public Object visitUse_db_stmt(SQLParser.Use_db_stmtContext ctx) {
-        handle_error("NotImplementError: use database not implemented.");
         return null;
     }
 

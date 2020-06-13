@@ -37,6 +37,7 @@ public class Global {
   public static final String DATA_FORMAT = "%s.db";
   public static final String META_FORMAT = "%s.meta";
   public static  final String INDEX_FORMATA = "%s.myi";
+  public static final String META_SUFFIX = "meta";
   public static final String SCRIPT_FORMAT = "%s.script";
   public static final String LOG_FORMAT = "%s.log";
 

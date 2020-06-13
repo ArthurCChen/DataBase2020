@@ -17,6 +17,8 @@ public class Database {
   private HashMap<String, TableInfo>tablename2Info;
   ReentrantReadWriteLock lock;
   private HashMap<Integer, Table> idTableMap;
+
+//  private ArrayList<Table> dropTables;
   private static int gId = 0;
   public String path;
 
@@ -28,6 +30,7 @@ public class Database {
     this.tablename2Info = new HashMap<>();
     this.idTableMap = new HashMap<>();
     this.lock = new ReentrantReadWriteLock();
+//    dropTables = new ArrayList<>();
     recover();
   }
 
@@ -86,14 +89,26 @@ public class Database {
     }
   }
 
+  private void recoverCreate(String tableName, RowDesc desc, TableInfo info) throws Exception{
+    // TODO
+//      tablename2Desc.put(tableName, desc);
+//      tablename2Info.put(tableName, info);
+    File diskFile = new File(
+            Global.synthFilePath(path, databaseName, String.format("%s.db", tableName)));
+    Table table = new Table(name2Id.get(tableName), tableName, desc, diskFile, info);
+
+
+    idTableMap.put(name2Id.get(tableName), table);
+  }
+
   public void drop(String tableName) throws Exception{
 
     Table table = this.getTable(tableName);
     if(table == null){
       throw new Exception("cannot found table");
     }else{
-      table.getDiskFile().delete();
-
+//      table.getDiskFile().delete(); // 惰性删除,仅在初始化的时候选择删除
+//      this.dropTables.add(table);
       Integer id = table.getId();
       idTableMap.remove(id);
       name2Id.remove(tableName);
@@ -104,9 +119,23 @@ public class Database {
     // TODO result
   }
 
-  public void dropAll() throws Exception{
-    for(String tableName : this.tablename2Desc.keySet())
-      drop(tableName);
+  public void sync(boolean isCommit){
+    if(!isCommit){
+      recover();
+    }else {
+      persist();
+    }
+  }
+
+
+  private void dropAll(){
+      for (String tableName : this.tablename2Desc.keySet()) {
+        try {
+          drop(tableName);
+        } catch (Exception e) {
+          System.out.println("Warning: has bug in drop database but ignore it");
+        }
+      }
   }
 
   public FileHandler getFileHandler(String tableName){
@@ -133,6 +162,8 @@ public class Database {
       oos.writeObject(name2Id);
       oos.close();
       fos.close();
+
+      deleteRedunctant();
     }catch (Exception e){
       //TODO
     }
@@ -143,9 +174,15 @@ public class Database {
     if(!newDatabaseDirectory(root)){
       throw new InternalException("not exist");//TODO throw
     }
-    String databaseScriptFile = Global.synthFilePath(root, String.format(Global.META_FORMAT, databaseName));
+    String metaFileName = Global.synthFilePath(root, String.format(Global.META_FORMAT, databaseName));
+    File metaFile = new File(metaFileName);
     try {
-      FileInputStream fis = new FileInputStream(databaseScriptFile);
+      if(!metaFile.exists())
+        metaFile.createNewFile();
+      if(metaFile.length() == 0)
+        return;//未初始化
+
+      FileInputStream fis = new FileInputStream(metaFileName);
       ObjectInputStream ois = new ObjectInputStream(fis);
       tablename2Desc = (HashMap<String, RowDesc>)ois.readObject();
       tablename2Info = (HashMap<String, TableInfo>) ois.readObject();
@@ -153,13 +190,35 @@ public class Database {
       ois.close();
       fis.close();
 
+      idTableMap = new HashMap<>();
       for(String name: tablename2Desc.keySet()){
         RowDesc desc = tablename2Desc.get(name);
         TableInfo info = tablename2Info.get(name);
-        create(name, desc, info);
+        recoverCreate(name, desc, info);
       }
+
+      this.deleteRedunctant();
     }catch (Exception e){
       //TODO
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * 作用: 初始化时删除冗余的db
+   */
+  private void deleteRedunctant() {
+    String root = Global.synthFilePath(path, databaseName);
+    File dir = new File(root);
+    File[] files=dir.listFiles();
+    for(int i=0;i<files.length;i++) {
+      String fileName = files[i].getName();
+      String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);
+      String name = fileName.substring(0, fileName.lastIndexOf("."));
+
+      if(!suffix.equals(Global.META_SUFFIX) && !tablename2Info.containsKey(name)){
+        files[i].delete();
+      }
     }
   }
 
@@ -174,12 +233,28 @@ public class Database {
     }
   }
 
+  public int tableName2Id(String tableName){
+    return this.tableName2Id(tableName);
+  }
+
+
   public Table getTable(String tableName){
     return this.getTable(name2Id.get(tableName));
   }
 
   public Table getTable(Integer tableId){
     return this.idTableMap.get(tableId);
+  }
+
+  public boolean dropSelf(){
+    dropAll();
+    sync(true);
+    String root = Global.synthFilePath(path, databaseName);
+    File dir = new File(root);
+    for(File subfile: dir.listFiles()){
+      subfile.delete();
+    }
+    return dir.delete();
   }
 
 }

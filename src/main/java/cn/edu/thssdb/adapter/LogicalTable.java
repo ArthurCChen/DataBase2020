@@ -29,7 +29,7 @@ public interface LogicalTable extends Iterable<Row> {
     // return false if: 1. currently not locked(do not upgrade); 2. is already exclusive lock;
     boolean upgrade_lock();
 
-    void unlock();
+    void unlock(boolean isCommit);
 
     ArrayList<Column> get_columns();
 

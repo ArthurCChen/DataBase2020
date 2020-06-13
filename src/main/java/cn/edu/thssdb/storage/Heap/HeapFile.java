@@ -2,6 +2,7 @@ package cn.edu.thssdb.storage.Heap;
 
 
 import cn.edu.thssdb.index.BPlusTree;
+import cn.edu.thssdb.exception.DuplicateKeyException;
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.RowDesc;
 import cn.edu.thssdb.storage.FileHandler;
@@ -116,7 +117,7 @@ public class HeapFile implements FileHandler {
     public void checkPrimaryKeyViolated(Row t) throws Exception{
         ColumnValue primary = t.getPrimaryValue();
         if(primaryIndex.contains(primary)) {
-            throw new Exception("primary key clash");
+            throw new DuplicateKeyException();
         }
 //        int tableId = this.getTid();
 //        int numPages = this.numPages();
