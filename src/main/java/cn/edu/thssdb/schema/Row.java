@@ -79,10 +79,9 @@ public class Row implements Serializable {
           ColumnValue val = ValueFactory.getValue(hashMap.get(attr), desc.get(i).getType(), desc.get(i).getMaxLength());
           setValue(i, val);
         }else if(item.getPrimary() == Column.PRIMARY || item.isNotNull()){
-          if(item.getPrimary() == Column.PRIMARY )
-            throw new ConstrainNotSatisfyException(ConstrainNotSatisfyException.PRIMARY);
-          if(item.isNotNull())
-            throw new ConstrainNotSatisfyException(ConstrainNotSatisfyException.ISNOTNULL);
+          int option = item.getPrimary() == Column.PRIMARY ? ConstrainNotSatisfyException.PRIMARY : 0;
+          option |= item.getPrimary() == Column.PRIMARY ? ConstrainNotSatisfyException.ISNOTNULL : 0;
+          throw new ConstrainNotSatisfyException(option);
         }
       }
     }

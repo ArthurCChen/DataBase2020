@@ -17,8 +17,12 @@ public class ConstrainNotSatisfyException extends RuntimeException{
 
     @Override
     public String getMessage() {
+        String info = new String("Exception for:");
         if (satisfy(PRIMARY, cause))
-            return "Exception: insert row not satisfy the constraint: " + cause;
-        return null;
+            info +=  "insert row not satisfy the constraint; ";
+        if ( satisfy(ISNOTNULL, cause))
+            info += "isnotnull not satisfied ; ";
+
+        return info;
     }
 }
