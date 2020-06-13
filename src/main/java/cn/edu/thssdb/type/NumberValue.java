@@ -34,6 +34,21 @@ public abstract class NumberValue implements ColumnValue{
 
     public abstract boolean less_than(ColumnValue val);
 
+    @Override
+    public int compareTo(ColumnValue o) {
+        if(greater_than(o))
+            return 1;
+        if(less_than(o))
+            return -1;
+        return 0;
+    }
+
     public ColumnType getType() {
-        return type;}
+        return type;
+    }
+
+    @Override
+    public int getMaxLen() {
+        return 0;
+    }
 }

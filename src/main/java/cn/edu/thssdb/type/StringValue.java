@@ -65,4 +65,14 @@ public class StringValue implements ColumnValue{
     public ColumnType getType() {
         return ColumnType.STRING;
     }
+
+    @Override
+    public int compareTo(ColumnValue o) {
+        return value.compareTo(((StringValue)o).value);
+    }
+
+    @Override
+    public int getMaxLen() {
+        return maxLen;
+    }
 }

@@ -12,24 +12,35 @@ import cn.edu.thssdb.type.ColumnValue;
 import cn.edu.thssdb.utils.Global;
 import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 public class HeapFile implements FileHandler {
 
     private File file;
+    private File indexFile;
     private int id;
     private RowDesc tupleDesc;
     private boolean hasPrimaryKeyConstraint=true;
-    private BPlusTree<ColumnValue, HeapIndexEntry>
+    private BPlusTree<ColumnValue, HeapIndexEntry> primaryIndex;
 
-    public HeapFile(int id, File file, RowDesc tupleDesc){
+    public HeapFile(int id, File file, File indexFile, RowDesc tupleDesc) throws IOException{
         this.id = id;
+        this.indexFile = indexFile;
         this.file = file;
         this.tupleDesc = tupleDesc;
+        recoverIndex();
+    }
+
+    public void recoverIndex() throws IOException{
+
+        primaryIndex = new BPlusTree<ColumnValue, HeapIndexEntry>();
+        DataInputStream dis = new DataInputStream(new FileInputStream(indexFile));
+        while(dis.available() != 0){
+            HeapIndexEntry entry = HeapIndexEntry.parse(dis, tupleDesc.getPrimaryType(), tupleDesc.getPrimaryMaxLen());
+            primaryIndex.put(entry.primary, entry);
+        }
     }
 
 

@@ -1,5 +1,6 @@
 package cn.edu.thssdb.schema;
 
+import cn.edu.thssdb.type.ColumnType;
 import cn.edu.thssdb.utils.Global;
 
 import java.io.Serializable;
@@ -13,6 +14,8 @@ public class RowDesc implements Serializable {
     private ArrayList<Column> columns;
     private ArrayList<String> primaryNames;
     private ArrayList<Integer> primaryIndex;
+    private ColumnType primaryType = null;
+    private int primaryMaxLen = 0;
 
     public ArrayList<Column> getColumns() {
         return columns;
@@ -20,6 +23,14 @@ public class RowDesc implements Serializable {
 
     public ArrayList<String> getPrimaryNames() {
         return primaryNames;
+    }
+
+    public ColumnType getPrimaryType() {
+        return primaryType;
+    }
+
+    public int getPrimaryMaxLen() {
+        return primaryMaxLen;
     }
 
     public ArrayList<String> getAttrNames(){
@@ -45,6 +56,8 @@ public class RowDesc implements Serializable {
                 if(primaryKeys.contains(columns.get(i).getName())){
                     this.primaryIndex.add(i);
                     this.columns.get(i).setPrimary(Column.PRIMARY);
+                    primaryType = columns.get(i).getType();
+                    primaryMaxLen = columns.get(i).getMaxLength();
                 }
             }
         }else {
