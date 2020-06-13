@@ -135,7 +135,7 @@ public class Manager {
 
 
 
-  private void deleteDatabase(String databaseName) throws Exception{
+  public void deleteDatabase(String databaseName) throws Exception{
     // TODO
     try{
       lock.writeLock().lock();
