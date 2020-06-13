@@ -1,6 +1,7 @@
 package cn.edu.thssdb.storage.Heap;
 
 
+import cn.edu.thssdb.exception.DuplicateKeyException;
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.RowDesc;
 import cn.edu.thssdb.storage.FileHandler;
@@ -96,7 +97,7 @@ public class HeapFile implements FileHandler {
             while (iterator.hasNext()) {
                 Row tuple = iterator.next();
                 if (tuple.getColumnValue(primaryKeyIdx).equals(pkField)){
-                    throw new Exception("primary key clash");
+                    throw new DuplicateKeyException();
                 }
             }
         }
