@@ -34,8 +34,9 @@ public class Global {
 
   public static final String S_URL_INTERNAL = "jdbc:default:connection";
   public static final String FILE_SEPARATOR = File.separator;
-  public static final String DATA_FORMAT = "%s.data";
+  public static final String DATA_FORMAT = "%s.db";
   public static final String META_FORMAT = "%s.meta";
+  public static  final String INDEX_FORMATA = "%s.myi";
   public static final String SCRIPT_FORMAT = "%s.script";
   public static final String LOG_FORMAT = "%s.log";
 

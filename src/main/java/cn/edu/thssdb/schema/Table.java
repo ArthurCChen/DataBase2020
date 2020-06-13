@@ -6,6 +6,7 @@ import cn.edu.thssdb.storage.Heap.HeapFile;
 import cn.edu.thssdb.utils.Global;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -53,7 +54,8 @@ public class Table  {
             Integer id,
             String name,
             RowDesc desc,
-            File diskFile){
+            File diskFile,
+            File indexFile) throws IOException {
         // TODO
         this.tid = id;
         this.lock = new ReentrantReadWriteLock();
@@ -62,7 +64,7 @@ public class Table  {
         for(int i = 0; i < desc.getColumnSize(); i ++){
             columnIndex.put(desc.get(i).getName(), i);
         }
-        this.fileHandler = new HeapFile(id, diskFile, desc);
+        this.fileHandler = new HeapFile(id, diskFile, indexFile, desc);
         this.tableName = name;
         this.diskFile = diskFile;
         this.tableInfo = new TableInfo(0, 0);
@@ -73,9 +75,10 @@ public class Table  {
             String name,
             RowDesc desc,
             File diskFile,
+            File indexFile,
             TableInfo tableInfo
-            ){
-        this(id, name, desc, diskFile);
+            ) throws IOException{
+        this(id, name, desc, diskFile, indexFile);
         this.tableInfo = tableInfo;
         // TODO
     }

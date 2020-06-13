@@ -64,16 +64,19 @@ public class Database {
 
     }else{
       File diskFile = new File(
-              Global.synthFilePath(path, databaseName, String.format("%s.db", tableName)));
+              Global.synthFilePath(path, databaseName, String.format(Global.DATA_FORMAT, tableName)));
+      File indexFile = new File(
+              Global.synthFilePath(path, databaseName, String.format(Global.INDEX_FORMATA, tableName)));
       try{
         diskFile.createNewFile();
+        indexFile.createNewFile();
       }catch (Exception e){
         e.printStackTrace();
       }
 
     this.gId ++;
       RowDesc desc = new RowDesc(columns, primaryNames);
-      Table table = new Table(gId, tableName, desc, diskFile, info);
+      Table table = new Table(gId, tableName, desc, diskFile, indexFile, info);
     tablename2Desc.put(tableName, desc);
     tablename2Info.put(tableName, info);
     name2Id.put(tableName, gId);
@@ -90,6 +93,7 @@ public class Database {
       throw new Exception("cannot found table");
     }else{
       table.getDiskFile().delete();
+
       Integer id = table.getId();
       idTableMap.remove(id);
       name2Id.remove(tableName);
@@ -157,10 +161,6 @@ public class Database {
     }catch (Exception e){
       //TODO
     }
-  }
-
-  private void recoverFromScript(){
-    //TODO 从记录的sql script建立database的column项
   }
 
   public void quit() {
