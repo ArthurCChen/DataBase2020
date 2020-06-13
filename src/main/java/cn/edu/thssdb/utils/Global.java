@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Global {
-  public static int fanout = 129;
+  public static int fanout = 8;//8 is the best fallout for our task
 
   public static int SUCCESS_CODE = 0;
   public static int FAILURE_CODE = -1;
@@ -48,7 +48,7 @@ public class Global {
   //--------------------------------------------------------
   //--------For Storage usage-------------------------------
   //--------------------------------------------------------
-  public static final int pageSize = 4096;
+  public static final int pageSize = 4096 * 16;
   public static final int bufferChunkSize = 50;
 
   //用于转换Object为数组类型
