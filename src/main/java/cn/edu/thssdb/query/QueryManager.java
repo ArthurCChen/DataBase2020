@@ -334,7 +334,7 @@ public class QueryManager implements QueryManagerInterface {
                         break;
                     }
                 } catch (Exception e) {
-                    handle_error("SemanticError: convert fail.");
+                    handle_error(e.getMessage());
                     break;
                 }
             }

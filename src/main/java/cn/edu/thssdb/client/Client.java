@@ -63,7 +63,6 @@ public class Client {
       while (true) {
         print(Global.CLI_PREFIX);
         String msg = SCANNER.nextLine();
-//        String msgLower = msg.trim().toLowerCase();
         long startTime = System.currentTimeMillis();
 
         switch (msg.trim()) {
@@ -74,7 +73,7 @@ public class Client {
             showHelp();
             break;
           case Global.QUIT:
-//            disconnect();
+            disconnect();
             open = false;
             break;
           default:
@@ -88,11 +87,11 @@ public class Client {
               println(resp.getStatus().msg);
             }
             //检查是否abort，若有则提醒用户
-            if (resp.isAbort == true) {
+            if (resp.isAbort) {
               println("The execution is aborted!");
             }
             //若成功，检查是否有需要展示的表格
-            if (resp.hasResult == true) {
+            if (resp.hasResult) {
               System.out.println(resp.getColumnsList());
               System.out.println(resp.getRowList());
             }
@@ -133,17 +132,15 @@ public class Client {
     return resp.getSessionId();
   }
 
-//  private static void disconnect(long sessionId) throws TException{
-//    DisconnectResp req = new DisconnectResp();
-//    req.setSessionId(sessionId);
-//    try {
-//      client.disconnect(req);
-//      sessionId=-1;
-//      System.out.println("Sessionid:-1");
-//    } catch (TException e) {
-//      logger.error(e.getMessage());
-//    }
-//  }
+  private static void disconnect() throws TException {
+    DisconnectReq req = new DisconnectReq();
+    DisconnectResp resp = client.disconnect(req);
+    if (resp.getStatus().code == Global.SUCCESS_CODE) {
+      println("Disconnect Successfully!");
+    } else {
+      println("Disconnect Unsuccessfully!");
+    }
+  }
 
   static Options createOptions() {
     Options options = new Options();
