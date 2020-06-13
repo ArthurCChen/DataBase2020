@@ -30,6 +30,7 @@ public class Global {
   public static String CLI_PREFIX = "ThssDB>";
   public static final String SHOW_TIME = "show time;";
   public static final String QUIT = "quit;";
+  public static final String SHOW_HELP = "help;";
 
   public static final String S_URL_INTERNAL = "jdbc:default:connection";
   public static final String FILE_SEPARATOR = File.separator;
