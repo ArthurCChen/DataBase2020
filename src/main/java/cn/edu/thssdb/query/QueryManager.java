@@ -82,12 +82,12 @@ public class QueryManager implements QueryManagerInterface {
         return false;
     }
 
-    private void clear_locks() {
+    private void clear_locks(boolean isCommit) {
         for (LogicalTable table : shared) {
-            table.unlock();
+            table.unlock(false);
         }
         for (LogicalTable table : exclusive) {
-            table.unlock();
+            table.unlock(isCommit);
         }
         shared.clear();
         exclusive.clear();
@@ -173,7 +173,7 @@ public class QueryManager implements QueryManagerInterface {
             storage.commit(current_transaction_id);
             current_transaction_id = -1;
             // as we are implementing Rigorous 2PL, release locks after transaction finish
-            clear_locks();
+            clear_locks(true);
         }
     }
 
@@ -183,7 +183,7 @@ public class QueryManager implements QueryManagerInterface {
             storage.abort(current_transaction_id);
             current_transaction_id = -1;
             // as we are implementing Rigorous 2PL, release locks after transaction finish
-            clear_locks();
+            clear_locks(false);
         }
     }
 
@@ -381,7 +381,8 @@ public class QueryManager implements QueryManagerInterface {
                 for (int i = 0; i < tables.size(); i++) {
                     if (!require_shared_lock(tables.get(i))) {
                         for (int j = 0; j < i; j++) {
-                            tables.get(j).unlock();
+                            tables.get(j).unlock(false);
+                            shared.remove(tables.get(j));
                         }
                         locked = false;
                         break;

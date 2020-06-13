@@ -225,27 +225,27 @@ public class M_Physical2LogicalInterfaceTest {
         assertTrue(table1.shared_lock());
         assertTrue(table1.is_share_locked());
         assertFalse(table1.is_exclusive_locked());
-        table1.unlock();
+        table1.unlock(false);
         // shared_lock() is called twice, so two transactions own this lock
         assertTrue(table1.is_share_locked());
-        table1.unlock();
+        table1.unlock(false);
         assertFalse(table1.is_share_locked());
         assertFalse(table1.upgrade_lock());
         assertTrue(table1.exclusive_lock());
         assertTrue(table1.is_exclusive_locked());
         assertFalse(table1.exclusive_lock());
         assertTrue(table1.is_exclusive_locked());
-        table1.unlock();
+        table1.unlock(false);
         assertFalse(table1.is_exclusive_locked());
         assertTrue(table1.shared_lock());
         assertTrue(table1.shared_lock());
         assertFalse(table1.exclusive_lock());
         // more than one transactions own read lock, can not upgrade
         assertFalse(table1.upgrade_lock());
-        table1.unlock();
+        table1.unlock(false);
         assertTrue(table1.upgrade_lock());
         assertTrue(table1.is_exclusive_locked());
-        table1.unlock();
+        table1.unlock(false);
         assertFalse(table1.is_exclusive_locked());
 
     }
