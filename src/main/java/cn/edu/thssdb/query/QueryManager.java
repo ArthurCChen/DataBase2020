@@ -521,6 +521,33 @@ public class QueryManager implements QueryManagerInterface {
         submit_task(task);
     }
 
+    @Override
+    public void create_database(String db_name) {
+        try {
+            Manager.getInstance().createDatabase(db_name);
+        } catch (Exception e) {
+            handle_error("SemanticError: database already exists.");
+        }
+    }
+
+    @Override
+    public void use_database(String db_name) {
+        try {
+            Manager.getInstance().useDatabase(db_name);
+        } catch (Exception e) {
+            handle_error("SemanticError: database does not exist.");
+        }
+    }
+
+    @Override
+    public void drop_database(String db_name) {
+        try {
+            Manager.getInstance().deleteDatabase(db_name);
+        } catch (Exception e) {
+            handle_error("SemanticError: database does not exist.");
+        }
+    }
+
     private void handle_error(String error) {
         logBuffer.write(error);
         has_semantic_error = true;

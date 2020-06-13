@@ -23,30 +23,36 @@ import java.util.ArrayList;
  */
 public interface QueryManagerInterface {
 
-    public boolean ready();
+    boolean ready();
 
     // start a transaction
-    public void startTransaction();
+    void startTransaction();
 
     // end a transaction
-    public void commit();
+    void commit();
 
     // discard all the changes that has been made within the current transaction
-    public void rollback();
+    void rollback();
 
-    public void createTable(@NotNull String tableName, @NotNull ArrayList<Column> columns);
+    void createTable(@NotNull String tableName, @NotNull ArrayList<Column> columns);
 
-    public void deleteRows(@NotNull String tableName, Predicate predicate);
+    void deleteRows(@NotNull String tableName, Predicate predicate);
 
-    public void dropTable(@NotNull String tableName);
+    void dropTable(@NotNull String tableName);
 
-    public void quit();
+    void quit();
 
-    public void showTable(@NotNull String tableName);
+    void showTable(@NotNull String tableName);
 
-    public void insertRow(@NotNull String tableName, @NotNull ArrayList<String> columns, @NotNull ArrayList<ArrayList<Object>> entries);
+    void insertRow(@NotNull String tableName, @NotNull ArrayList<String> columns, @NotNull ArrayList<ArrayList<Object>> entries);
 
-    public void select(@NotNull ArrayList<Column> result_columns, @NotNull VirtualTable vt, @NotNull Predicate conditions);
+    void select(@NotNull ArrayList<Column> result_columns, @NotNull VirtualTable vt, @NotNull Predicate conditions);
 
-    public void update(@NotNull String table_name, @NotNull String column_name, @NotNull Operand value, @NotNull  Predicate condition);
+    void update(@NotNull String table_name, @NotNull String column_name, @NotNull Operand value, @NotNull Predicate condition);
+
+    void create_database(@NotNull String db_name);
+
+    void use_database(@NotNull String db_name);
+
+    void drop_database(@NotNull String db_name);
 }
