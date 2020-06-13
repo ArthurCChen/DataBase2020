@@ -16,7 +16,7 @@ public interface FileHandler {
 
     ArrayList<Page> updateRow(Row row) throws  Exception;
 
-    int getId();
+    int getTid();
 
     FileIterator iterator();
 

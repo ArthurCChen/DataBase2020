@@ -1,5 +1,6 @@
 package cn.edu.thssdb.storage.Heap;
 
+import cn.edu.thssdb.exception.IndexException;
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.RowDesc;
 import cn.edu.thssdb.storage.Page;
@@ -51,6 +52,14 @@ public class HeapPage implements Page {
                 (Global.pageSize * 8.0) / (this.td.getByteSize() * 8 + 1)
         );
     }
+
+    public Row getRowByOffset(int offset){
+        if(!isSlotUsed(offset)){
+            throw new IndexException();
+        }
+        return this.rows[offset];
+    }
+
 
     public boolean isSlotUsed(int i) {
         if(i < 0 || i >= this.numSlots){

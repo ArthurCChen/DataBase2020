@@ -24,6 +24,10 @@ public class Row implements Serializable {
     this.entries = entries;
   }
 
+  public ColumnValue getPrimaryValue(){
+    return (entries.get(rowDesc.getPrimaryIndex().get(0))).value;
+  }
+
   private Row(RowDesc desc){
   this.rowDesc = desc;
   entries = new ArrayList<>();

@@ -12,9 +12,9 @@ import java.io.Serializable;
 public class HeapIndexEntry implements Serializable {
     ColumnValue primary;
     int pageNumber;// page 所属在第几页
-    int offset;
+    short offset;
 
-    public HeapIndexEntry(ColumnValue primary, int pid, int offset){
+    public HeapIndexEntry(ColumnValue primary, int pid, short offset){
         this.primary = primary;
         this.pageNumber = pid;
         this.offset = offset;
@@ -29,7 +29,7 @@ public class HeapIndexEntry implements Serializable {
     public static HeapIndexEntry parse(DataInputStream dis, ColumnType primaryType, int maxLen) throws IOException {
         ColumnValue val = primaryType.parse(dis, maxLen);
         int pageNumber = dis.readInt();
-        int offset = dis.readInt();
+        short offset = dis.readShort();
         return new HeapIndexEntry(val, pageNumber, offset);
     }
 }

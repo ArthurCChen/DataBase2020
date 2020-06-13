@@ -10,6 +10,7 @@ import cn.edu.thssdb.storage.Page;
 import cn.edu.thssdb.storage.PageId;
 import cn.edu.thssdb.type.ColumnValue;
 import cn.edu.thssdb.utils.Global;
+import javafx.util.Pair;
 import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
 
 import java.io.*;
@@ -20,13 +21,13 @@ public class HeapFile implements FileHandler {
 
     private File file;
     private File indexFile;
-    private int id;
+    private int tid;
     private RowDesc tupleDesc;
     private boolean hasPrimaryKeyConstraint=true;
     private BPlusTree<ColumnValue, HeapIndexEntry> primaryIndex;
 
     public HeapFile(int id, File file, File indexFile, RowDesc tupleDesc) throws IOException{
-        this.id = id;
+        this.tid = id;
         this.indexFile = indexFile;
         this.file = file;
         this.tupleDesc = tupleDesc;
@@ -43,14 +44,30 @@ public class HeapFile implements FileHandler {
         }
     }
 
+    public void persistIndex() throws IOException{
+
+        DataOutputStream dos = new DataOutputStream(new FileOutputStream(indexFile));
+        for(Pair<ColumnValue, HeapIndexEntry> entry: primaryIndex){
+            entry.getKey().serialize(dos);
+            dos.writeInt(entry.getValue().pageNumber);
+            dos.writeShort(entry.getValue().offset);
+        }
+    }
+
+    private Row getRow(int pageNum, short offset) {
+        PageId pid = new HeapPageId(getTid(), pageNum);
+        HeapPage page = (HeapPage) Global.gBufferPool().getPage(pid);
+        Row row = page.getRowByOffset(offset);
+        return row;
+    }
 
     public File getFile() {
         return this.file;
     }
 
 
-    public int getId() {
-        return this.id;
+    public int getTid() {
+        return this.tid;
     }
 
 
@@ -97,21 +114,25 @@ public class HeapFile implements FileHandler {
 
 
     public void checkPrimaryKeyViolated(Row t) throws Exception{
-        int tableId = this.getId();
-        int numPages = this.numPages();
-        int primaryKeyIdx = t.getRowDesc().getPrimaryIndex().get(0);
-        ColumnValue pkField = t.getEntries().get(primaryKeyIdx).value;
-        for (int i = 0; i < numPages; i++) {
-            HeapPageId pageId = new HeapPageId(tableId, i);
-            Page page = Global.gBufferPool().getPage(pageId);
-            Iterator<Row> iterator = ((HeapPage)page).iterator();
-            while (iterator.hasNext()) {
-                Row tuple = iterator.next();
-                if (tuple.getColumnValue(primaryKeyIdx).equals(pkField)){
-                    throw new Exception("primary key clash");
-                }
-            }
+        ColumnValue primary = t.getPrimaryValue();
+        if(primaryIndex.contains(primary)) {
+            throw new Exception("primary key clash");
         }
+//        int tableId = this.getTid();
+//        int numPages = this.numPages();
+//        int primaryKeyIdx = t.getRowDesc().getPrimaryIndex().get(0);
+//        ColumnValue pkField = t.getEntries().get(primaryKeyIdx).value;
+//        for (int i = 0; i < numPages; i++) {
+//            HeapPageId pageId = new HeapPageId(tableId, i);
+//            Page page = Global.gBufferPool().getPage(pageId);
+//            Iterator<Row> iterator = ((HeapPage)page).iterator();
+//            while (iterator.hasNext()) {
+//                Row tuple = iterator.next();
+//                if (tuple.getColumnValue(primaryKeyIdx).equals(pkField)){
+//                    throw new Exception("primary key clash");
+//                }
+//            }
+//        }
     }
 
 
@@ -123,7 +144,7 @@ public class HeapFile implements FileHandler {
         }
         HeapPage heapPage = (HeapPage)this.getEmptyPage(0);
         if (heapPage == null) {
-            HeapPageId heapPageId = new HeapPageId(this.getId(), this.numPages());
+            HeapPageId heapPageId = new HeapPageId(this.getTid(), this.numPages());
             heapPage = new HeapPage(heapPageId, HeapPage.createEmptyPageData(), tupleDesc);
             this.writePage(heapPage);
             heapPage = (HeapPage) Global.gBufferPool().getPage(heapPageId);
@@ -138,7 +159,7 @@ public class HeapFile implements FileHandler {
     public Page getEmptyPage(int start)
             throws Exception {
         try {
-            int tableId = this.getId();
+            int tableId = this.getTid();
             int numPages = this.numPages();
             for (int i = start; i < numPages; i++) {
                 HeapPageId pageId = new HeapPageId(tableId, i);

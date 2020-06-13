@@ -76,7 +76,7 @@ public class HeapFileIterator implements FileIterator {
 
 
     private Iterator<Row> getTupleIteratorFromPage(int pgNum){
-        PageId pageId = new HeapPageId(f.getId(), pgNum);
+        PageId pageId = new HeapPageId(f.getTid(), pgNum);
         Page page = Global.gBufferPool().getPage(pageId);
         HeapPage heapPage = (HeapPage)page;
         return heapPage.iterator();
