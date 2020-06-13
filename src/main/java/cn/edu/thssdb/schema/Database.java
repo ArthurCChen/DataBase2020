@@ -125,9 +125,14 @@ public class Database {
   }
 
 
-  public void dropAll() throws Exception{
-    for(String tableName : this.tablename2Desc.keySet())
-      drop(tableName);
+  private void dropAll(){
+      for (String tableName : this.tablename2Desc.keySet()) {
+        try {
+          drop(tableName);
+        } catch (Exception e) {
+          System.out.println("Warning: has bug in drop database but ignore it");
+        }
+      }
   }
 
   public FileHandler getFileHandler(String tableName){
@@ -166,9 +171,15 @@ public class Database {
     if(!newDatabaseDirectory(root)){
       throw new InternalException("not exist");//TODO throw
     }
-    String databaseScriptFile = Global.synthFilePath(root, String.format(Global.META_FORMAT, databaseName));
+    String metaFileName = Global.synthFilePath(root, String.format(Global.META_FORMAT, databaseName));
+    File metaFile = new File(metaFileName);
     try {
-      FileInputStream fis = new FileInputStream(databaseScriptFile);
+      if(!metaFile.exists())
+        metaFile.createNewFile();
+      if(metaFile.length() == 0)
+        return;//未初始化
+
+      FileInputStream fis = new FileInputStream(metaFileName);
       ObjectInputStream ois = new ObjectInputStream(fis);
       tablename2Desc = (HashMap<String, RowDesc>)ois.readObject();
       tablename2Info = (HashMap<String, TableInfo>) ois.readObject();
@@ -234,6 +245,17 @@ public class Database {
 
   public Table getTable(Integer tableId){
     return this.idTableMap.get(tableId);
+  }
+
+  public boolean dropSelf(){
+    dropAll();
+    sync(true);
+    String root = Global.synthFilePath(path, databaseName);
+    File dir = new File(root);
+    for(File subfile: dir.listFiles()){
+      subfile.delete();
+    }
+    return dir.delete();
   }
 
 }

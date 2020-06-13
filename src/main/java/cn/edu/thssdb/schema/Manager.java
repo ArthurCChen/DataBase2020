@@ -48,6 +48,7 @@ public class Manager {
               path,
               databaseName);
       databases.put(databaseName, database);
+      persist();
     }finally {
       lock.writeLock().unlock();
     }
@@ -71,7 +72,7 @@ public class Manager {
     }
   }
 
-  public void persistMeta(){
+  private void persistMeta(){
     try{
       lock.writeLock().lock();;
       persist();
@@ -140,8 +141,10 @@ public class Manager {
     try{
       lock.writeLock().lock();
       if(databases.containsKey(databaseName)){
-        databases.get(databaseName).dropAll();
+        databases.get(databaseName).dropSelf();
         databases.remove(databaseName);
+        this.currentDatabase = null;
+        persist();
       }
     }finally {
       lock.writeLock().unlock();
