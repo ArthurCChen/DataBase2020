@@ -8,7 +8,7 @@ import java.util.Iterator;
 public class HeapTableIterator implements Iterator<Row> {
 
     FileIterator iter;
-    HeapTableIterator(FileIterator iter){
+    public HeapTableIterator(FileIterator iter){
         this.iter = iter;
     }
 

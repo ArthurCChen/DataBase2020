@@ -333,7 +333,7 @@ public class QueryManager implements QueryManagerInterface {
                 try {
                     Row row = new Row(rowDesc, names, entry);
                     if (!storage.insert_row(tableName, row, current_transaction_id)) {
-                        handle_error("SemanticError: fail to insert row " + row + " into table " + tableName + ".");
+                        handle_error("SemanticError: fail to insert row " + row + " into table " + tableName + ", it already exists.");
                         break;
                     }
                 } catch (Exception e) {
@@ -529,7 +529,8 @@ public class QueryManager implements QueryManagerInterface {
         try {
             Manager.getInstance().createDatabase(db_name);
         } catch (Exception e) {
-            handle_error("SemanticError: database already exists.");
+            System.out.println(e.getMessage());
+//            handle_error("SemanticError: database already exists.");
         }
     }
 

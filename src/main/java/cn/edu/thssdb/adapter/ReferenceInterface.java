@@ -72,7 +72,8 @@ public class ReferenceInterface implements Physical2LogicalInterface {
     public LogicalTable get_table(String table_name, int transaction_id) {
         Table realTable = manager.getCurrentDatabase().getTable(table_name);
         if(realTable != null) {
-            LogicalTable logicalTable = new HeapTable(realTable);
+//            LogicalTable logicalTable = new HeapTable(realTable);
+            LogicalTable logicalTable = realTable;
             return logicalTable;
         }else{
             return null;

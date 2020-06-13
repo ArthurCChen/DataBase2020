@@ -25,7 +25,7 @@ public class SQLParser extends Parser {
 		K_IDENTIFIED=38, K_INSERT=39, K_INTO=40, K_JOIN=41, K_KEY=42, K_NOT=43, 
 		K_NULL=44, K_ON=45, K_PRIMARY=46, K_QUIT=47, K_REVOKE=48, K_SELECT=49, 
 		K_SET=50, K_SHOW=51, K_TABLE=52, K_TO=53, K_UPDATE=54, K_USE=55, K_USER=56, 
-		K_VALUES=57, K_VIEW=58, K_WHERE=59, K_START=60, K_TRANSACTION=61, K_COMMIT=62, 
+		K_VALUES=57, K_VIEW=58, K_WHERE=59, K_BEGIN=60, K_TRANSACTION=61, K_COMMIT=62, 
 		K_ROLLBACK=63, IDENTIFIER=64, NUMERIC_LITERAL=65, EXPONENT=66, STRING_LITERAL=67, 
 		SINGLE_LINE_COMMENT=68, MULTILINE_COMMENT=69, SPACES=70;
 	public static final int
@@ -75,7 +75,7 @@ public class SQLParser extends Parser {
 			"K_EXISTS", "K_FROM", "K_GRANT", "K_IF", "K_IDENTIFIED", "K_INSERT", 
 			"K_INTO", "K_JOIN", "K_KEY", "K_NOT", "K_NULL", "K_ON", "K_PRIMARY", 
 			"K_QUIT", "K_REVOKE", "K_SELECT", "K_SET", "K_SHOW", "K_TABLE", "K_TO", 
-			"K_UPDATE", "K_USE", "K_USER", "K_VALUES", "K_VIEW", "K_WHERE", "K_START", 
+			"K_UPDATE", "K_USE", "K_USER", "K_VALUES", "K_VIEW", "K_WHERE", "K_BEGIN", 
 			"K_TRANSACTION", "K_COMMIT", "K_ROLLBACK", "IDENTIFIER", "NUMERIC_LITERAL", 
 			"EXPONENT", "STRING_LITERAL", "SINGLE_LINE_COMMENT", "MULTILINE_COMMENT", 
 			"SPACES"
@@ -544,7 +544,7 @@ public class SQLParser extends Parser {
 	}
 
 	public static class Start_transactionContext extends ParserRuleContext {
-		public TerminalNode K_START() { return getToken(SQLParser.K_START, 0); }
+		public TerminalNode K_BEGIN() { return getToken(SQLParser.K_BEGIN, 0); }
 		public TerminalNode K_TRANSACTION() { return getToken(SQLParser.K_TRANSACTION, 0); }
 		public Start_transactionContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -572,7 +572,7 @@ public class SQLParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(142);
-			match(K_START);
+			match(K_BEGIN);
 			setState(143);
 			match(K_TRANSACTION);
 			}
