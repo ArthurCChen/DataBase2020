@@ -11,8 +11,8 @@ import java.io.Serializable;
 
 public class HeapIndexEntry implements Serializable {
     ColumnValue primary;
-    int pageNumber;// page 所属在第几页
-    short offset;
+    public int pageNumber;// page 所属在第几页
+    public short offset;
 
     public HeapIndexEntry(ColumnValue primary, int pid, short offset){
         this.primary = primary;

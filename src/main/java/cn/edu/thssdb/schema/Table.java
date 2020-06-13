@@ -1,5 +1,7 @@
 package cn.edu.thssdb.schema;
 
+import cn.edu.thssdb.recovery.RecoveryInfo;
+import cn.edu.thssdb.recovery.WALManager;
 import cn.edu.thssdb.storage.FileHandler;
 import cn.edu.thssdb.storage.FileIterator;
 import cn.edu.thssdb.storage.Heap.HeapFile;
@@ -14,8 +16,14 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class Table  {
     ReentrantReadWriteLock lock;
 
+    public class WALBuffer{
+        public int pageNum = 0;
+        public short pageOffset = 0;
+    }
+
     RowDesc desc;
     private File diskFile;
+    public WALManager walManager;
     public int tid;
     public String databaseName;
     public String tableName;
@@ -28,7 +36,7 @@ public class Table  {
 //  public ArrayList<Column> columnLabel;
 
     //  public BPlusTree<Entry, Row> index;
-    private FileHandler fileHandler;
+    public HeapFile fileHandler;
 //  private Integer id;
 
     private int primaryIndex;
@@ -55,7 +63,8 @@ public class Table  {
             String name,
             RowDesc desc,
             File diskFile,
-            File indexFile) throws IOException {
+            File indexFile,
+            File walFile) throws IOException {
         // TODO
         this.tid = id;
         this.lock = new ReentrantReadWriteLock();
@@ -68,6 +77,19 @@ public class Table  {
         this.tableName = name;
         this.diskFile = diskFile;
         this.tableInfo = new TableInfo(0, 0);
+        this.walManager = new WALManager(walFile, (HeapFile)( fileHandler));
+
+        redoWalLog();
+    }
+
+    private void redoWalLog() {
+        try {
+            walManager.recover();
+            fileHandler.persistIndex();
+            walManager.flush();
+        }catch (Exception e){
+            //TODO
+        }
     }
 
     public Table(
@@ -76,9 +98,10 @@ public class Table  {
             RowDesc desc,
             File diskFile,
             File indexFile,
+            File walFile,
             TableInfo tableInfo
             ) throws IOException{
-        this(id, name, desc, diskFile, indexFile);
+        this(id, name, desc, diskFile, indexFile, walFile);
         this.tableInfo = tableInfo;
         // TODO
     }
@@ -91,16 +114,19 @@ public class Table  {
         return desc.getPrimaryNames();
     }
 
-    public boolean insertRow(Row row){
+    public boolean insertRow(Row row, int txn_id){
         tableInfo.autoIncrement ++;
         tableInfo.count ++;
-        return Global.gBufferPool().insertRow(this.tid, row);
+
+        WALBuffer buf = new WALBuffer();
+        Global.gBufferPool().insertRow(this.tid, row);
+        walManager.delete(txn_id, buf.pageNum, buf.pageOffset);
     }
 
-    public boolean insertRow(ArrayList<String> attrNames, ArrayList<Object> values) {
+    public boolean insertRow(ArrayList<String> attrNames, ArrayList<Object> values, int txn_id) {
         try {
             Row row = new Row(this.desc, attrNames, values);
-            return insertRow(row);
+            return insertRow(row, txn_id);
         }catch (Exception e){
             e.printStackTrace();
             return false;
@@ -113,6 +139,17 @@ public class Table  {
         return iterator;
     }
 
+    public boolean deleteRow(Entry entry, int txn_id) {
+        try {
+            this.tableInfo.count--;
+            WALBuffer buf = new WALBuffer();
+            ((HeapFile)this.fileHandler).deleteRow(entry.value, buf);
+            walManager.delete(txn_id, buf.pageNum, buf.pageOffset);
+            return true;
+        }catch(Exception e){
+            return false;
+        }
+    }
 
     //
     public boolean deleteRow(Row row){
@@ -121,7 +158,7 @@ public class Table  {
     }
 
     // warning should never use it !!!
-    private Row search(Entry primary_key){
+    private Row search(Entry primary_key, int txn_id){
         primaryIndex = desc.getPrimaryIndex().get(0);
         FileIterator iterator = getIterator();
         while(iterator.hasNext()){
@@ -135,10 +172,12 @@ public class Table  {
 
     public void flush() throws IOException{
         Global.gBufferPool().flushPagesOfTable(tid);
-        fileHandler.persistIndex();
+//        fileHandler.persistIndex();
+        walManager.persist();
     }
 
     public void discard(){
         Global.gBufferPool().discardPagesOfTables(tid);
+
     }
 }

@@ -36,7 +36,7 @@ public class TransactionManager implements Physical2LogicalInterface {
 
     @Override
     public boolean create_table(String table_name, ArrayList<Column> columns, int transaction_id) {
-        boolean success = storage_manager.create_table(table_name, columns, -1);
+        boolean success = storage_manager.create_table(table_name, columns, transaction_id);
         if (success) {
             // an action to be executed after commit or abort
             this.transaction_pool.get(transaction_id).add((commit) -> {
@@ -47,7 +47,7 @@ public class TransactionManager implements Physical2LogicalInterface {
                 else {
                     // when abort, remove the table
                     Manager.getInstance().getCurrentDatabase().sync(false);
-                    // storage_manager.drop_table(table_name, -1);
+                    // storage_manager.drop_table(table_name, transaction_id);
                 }
             });
         }
@@ -59,7 +59,7 @@ public class TransactionManager implements Physical2LogicalInterface {
         LogicalTable table = storage_manager.get_table(table_name, -1);
         primary_index_cache.remove(table_name);
         if (table != null) {
-            storage_manager.drop_table(table_name, -1);
+            storage_manager.drop_table(table_name, transaction_id);
             this.transaction_pool.get(transaction_id).add((success) -> {
                 if (success) {
                     Manager.getInstance().getCurrentDatabase().sync(true);
@@ -68,7 +68,7 @@ public class TransactionManager implements Physical2LogicalInterface {
                 else {
                     // when abort, add the table back again
                     Manager.getInstance().getCurrentDatabase().sync(false);
-//                    storage_manager.create_table(table_name, table.get_columns(), -1);
+//                    storage_manager.create_table(table_name, table.get_columns(), transaction_id);
                 }
             });
         }
@@ -77,7 +77,7 @@ public class TransactionManager implements Physical2LogicalInterface {
 
     @Override
     public LogicalTable get_table(String table_name, int transaction_id) {
-        return storage_manager.get_table(table_name, -1);
+        return storage_manager.get_table(table_name, transaction_id);
     }
 
     private int get_primary_index(String table_name) {
@@ -95,7 +95,7 @@ public class TransactionManager implements Physical2LogicalInterface {
 
     @Override
     public boolean insert_row(String table_name, Row row, int transaction_id) {
-        boolean success_insert = storage_manager.insert_row(table_name, row, -1);
+        boolean success_insert = storage_manager.insert_row(table_name, row, transaction_id);
         if (success_insert) {
             this.transaction_pool.get(transaction_id).add((success) -> {
                 if (success) {
@@ -103,7 +103,7 @@ public class TransactionManager implements Physical2LogicalInterface {
                 }
                 else {
                     int primary_index = get_primary_index(table_name);
-                    storage_manager.delete_row(table_name, row.getEntries().get(primary_index), -1);
+                    storage_manager.delete_row(table_name, row.getEntries().get(primary_index), transaction_id);
                 }
             });
         }
@@ -112,7 +112,7 @@ public class TransactionManager implements Physical2LogicalInterface {
 
     @Override
     public boolean delete_row(String table_name, Entry primary_key, int transaction_id) {
-        LogicalTable table = storage_manager.get_table(table_name, -1);
+        LogicalTable table = storage_manager.get_table(table_name, transaction_id);
         if (table != null) {
             Row row = null;
             int primary_index = get_primary_index(table_name);
@@ -123,7 +123,7 @@ public class TransactionManager implements Physical2LogicalInterface {
                 }
             }
             final Row to_be_delete = row;
-            boolean delete_success = storage_manager.delete_row(table_name, primary_key, -1);
+            boolean delete_success = storage_manager.delete_row(table_name, primary_key, transaction_id);
             if (delete_success) {
                 this.transaction_pool.get(transaction_id).add((success) -> {
                     if (success) {
@@ -131,7 +131,7 @@ public class TransactionManager implements Physical2LogicalInterface {
                     }
                     else {
                         // add the row back
-                        storage_manager.insert_row(table_name, to_be_delete, -1);
+                        storage_manager.insert_row(table_name, to_be_delete, transaction_id);
                     }
                 });
                 return true;
@@ -150,7 +150,18 @@ public class TransactionManager implements Physical2LogicalInterface {
     public int start_transaction() {
         this.transaction_pool.put(this.max_transaction_id, new ArrayList<>());
         max_transaction_id += 1;
+        storage_manager.start_transaction(max_transaction_id - 1);
         return max_transaction_id - 1;
+    }
+
+    /**
+     * @deprecated
+     * @param id
+     * @return
+     */
+    @Override
+    public int start_transaction(int id) {
+        return 0;
     }
 
     @Override
@@ -160,6 +171,7 @@ public class TransactionManager implements Physical2LogicalInterface {
         for (int i = transaction.size() - 1; i >= 0 ; i--) {
             transaction.get(i).accept(false);
         }
+        storage_manager.abort(transaction_id);
         transaction_pool.remove(transaction_id);
         return true;
     }
@@ -170,6 +182,7 @@ public class TransactionManager implements Physical2LogicalInterface {
         for (int i = 0; i < transaction.size() ; i++) {
             transaction.get(i).accept(true);
         }
+        storage_manager.commit(transaction_id);
         transaction_pool.remove(transaction_id);
         return false;
     }

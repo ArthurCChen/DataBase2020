@@ -70,16 +70,19 @@ public class Database {
               Global.synthFilePath(path, databaseName, String.format(Global.DATA_FORMAT, tableName)));
       File indexFile = new File(
               Global.synthFilePath(path, databaseName, String.format(Global.INDEX_FORMAT, tableName)));
+      File walFile = new File(
+              Global.synthFilePath(path, databaseName, String.format(Global.WAL_FORMAT, tableName)));
       try{
         diskFile.createNewFile();
         indexFile.createNewFile();
+        walFile.createNewFile();
       }catch (Exception e){
-        e.printStackTrace();
+//        e.printStackTrace();
       }
 
     this.gId ++;
       RowDesc desc = new RowDesc(columns, primaryNames);
-      Table table = new Table(gId, tableName, desc, diskFile, indexFile, info);
+      Table table = new Table(gId, tableName, desc, diskFile, indexFile, walFile, info);
     tablename2Desc.put(tableName, desc);
     tablename2Info.put(tableName, info);
     name2Id.put(tableName, gId);
@@ -97,7 +100,9 @@ public class Database {
             Global.synthFilePath(path, databaseName, String.format(Global.DATA_FORMAT, tableName)));
     File indexFile = new File(
             Global.synthFilePath(path, databaseName, String.format(Global.INDEX_FORMAT, tableName)));
-    Table table = new Table(name2Id.get(tableName), tableName, desc, diskFile, indexFile, info);
+    File walFile = new File(
+            Global.synthFilePath(path, databaseName, String.format(Global.WAL_FORMAT, tableName)));
+    Table table = new Table(name2Id.get(tableName), tableName, desc, diskFile, indexFile, walFile, info);
 
 
     idTableMap.put(name2Id.get(tableName), table);

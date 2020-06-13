@@ -3,10 +3,13 @@ package cn.edu.thssdb.storage;
 import cn.edu.thssdb.exception.BufferException;
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.Table;
+import cn.edu.thssdb.storage.Heap.HeapFile;
+import cn.edu.thssdb.storage.Heap.HeapIndexEntry;
 import cn.edu.thssdb.storage.operation.DeleteOperation;
 import cn.edu.thssdb.storage.operation.FileOperation;
 import cn.edu.thssdb.storage.operation.InsertOperation;
 import cn.edu.thssdb.storage.operation.UpdateOperation;
+import cn.edu.thssdb.type.ColumnValue;
 import cn.edu.thssdb.utils.Global;
 
 import java.util.*;
@@ -173,11 +176,15 @@ public class BufferPool {
         pageIds.remove(pageId);
     }
 
-    public boolean operateRow(Integer tid, Row row, FileOperation op){
+    public boolean operateRow(Integer tid, ColumnValue primary, Row row, FileOperation op, Table.WALBuffer buf){
         try {
             Table table = Global.getTableFromTid(tid);
-            FileHandler file = table.getFileHandler();
-            ArrayList<Page> dirtyPages = op.operate(file, row);
+            HeapFile file =  (HeapFile)table.getFileHandler();
+            HeapIndexEntry entry = file.getEntry(primary);
+            buf.pageOffset = entry.offset;
+            buf.pageNum = entry.pageNumber;
+
+            ArrayList<Page> dirtyPages = op.operate(file, primary);
             for (Page page : dirtyPages) {
                 markPageDirty(page);
                 if (op instanceof InsertOperation) {
@@ -192,15 +199,15 @@ public class BufferPool {
     }
 
 
-    public boolean insertRow(Integer tid, Row row){
-        return operateRow(tid, row, new InsertOperation());
+    public boolean insertRow(Integer tid, Row row, Table.WALBuffer buf){
+        return operateRow(tid, row.getPrimaryValue(),  row, new InsertOperation(), buf);
     }
 
-    public boolean deleteRow(Integer tid, Row row){
-        return operateRow(tid, row, new DeleteOperation());
+    public boolean deleteRow(Integer tid, ColumnValue primary, Table.WALBuffer buf){
+        return operateRow(tid, primary, null, new DeleteOperation(), buf);
     }
 
-    public boolean updateRow(Integer tid, Row row) {
-        return operateRow(tid, row, new UpdateOperation());
+    public boolean updateRow(Integer tid, Row row, Table.WALBuffer buf) {
+        return operateRow(tid, row.getPrimaryValue(), row, new UpdateOperation(), buf);
     }
 }

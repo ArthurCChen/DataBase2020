@@ -5,6 +5,7 @@ import cn.edu.thssdb.index.BPlusTree;
 import cn.edu.thssdb.exception.DuplicateKeyException;
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.RowDesc;
+import cn.edu.thssdb.schema.Table;
 import cn.edu.thssdb.storage.FileHandler;
 import cn.edu.thssdb.storage.FileIterator;
 import cn.edu.thssdb.storage.Page;
@@ -107,6 +108,9 @@ public class HeapFile implements FileHandler {
         return null;
     }
 
+    public HeapIndexEntry getEntry(ColumnValue primary){
+        return primaryIndex.get(primary);
+    }
 
     public void writePage(Page page){
         try {
@@ -213,6 +217,15 @@ public class HeapFile implements FileHandler {
         primaryIndex.remove(t.getPrimaryValue());
 
         return affectedPages;
+    }
+
+    public ArrayList<Page> deleteRow(ColumnValue primaryValue, Table.WALBuffer buf) throws  Exception{
+        ArrayList<Page> affectedPages = new ArrayList<>();
+        HeapIndexEntry entry = primaryIndex.get(primaryValue);
+        Row row = getRow(entry.pageNumber, entry.offset);
+        buf.pageNum = entry.pageNumber;
+        buf.pageOffset = entry.offset;
+        return  deleteRow(row);
     }
 
     @Override

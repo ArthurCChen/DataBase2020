@@ -2,7 +2,7 @@ package cn.edu.thssdb.recovery;
 
 // TXN means transaction
 public enum WALType {
-    START_TXN(0),//开始事务
+    START_TXN(0),//开始事务 暂时未实现
     INSERT_ROW(1),//添加行
     DELETE_ROW(2),//删除行
     COMMIT_TXN(3),//提交事务

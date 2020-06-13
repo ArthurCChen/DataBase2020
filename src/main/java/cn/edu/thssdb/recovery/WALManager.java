@@ -83,6 +83,13 @@ public class WALManager {
         }
     }
 
+    //should be use after recover
+    public void flush() throws IOException{
+        recoveryList = new ArrayList<>();
+        persist();
+    }
+
+
     private void undo() {
     }
 

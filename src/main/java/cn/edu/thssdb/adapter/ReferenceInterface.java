@@ -73,6 +73,7 @@ public class ReferenceInterface implements Physical2LogicalInterface {
         Table realTable = manager.getCurrentDatabase().getTable(table_name);
         if(realTable != null) {
             LogicalTable logicalTable = new HeapTable(realTable);
+            ((HeapTable) logicalTable).setTxnId(transaction_id);
             return logicalTable;
         }else{
             return null;
@@ -105,20 +106,21 @@ public class ReferenceInterface implements Physical2LogicalInterface {
     public boolean delete_row(String table_name, Entry primary_key, int transaction_id) {
         try{
             Table table = manager.getCurrentDatabase().getTable(table_name);
-            Boolean success = false;
-            // 通过iterator遍历,来完成删除对应的操作
-            FileIterator iter = table.getIterator();
-            ArrayList<Row> rows = new ArrayList<>();
-            while(iter.hasNext()){
-                Row row = iter.next();
-                if(row.matchValue(table.getTableMeta().getPrimaryNames().get(0), primary_key.value)){
-                    //table调用index在文件中删去row
-                    success = table.deleteRow(row);
-                }
-            }
-            iter.close();
+            return table.deleteRow(primary_key, transaction_id);
+//            Boolean success = false;
+//            // 通过iterator遍历,来完成删除对应的操作
+//            FileIterator iter = table.getIterator();
+//            ArrayList<Row> rows = new ArrayList<>();
+//            while(iter.hasNext()){
+//                Row row = iter.next();
+//                if(row.matchValue(table.getTableMeta().getPrimaryNames().get(0), primary_key.value)){
+//                    //table调用index在文件中删去row
+//                    success = table.deleteRow(row);
+//                }
+//            }
+//            iter.close();
 
-            return success;
+//            return success;
         }catch (Exception e){
             return false;
         }
@@ -151,6 +153,12 @@ public class ReferenceInterface implements Physical2LogicalInterface {
     public int start_transaction() {
         return 0;
     }
+
+    @Override
+    public int start_transaction(int id) {
+        return 0;
+    }
+
 
     @Override
     public boolean abort(int transaction_id) {

@@ -40,6 +40,8 @@ public interface Physical2LogicalInterface {
     // always return 0 if transaction not implemented
     int start_transaction();
 
+    int start_transaction(int id);
+
     // return true if success
     boolean abort(int transaction_id);
 

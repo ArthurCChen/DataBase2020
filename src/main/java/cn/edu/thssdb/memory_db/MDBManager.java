@@ -126,6 +126,11 @@ public class MDBManager implements Physical2LogicalInterface {
     }
 
     @Override
+    public int start_transaction(int id) {
+        return 0;
+    }
+
+    @Override
     public boolean abort(int transaction_id) {
         // should not execute here
         return true;
