@@ -171,6 +171,8 @@ public class Client {
         println("The Result Set is Correct!");
       } else {
         println("The Result Set is Wrong!");
+        System.out.println(resp.getRowList().size());
+        System.out.println(results[i]);
       }
     }
     println("It costs " + (System.currentTimeMillis() - startTime) + "ms.");

@@ -283,7 +283,6 @@ public class QueryManager implements QueryManagerInterface {
             for (Column column : columns) {
                 column_list.add(column.getName());
             }
-            resp.setColumnsList(column_list);
             List<List<String>> rows_list = new ArrayList<>();
             for (Row row : table) {
                 List<String> rows_str = new ArrayList<>();
@@ -292,8 +291,15 @@ public class QueryManager implements QueryManagerInterface {
                 }
                 rows_list.add(rows_str);
             }
-            resp.setRowList(rows_list);
-            resp.setHasResult(true);
+            if (resp != null) {
+                resp.setColumnsList(column_list);
+                resp.setRowList(rows_list);
+                resp.setHasResult(true);
+            }
+            else {
+                System.out.println(column_list);
+                System.out.println(rows_list);
+            }
             return true;
         };
         BooleanSupplier task = build_task(tableName, func, true, error_log);
@@ -401,7 +407,9 @@ public class QueryManager implements QueryManagerInterface {
                     columns.addAll(table.get_columns());
                 }
                 BindVisitor bind = new BindVisitor(logBuffer, columns);
-                all_condition.accept(bind);
+                if (all_condition != null) {
+                    all_condition.accept(bind);
+                }
                 if (bind.has_error()) {
                     handle_error("");
                     break;
@@ -412,7 +420,9 @@ public class QueryManager implements QueryManagerInterface {
                 ArrayList<Row> rows = new ArrayList<>();
                 while (iterator.get_multi_row() != null) {
                     evaluator.bindRow(iterator.get_multi_row());
-                    all_condition.accept(evaluator);
+                    if (all_condition != null) {
+                        all_condition.accept(evaluator);
+                    }
                     if (evaluator.getAnswer()) {
                         rows.add(bind.collect(result_columns, iterator.get_multi_row()));
                     }
@@ -423,7 +433,6 @@ public class QueryManager implements QueryManagerInterface {
                 for (Column column : result_columns){
                     column_names.add(column.getName());
                 }
-                resp.setColumnsList(column_names);
                 List<List<String>> row_list = new ArrayList<>();
                 for (Row row : rows) {
                     ArrayList<String> row_str = new ArrayList<>();
@@ -432,8 +441,15 @@ public class QueryManager implements QueryManagerInterface {
                     }
                     row_list.add(row_str);
                 }
-                resp.setRowList(row_list);
-                resp.setHasResult(true);
+                if (resp != null) {
+                    resp.setColumnsList(column_names);
+                    resp.setRowList(row_list);
+                    resp.setHasResult(true);
+                }
+                else {
+                    System.out.println(column_names);
+                    System.out.println(row_list);
+                }
                 over = true;
                 break;
             }
@@ -508,6 +524,8 @@ public class QueryManager implements QueryManagerInterface {
         logBuffer.write(error);
         has_semantic_error = true;
         rollback();
-        resp.setIsAbort(true);
+        if (resp != null) {
+            resp.setIsAbort(true);
+        }
     }
 }

@@ -430,7 +430,8 @@ public class SQLBaseVisitorImpl extends SQLBaseVisitor<Object> {
             return ctx.NUMERIC_LITERAL().getText();
         }
         else {
-            return ctx.STRING_LITERAL().getText();
+            String text = ctx.STRING_LITERAL().getText();
+            return text.substring(1, text.length() - 1);
         }
     }
 

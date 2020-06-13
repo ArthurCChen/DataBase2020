@@ -17,7 +17,7 @@ import cn.edu.thssdb.schema.Row;
  */
 public class EvaluateVisitor implements PredicateVisitor {
 
-    private boolean evaluate_result = false;
+    private boolean evaluate_result = true;
     private MultiRow row = null;
 
     public void bindRow(MultiRow row) {
