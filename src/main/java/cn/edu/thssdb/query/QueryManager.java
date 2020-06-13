@@ -7,14 +7,13 @@ import cn.edu.thssdb.predicate.Operand;
 import cn.edu.thssdb.predicate.base.Predicate;
 import cn.edu.thssdb.predicate.logical.AndPredicate;
 import cn.edu.thssdb.schema.*;
+import cn.edu.thssdb.type.ColumnType;
+import cn.edu.thssdb.type.ValueFactory;
 import cn.edu.thssdb.utils.LogBuffer;
 import cn.edu.thssdb.utils.Physical2LogicalInterface;
-import com.google.common.collect.ObjectArrays;
 import com.sun.istack.internal.NotNull;
-import sun.security.util.ArrayUtil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.function.BooleanSupplier;
 
@@ -111,11 +110,19 @@ public class QueryManager implements QueryManagerInterface {
                     over = true;
                     break;
                 }
+                if (current_transaction_id == -1) {
+                    handle_error("RuntimeError: you are not in a transaction.");
+                    over = true;
+                    break;
+                }
                 LogicalTable table = storage.get_table(tableName, current_transaction_id);
                 if (table == null) {
                     if (is_first_task()) {
                         handle_error(error_log);
                         over = true;
+                    }
+                    else{
+                        System.out.println(stacked_tasks);
                     }
                     break;
                 }
@@ -176,6 +183,10 @@ public class QueryManager implements QueryManagerInterface {
         if (has_semantic_error) {
             return;
         }
+        if (current_transaction_id == -1) {
+            handle_error("RuntimeError: you are not in a transaction.");
+            return;
+        }
         // carry out the task in current thread, since it do not have conflict
         if (this.storage.get_table(tableName, current_transaction_id) == null) {
             this.storage.create_table(tableName, columns, current_transaction_id);
@@ -212,7 +223,7 @@ public class QueryManager implements QueryManagerInterface {
                 }
             }
             for (Row row : table) {
-                evaluator.bindRow(row);
+                evaluator.bindRow(new MultiRow(row));
                 predicate.accept(evaluator);
                 if (evaluator.getAnswer()) {
                     primary.add(row.getEntries().get(primary_index));
@@ -233,9 +244,7 @@ public class QueryManager implements QueryManagerInterface {
         if (has_semantic_error) {
             return;
         }
-        java.util.function.Predicate<LogicalTable> func = (LogicalTable table) -> {
-            return storage.drop_table(tableName, current_transaction_id);
-        };
+        java.util.function.Predicate<LogicalTable> func = (LogicalTable table) -> storage.drop_table(tableName, current_transaction_id);
         String error_log = "SemanticError: can not drop a non-exist table.";
         BooleanSupplier task = build_task(tableName, func, true, error_log);
         submit_task(task);
@@ -333,66 +342,91 @@ public class QueryManager implements QueryManagerInterface {
                     over = true;
                     break;
                 }
-                LogicalTable table1 = storage.get_table(vt.tables.get(0), current_transaction_id);
-                LogicalTable table2 = storage.get_table(vt.tables.get(1), current_transaction_id);
-                if (table1 == null || table2 == null) {
-                    if (is_first_task()) {
-                        handle_error("SemanticError: table name not found.");
-                        over = true;
-                    }
+                if (current_transaction_id == -1) {
+                    handle_error("RuntimeError: you are not in a transaction.");
+                    over = true;
                     break;
                 }
-                if (require_shared_lock(table1) && require_shared_lock(table2)) {
-                    Predicate all_condition;
-                    if (conditions != null && vt.condition != null) {
-                        all_condition = new AndPredicate(conditions, vt.condition);
+                // get all related tables
+                ArrayList<LogicalTable> tables = new ArrayList<>();
+                for (String table_name : vt.tables) {
+                    LogicalTable table = storage.get_table(table_name, current_transaction_id);
+                    if (table == null) {
+                        handle_error("SemanticError: table name not found.");
+                        over = true;
+                        break;
                     }
-                    else if (conditions != null) {
-                        all_condition = conditions;
-                    }
-                    else {
-                        all_condition = vt.condition;
-                    }
-                    ArrayList<Column> columns = table1.get_columns();
-                    columns.addAll(table2.get_columns());
-                    BindVisitor bind = new BindVisitor(logBuffer, columns);
-
-                    all_condition.accept(bind);
-                    if (bind.has_error()) {
-                        handle_error("");
-                        return true;
-                    }
-                    EvaluateVisitor evaluator = new EvaluateVisitor();
-                    ArrayList<Row> rows = new ArrayList<>();
-                    for (Row row1 : table1) {
-                        for (Row row2 : table2) {
-                            ArrayList<Entry> all = new ArrayList<>(row1.getEntries());
-                            all.addAll(row2.getEntries());
-                            Row temp = new Row(all);
-                            evaluator.bindRow(temp);
-                            all_condition.accept(evaluator);
-                            if (evaluator.getAnswer()) {
-                                rows.add(bind.collect(result_columns, temp));
-                            }
+                    tables.add(table);
+                }
+                // fail to fetch some tables
+                if (tables.size() != vt.tables.size()) {
+                    break;
+                }
+                // try lock all related tables
+                boolean locked = true;
+                for (int i = 0; i < tables.size(); i++) {
+                    if (!require_shared_lock(tables.get(i))) {
+                        for (int j = 0; j < i; j++) {
+                            tables.get(j).unlock();
                         }
+                        locked = false;
+                        break;
                     }
-                    System.out.println("Select result: ");
-                    StringBuilder builder = new StringBuilder().append("\t");
-                    for (Column column : result_columns){
-                        builder.append(column.getName()).append("\t");
+                }
+                if (!locked) {
+                    break;
+                }
+                // get all conditions
+                Predicate all_condition;
+                if (conditions != null && vt.condition != null) {
+                    all_condition = new AndPredicate(conditions, vt.condition);
+                }
+                else if (conditions != null) {
+                    all_condition = conditions;
+                }
+                else {
+                    all_condition = vt.condition;
+                }
+                // bind the predicate tree to the schema
+                ArrayList<Column> columns = new ArrayList<>();
+                for (LogicalTable table : tables) {
+                    columns.addAll(table.get_columns());
+                }
+                BindVisitor bind = new BindVisitor(logBuffer, columns);
+                all_condition.accept(bind);
+                if (bind.has_error()) {
+                    handle_error("");
+                    break;
+                }
+                // traverse
+                EvaluateVisitor evaluator = new EvaluateVisitor();
+                JoinIterator iterator = new JoinIterator(tables);
+                ArrayList<Row> rows = new ArrayList<>();
+                while (iterator.get_multi_row() != null) {
+                    evaluator.bindRow(iterator.get_multi_row());
+                    all_condition.accept(evaluator);
+                    if (evaluator.getAnswer()) {
+                        rows.add(bind.collect(result_columns, iterator.get_multi_row()));
+                    }
+                    iterator.next();
+                }
+                // print out the result
+                System.out.println("Select result: ");
+                StringBuilder builder = new StringBuilder().append("\t");
+                for (Column column : result_columns){
+                    builder.append(column.getName()).append("\t");
+                }
+                builder.append("\n");
+                for (Row row : rows) {
+                    builder.append("\t");
+                    for (Entry entry : row.getEntries()) {
+                        builder.append(entry.value).append("\t");
                     }
                     builder.append("\n");
-                    for (Row row : rows) {
-                        builder.append("\t");
-                        for (Entry entry : row.getEntries()) {
-                            builder.append(entry.value).append("\t");
-                        }
-                        builder.append("\n");
-                    }
-                    builder.append("End");
-                    System.out.println(builder);
-                    over = true;
                 }
+                builder.append("End");
+                System.out.println(builder);
+                over = true;
                 break;
             }
             if (over) {
@@ -408,7 +442,58 @@ public class QueryManager implements QueryManagerInterface {
         if (has_semantic_error) {
             return;
         }
+        java.util.function.Predicate<LogicalTable> func = (LogicalTable table) -> {
+            BindVisitor binder = new BindVisitor(logBuffer, table.get_columns());
+            condition.accept(binder);
+            if (binder.has_error()) {
+                handle_error("");
+                return true;
+            }
+            EvaluateVisitor evaluator = new EvaluateVisitor();
+            // a list of primary to be deleted
+            ArrayList<Entry> primary = new ArrayList<>();
+            ArrayList<Column> columns = table.get_columns();
+            ArrayList<Row> inserts = new ArrayList<>();
+            int primary_index = -1;
+            int update = -1;
+            for (int i = 0; i < columns.size(); i++) {
+                if (columns.get(i).getPrimary()) {
+                    primary_index = i;
+                }
+                if (columns.get(i).getName().equals(column_name)) {
+                    update = i;
+                }
+            }
+            // when field name not found
+            if (update == -1) {
+                handle_error(String.format("SemanticError: column %s not found.", column_name));
+                return true;
+            }
+            for (Row row : table) {
+                evaluator.bindRow(new MultiRow(row));
+                condition.accept(evaluator);
+                if (evaluator.getAnswer()) {
+                    primary.add(row.getEntries().get(primary_index));
+                    ColumnType type = row.getEntries().get(update).value.getType();
+                    Entry v = new Entry(ValueFactory.getValue(value.value_str, type, value.value_str.length()));
+                    row.getEntries().set(update, v);
+                    inserts.add(row);
+                }
+            }
+            for (Entry p : primary) {
+                storage.delete_row(table_name, p, current_transaction_id);
+            }
+            for (Row row : inserts) {
+                if (!storage.insert_row(table_name, row, current_transaction_id)) {
+                    handle_error("RuntimeError: fail to update all the rows.");
+                    return true;
+                }
+            }
+            return true;
+        };
         String error_log = "SemanticError: can not insert to a non-exist table.";
+        BooleanSupplier task = build_task(table_name, func, false, error_log);
+        submit_task(task);
     }
 
     private void handle_error(String error) {

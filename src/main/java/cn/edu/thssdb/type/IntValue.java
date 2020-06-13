@@ -31,7 +31,11 @@ public class IntValue extends NumberValue {
 
     @Override
     public boolean equals(Object obj) {
-        return getValue() == ((IntValue)obj).getValue();
+        // to: LI SIYU
+        // the line is previously:
+        //     return getValue() == ((IntValue)obj).getValue();
+        // which is a bug, since == do not work for all integers, please take care when merge.
+        return getValue().equals(((IntValue)obj).getValue());
     }
 
     public Integer getValue(){

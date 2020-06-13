@@ -31,7 +31,11 @@ public class FloatValue extends NumberValue{
 
     @Override
     public boolean equals(Object obj) {
-        return getValue() == ((FloatValue)obj).getValue();
+        // to: LI SIYU
+        // the line is previously:
+        //     return getValue() == ((FloatValue)obj).getValue();
+        // which is a bug, since == only works for primitive types, please take care when merge.
+        return getValue().equals(((FloatValue) obj).getValue());
     }
 
     public Float getValue(){

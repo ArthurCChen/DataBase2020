@@ -1,6 +1,7 @@
 package cn.edu.thssdb.predicate;
 
 import cn.edu.thssdb.schema.Entry;
+import cn.edu.thssdb.schema.MultiRow;
 import cn.edu.thssdb.schema.Row;
 
 /**
@@ -37,13 +38,13 @@ public class Operand {
         this.value = entry;
     }
 
-    Entry getValue(Row row) {
+    Entry getValue(MultiRow row) {
         if (this.is_constant) {
             assert(bind);
             return this.value;
         }
         else {
-            return row.getEntries().get(this.index);
+            return row.get(this.index);
         }
     }
 

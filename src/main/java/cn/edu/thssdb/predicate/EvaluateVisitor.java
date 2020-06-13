@@ -7,6 +7,7 @@ import cn.edu.thssdb.predicate.compare.*;
 import cn.edu.thssdb.predicate.logical.AndPredicate;
 import cn.edu.thssdb.predicate.logical.OrPredicate;
 import cn.edu.thssdb.schema.Entry;
+import cn.edu.thssdb.schema.MultiRow;
 import cn.edu.thssdb.schema.Row;
 
 /**
@@ -17,9 +18,9 @@ import cn.edu.thssdb.schema.Row;
 public class EvaluateVisitor implements PredicateVisitor {
 
     private boolean evaluate_result = false;
-    private Row row = null;
+    private MultiRow row = null;
 
-    public void bindRow(Row row) {
+    public void bindRow(MultiRow row) {
         this.row = row;
     }
 

@@ -1,4 +1,4 @@
-import cn.edu.thssdb.memory_db.MDBManager;
+import cn.edu.thssdb.memory_db.TransactionManager;
 import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Entry;
 import cn.edu.thssdb.adapter.LogicalTable;
@@ -21,7 +21,7 @@ import static org.junit.Assert.*;
 public class M_Physical2LogicalInterfaceTest {
 
     // change here to switch to other implementations
-    Physical2LogicalInterface storage = new MDBManager();
+    Physical2LogicalInterface storage = new TransactionManager();
 
     Column c0;
     Column c1;

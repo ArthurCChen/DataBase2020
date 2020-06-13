@@ -24,7 +24,8 @@ public class Entry implements Serializable {
     if (this.getClass() != obj.getClass())
       return false;
     Entry e = (Entry) obj;
-    return value.equals(e.value);
+    boolean result = value.equals(e.value);
+    return result;
   }
 
 

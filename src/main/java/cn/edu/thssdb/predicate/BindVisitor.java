@@ -8,6 +8,7 @@ import cn.edu.thssdb.predicate.logical.AndPredicate;
 import cn.edu.thssdb.predicate.logical.OrPredicate;
 import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Entry;
+import cn.edu.thssdb.schema.MultiRow;
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.type.ColumnType;
 import cn.edu.thssdb.type.ValueFactory;
@@ -63,10 +64,10 @@ public class BindVisitor implements PredicateVisitor {
         has_semantic_error = false;
     }
 
-    public Row collect(ArrayList<Column> columns, Row original) {
+    public Row collect(ArrayList<Column> columns, MultiRow original) {
         ArrayList<Entry> result = new ArrayList<>();
         for (Column column : columns) {
-            result.add(original.getEntries().get(column_name_map.get(column.getFullName())));
+            result.add(original.get(column_name_map.get(column.getFullName())));
         }
         return new Row(result);
     }

@@ -22,15 +22,9 @@ import java.util.function.Consumer;
 public class MDBManager implements Physical2LogicalInterface {
 
     ArrayList<MTable> tables;
-    // an transaction is actually made up of several tasks which is to be executed when commit.
-    // (such as writing log)
-    HashMap<Integer, ArrayList<Consumer<Boolean>>> transaction_pool;
-    int max_transaction_id;
 
     public MDBManager() {
         this.tables = new ArrayList<>();
-        this.transaction_pool = new HashMap<>();
-        this.max_transaction_id = 0;
     }
 
 
@@ -68,16 +62,6 @@ public class MDBManager implements Physical2LogicalInterface {
         if (table_index == -1 && has_one_primary_key) {
             MTable new_table = new MTable(table_name, columns);
             this.tables.add(new_table);
-            // an action to be executed after commit or abort
-            this.transaction_pool.get(transaction_id).add((success) -> {
-                if (success) {
-                    System.out.println("table " + table_name + " created in transaction " + transaction_id);
-                }
-                else {
-                    // when abort, remove the table
-                    this.tables.remove(new_table);
-                }
-            });
             return true;
         }
         else {
@@ -91,15 +75,6 @@ public class MDBManager implements Physical2LogicalInterface {
         if (table_index != -1) {
             MTable table = this.tables.get(table_index);
             this.tables.remove(table_index);
-            this.transaction_pool.get(transaction_id).add((success) -> {
-                if (success) {
-                    System.out.println("drop table " + table_name);
-                }
-                else {
-                    // when abort, add the table back again
-                    this.tables.add(table);
-                }
-            });
             return true;
         }
         return false;
@@ -109,14 +84,6 @@ public class MDBManager implements Physical2LogicalInterface {
     public MTable get_table(String table_name, int transaction_id) {
         int table_index = get_table_index(table_name);
         if (table_index != -1) {
-            this.transaction_pool.get(transaction_id).add((success) -> {
-                if (success) {
-                    System.out.println("table " + table_name + " requested");
-                }
-                else {
-                    // do not need to do anything, since we assume the table is not changed
-                }
-            });
             return this.tables.get(table_index);
         }
         return null;
@@ -126,20 +93,7 @@ public class MDBManager implements Physical2LogicalInterface {
     public boolean insert_row(String table_name, Row row, int transaction_id) {
         int table_index = get_table_index(table_name);
         if (table_index != -1) {
-            boolean success_insert = this.tables.get(table_index).insert(row);
-            if (success_insert) {
-                this.transaction_pool.get(transaction_id).add((success) -> {
-                    if (success) {
-                        System.out.println("insert a row: " + row + " to table: " + table_name);
-                    }
-                    else {
-                        // remove the row
-                        int primary_index = this.tables.get(table_index).getPrimary_index();
-                        this.tables.get(table_index).delete(row.getEntries().get(primary_index));
-                    }
-                });
-                return true;
-            }
+            return this.tables.get(table_index).insert(row);
         }
         return false;
     }
@@ -148,28 +102,13 @@ public class MDBManager implements Physical2LogicalInterface {
     public boolean delete_row(String table_name, Entry primary_key, int transaction_id) {
         int table_index = get_table_index(table_name);
         if (table_index != -1) {
-            Row row = null;
             int primary_index = this.tables.get(table_index).getPrimary_index();
             for (Row r : this.tables.get(table_index)) {
                 if (r.getEntries().get(primary_index).equals(primary_key)) {
-                    row = r;
                     break;
                 }
             }
-            final Row to_be_delete = row;
-            boolean delete_success = this.tables.get(table_index).delete(primary_key);
-            if (delete_success) {
-                this.transaction_pool.get(transaction_id).add((success) -> {
-                    if (success) {
-                        System.out.println("delete a row with primary key: " + primary_key + " from table: " + table_name);
-                    }
-                    else {
-                        // add the row back
-                        this.tables.get(table_index).insert(to_be_delete);
-                    }
-                });
-                return true;
-            }
+            return this.tables.get(table_index).delete(primary_key);
         }
         return false;
     }
@@ -182,29 +121,19 @@ public class MDBManager implements Physical2LogicalInterface {
 
     @Override
     public int start_transaction() {
-        this.transaction_pool.put(this.max_transaction_id, new ArrayList<>());
-        max_transaction_id += 1;
-        return max_transaction_id - 1;
+        // should not execute here
+        return -1;
     }
 
     @Override
     public boolean abort(int transaction_id) {
-        ArrayList<Consumer<Boolean>> transaction = transaction_pool.get(transaction_id);
-        // undo each operation in reverse order
-        for (int i = transaction.size() - 1; i >= 0 ; i--) {
-            transaction.get(i).accept(false);
-        }
-        transaction_pool.remove(transaction_id);
+        // should not execute here
         return true;
     }
 
     @Override
     public boolean commit(int transaction_id) {
-        ArrayList<Consumer<Boolean>> transaction = transaction_pool.get(transaction_id);
-        for (int i = 0; i < transaction.size() ; i++) {
-            transaction.get(i).accept(true);
-        }
-        transaction_pool.remove(transaction_id);
-        return false;
+        // should not execute here
+        return true;
     }
 }
