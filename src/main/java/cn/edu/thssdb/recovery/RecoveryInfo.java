@@ -14,6 +14,13 @@ public class RecoveryInfo implements Serializable {
     public int pageNum;
     public short pageOffset;
 
+    static private short defaultOffset = 0;
+
+    public RecoveryInfo(int txnId, WALType walType){
+        this(txnId, walType, 0,defaultOffset);
+    }
+
+
     public RecoveryInfo(int txnId, WALType walType, int pageNum, short pageOffset){
         this.txnId = txnId;
         this.walType = walType;

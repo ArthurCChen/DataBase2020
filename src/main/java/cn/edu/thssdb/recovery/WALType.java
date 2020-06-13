@@ -6,12 +6,15 @@ public enum WALType {
     INSERT_ROW(1),//添加行
     DELETE_ROW(2),//删除行
     COMMIT_TXN(3),//提交事务
-    ABORT_TXN(4);//放弃事务
+    ABORT_TXN(4),//放弃事务
+    CHECKPOINT(5); // checkpoint 暂时未实现
 
     int id;
     WALType(int id){
         this.id = id;
     }
+
+
 
     public static WALType getTypeFromId(int id){
         switch(id){
