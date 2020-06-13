@@ -48,6 +48,7 @@ public class ReferenceInterface implements Physical2LogicalInterface {
     public boolean create_table(String table_name, ArrayList<Column> columns, int transaction_id) {
         try{
             manager.getCurrentDatabase().create(table_name, columns);
+            manager.persistMeta();
             return true;
         }catch (Exception e){
             return false;
@@ -59,6 +60,7 @@ public class ReferenceInterface implements Physical2LogicalInterface {
     public boolean drop_table(String table_name, int transaction_id) {
         try {
             manager.getCurrentDatabase().drop(table_name);
+            manager.persistMeta();
             return true;
         }catch (Exception e){
             return false;
