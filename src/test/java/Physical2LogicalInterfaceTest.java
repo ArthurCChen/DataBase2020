@@ -1,5 +1,6 @@
 import cn.edu.thssdb.adapter.LogicalTable;
 import cn.edu.thssdb.adapter.ReferenceInterface;
+import cn.edu.thssdb.memory_db.TransactionManager;
 import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Entry;
 import cn.edu.thssdb.schema.Row;
@@ -35,7 +36,7 @@ public class Physical2LogicalInterfaceTest {
 
     public Physical2LogicalInterfaceTest(){
         try {
-            storage = ReferenceInterface.getInstance();
+            storage = new TransactionManager();
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -116,11 +117,11 @@ public class Physical2LogicalInterfaceTest {
 
         // create a table and abort
         transaction_id = storage.start_transaction();
-        success = create_test_table1(transaction_id, "table3");
+        success = create_test_table1(transaction_id, "table30");
         assertTrue(success);
         storage.abort(transaction_id);
         transaction_id = storage.start_transaction();
-        LogicalTable table = storage.get_table("table3", transaction_id);
+        LogicalTable table = storage.get_table("table30", transaction_id);
         assertNull(table);
         storage.abort(transaction_id);
 
@@ -232,7 +233,7 @@ public class Physical2LogicalInterfaceTest {
         for (Row r : table) {
             count += 1;
         }
-        assertEquals(2, count);
+        assertEquals(1, count);
     }
 
     @Test
