@@ -7,11 +7,13 @@ import cn.edu.thssdb.parser.SQLLexer;
 import cn.edu.thssdb.parser.SQLParser;
 import cn.edu.thssdb.query.QueryManager;
 import cn.edu.thssdb.rpc.thrift.*;
+import cn.edu.thssdb.server.ThssDB;
 import cn.edu.thssdb.utils.Global;
 import cn.edu.thssdb.utils.LogBuffer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.apache.thrift.TApplicationException;
 import org.apache.thrift.TException;
 
 import java.util.Date;
@@ -56,16 +58,28 @@ public class IServiceHandler implements IService.Iface {
   @Override
   public ConnectResp connect(ConnectReq req) throws TException {
     // TODO
-    return null;
+    ConnectResp resp = new ConnectResp();
+    resp.setSessionId(0);
+    resp.setStatus(new Status(Global.SUCCESS_CODE).setMsg("success"));
+    return resp;
   }
 
   @Override
   public DisconnectResp disconnect(DisconnectReq req) throws TException {
-    return null;
+    DisconnectResp resp = new DisconnectResp();
+    resp.setStatus(new Status(Global.SUCCESS_CODE).setMsg("success"));
+    return resp;
   }
 
   @Override
-  public ExecuteStatementResp executeStatement(ExecuteStatementReq req) throws TException, ManagerNotReadyException {
+  public ExecuteStatementResp executeStatement(ExecuteStatementReq req) throws TException, TApplicationException, ManagerNotReadyException {
+
+    //sessionId验证机制 + 权限
+//    if (!ThssDB.getUserState(req.sessionId)) {
+//      manager = ThssDB.getUserManagerCopy(req.sessionId);
+//    } else {
+//      manager = ThssDB.getManager();
+//    }
 
     ExecuteStatementResp resp = new ExecuteStatementResp();
     this.resp = resp;
@@ -74,15 +88,29 @@ public class IServiceHandler implements IService.Iface {
     resp.setIsAbort(false);
     resp.setHasResult(false);
 
-    execute(req.statement);
-    if (!resp.isSetStatus()) {
-      try {
-        resp.wait(timeout);
-      } catch (InterruptedException e) {
-        resp.setStatus(new Status(Global.FAILURE_CODE).setMsg(
-                "InternalError: user process interrupted."));
-      }
-    }
+
+    SQLLexer lexer = new SQLLexer(CharStreams.fromString(req.statement));
+    CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+    SQLParser parser = new SQLParser(tokenStream);
+    parser.removeErrorListeners();
+    parser.addErrorListener(buffer);
+    ParseTree tree = parser.parse();
+    SQLBaseVisitorImpl visitor = new SQLBaseVisitorImpl();
+    visitor.auto_commit = false;
+    executor.reset();
+    visitor.bindQueryManager(executor, buffer);
+    visitor.bind_resp(this.resp);
+    visitor.visit(tree);
+
+
+//    if (!resp.isSetStatus()) {
+//      try {
+//        resp.wait(timeout);
+//      } catch (InterruptedException e) {
+//        resp.setStatus(new Status(Global.FAILURE_CODE).setMsg(
+//                "InternalError: user process interrupted."));
+//      }
+//    }
     String error_code = buffer.get();
     if (!error_code.equals("")) {
       resp.setStatus(new Status(Global.FAILURE_CODE).setMsg(error_code));

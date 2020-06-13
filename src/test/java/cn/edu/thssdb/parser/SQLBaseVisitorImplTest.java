@@ -28,7 +28,7 @@ public class SQLBaseVisitorImplTest {
 
         ParseTree tree = parser.parse();
         SQLBaseVisitorImpl visitor = new SQLBaseVisitorImpl();
-        visitor.bindQueryManager(printer, buffer);
+//        visitor.bindQueryManager(printer, buffer);
         visitor.visit(tree);
         return parser;
     }
@@ -36,7 +36,7 @@ public class SQLBaseVisitorImplTest {
     @Before
     public void setUp() throws IOException {
         BufferedWriter log = new BufferedWriter(new FileWriter("./SQLBaseVisitorImplTest.log"));
-        buffer = new LogBuffer(log);
+        buffer = new LogBuffer();
     }
 
     @Test
