@@ -130,4 +130,11 @@ public class Table  {
         return null;
     }
 
+    public void flush(){
+        Global.gBufferPool().flushPagesOfTable(tid);
+    }
+
+    public void discard(){
+        Global.gBufferPool().discardPagesOfTables(tid);
+    }
 }

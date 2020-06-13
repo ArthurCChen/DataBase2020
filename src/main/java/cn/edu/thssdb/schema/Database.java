@@ -174,6 +174,11 @@ public class Database {
     }
   }
 
+  public int tableName2Id(String tableName){
+    return this.tableName2Id(tableName);
+  }
+
+
   public Table getTable(String tableName){
     return this.getTable(name2Id.get(tableName));
   }
