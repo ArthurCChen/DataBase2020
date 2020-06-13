@@ -26,12 +26,13 @@ public class ReferenceInterface implements Physical2LogicalInterface {
            // 创建一个名为test的Database
            manager.createDatabase("test");
            // 将Manager当前指向的Database调整为test
-           manager.useDatabase("test");
+
 //        //
 //        manager.getCurrentDatabase().drop("test");
        }catch (Exception e){
-           e.printStackTrace();
+//           e.printStackTrace();
        }
+        manager.useDatabase("test");
     }
 
     static public ReferenceInterface getInstance(){
