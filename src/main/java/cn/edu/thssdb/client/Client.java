@@ -12,6 +12,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.transport.TFramedTransport;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
@@ -56,7 +57,7 @@ public class Client {
       int port = Integer.parseInt(commandLine.getOptionValue(PORT_ARGS, String.valueOf(Global.DEFAULT_SERVER_PORT)));
       transport = new TSocket(host, port);
       transport.open();
-      protocol = new TBinaryProtocol(transport);
+      protocol = new TBinaryProtocol(new TFramedTransport(transport));
       client = new IService.Client(protocol);
       boolean open = true;
       //执行连接（含一次begin transaction;）

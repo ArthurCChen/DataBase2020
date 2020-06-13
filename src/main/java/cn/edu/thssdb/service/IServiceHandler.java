@@ -11,17 +11,20 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.thrift.TException;
+
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 public class IServiceHandler implements IService.Iface {
 
-  private LogBuffer buffer = null;
-  private TransactionManager storage = null;
-  private QueryManager executor = null;
-  private long timeout = 30000; // 30s
+  private LogBuffer buffer;
+  private TransactionManager storage;
+  private HashMap<Long, QueryManager> executor;
   private ExecuteStatementResp resp = null;
+  private long max_session = -1;
 
-  private void execute(String s){
+  private void execute(String s, long session_id){
     SQLLexer lexer = new SQLLexer(CharStreams.fromString(s));
     CommonTokenStream tokenStream = new CommonTokenStream(lexer);
     SQLParser parser = new SQLParser(tokenStream);
@@ -30,16 +33,33 @@ public class IServiceHandler implements IService.Iface {
     ParseTree tree = parser.parse();
     SQLBaseVisitorImpl visitor = new SQLBaseVisitorImpl();
     visitor.auto_commit = false;
-    executor.reset();
-    visitor.bindQueryManager(executor, buffer);
+    QueryManager session = executor.get(session_id);
+    session.reset();
+    visitor.bindQueryManager(session, buffer);
     visitor.bind_resp(this.resp);
     visitor.visit(tree);
+  }
+
+  // return session id
+  private long add_session() {
+    max_session += 1;
+    QueryManager manager = new QueryManager(storage, buffer);
+    executor.put(max_session, manager);
+    return max_session;
+  }
+
+  private boolean remove_session(long session_id) {
+    if (executor.containsKey(session_id)) {
+      executor.remove(session_id);
+      return true;
+    }
+    return false;
   }
 
   public IServiceHandler() {
     buffer = new LogBuffer();
     storage = new TransactionManager();
-    executor = new QueryManager(storage, buffer);
+    executor = new HashMap<>();
   }
 
   @Override
@@ -52,22 +72,25 @@ public class IServiceHandler implements IService.Iface {
 
   @Override
   public ConnectResp connect(ConnectReq req) throws TException {
-    // TODO
+    long id = add_session();
     ConnectResp resp = new ConnectResp();
-    resp.setSessionId(0);
+    resp.setSessionId(id);
     resp.setStatus(new Status(Global.SUCCESS_CODE).setMsg("success"));
-    //手动执行一次start transaction
-    execute(Global.START_TRANSACTION);
-    String error_code = buffer.get();
+    execute(Global.START_TRANSACTION, id);
     return resp;
   }
 
   @Override
   public DisconnectResp disconnect(DisconnectReq req) throws TException {
-    //手动执行一次commit
-    execute(Global.COMMIT);
+    boolean success = remove_session(req.sessionId);
     DisconnectResp resp = new DisconnectResp();
-    resp.setStatus(new Status(Global.SUCCESS_CODE).setMsg("success"));
+    if (success) {
+      execute(Global.COMMIT, req.sessionId);
+      resp.setStatus(new Status(Global.SUCCESS_CODE).setMsg("success"));
+    }
+    else {
+      resp.setStatus(new Status(Global.FAILURE_CODE).setMsg("No such session id."));
+    }
     return resp;
   }
 
@@ -77,7 +100,6 @@ public class IServiceHandler implements IService.Iface {
     ExecuteStatementResp resp = new ExecuteStatementResp();
     this.resp = resp;
 
-
     // subject to change when executing
     resp.setIsAbort(false);
     resp.setHasResult(false);
@@ -85,15 +107,17 @@ public class IServiceHandler implements IService.Iface {
       resp.setStatus(new Status(Global.SUCCESS_CODE).setMsg("ok"));
       return resp;
     }
-    execute(req.statement);
-//    if (!resp.isSetStatus()) {
-//      try {
-//        resp.wait(timeout);
-//      } catch (InterruptedException e) {
-//        resp.setStatus(new Status(Global.FAILURE_CODE).setMsg(
-//                "InternalError: user process interrupted."));
-//      }
-//    }
+    execute(req.statement, req.sessionId);
+
+    QueryManager manager = executor.get(req.sessionId);
+    while (!manager.task_clear()) {
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException ignored) {
+        ;
+      }
+    }
+
     String error_code = buffer.get();
     if (!error_code.equals("")) {
       resp.setStatus(new Status(Global.FAILURE_CODE).setMsg(error_code));
