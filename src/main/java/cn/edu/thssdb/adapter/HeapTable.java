@@ -11,9 +11,14 @@ import java.util.Iterator;
 import java.util.Spliterator;
 
 public class HeapTable implements LogicalTable {
+
     Table table ;
-    public HeapTable(Table table) {
+    private int lock_state;
+
+    public HeapTable(Table table)
+    {
         this.table = table;
+        this.lock_state = 0;
     }
 
     @Override
@@ -46,41 +51,59 @@ public class HeapTable implements LogicalTable {
     //TODO
     @Override
     public boolean shared_lock() {
+        if (this.lock_state >= 0) {
+            this.lock_state += 1;
+            return true;
+        }
         return false;
     }
 
     //TODO
     @Override
     public boolean exclusive_lock() {
+        if (this.lock_state == 0) {
+            this.lock_state = -1;
+            return true;
+        }
         return false;
     }
 
     //TODO
     @Override
     public boolean is_share_locked() {
-        return false;
+        return lock_state > 0;
     }
 
     //TODO
     @Override
     public boolean is_exclusive_locked() {
-        return false;
+        return lock_state == -1;
     }
 
     //TODO
     @Override
     public boolean upgrade_lock() {
+        if (lock_state == 1) {
+            lock_state = -1;
+            return true;
+        }
         return false;
     }
 
     //TODO
     @Override
     public void unlock() {
-
+        if (lock_state > 0) {
+            lock_state -= 1;
+        }
+        else {
+            lock_state = 0;
+        }
     }
 
     @Override
-    public ArrayList<Column> get_columns() {
+    public ArrayList<Column> get_columns()
+    {
         return table.getTableMeta().getColumns();
     }
 
