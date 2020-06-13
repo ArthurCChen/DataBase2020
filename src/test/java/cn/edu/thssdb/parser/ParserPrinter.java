@@ -78,4 +78,19 @@ public class ParserPrinter implements QueryManagerInterface {
     public void update(String table_name, String column_name, Operand value, Predicate condition) {
         result = String.format("update called, table name: %s, value: %s, condition: %s", table_name, column_name, condition);
     }
+
+    @Override
+    public void create_database(String db_name) {
+
+    }
+
+    @Override
+    public void use_database(String db_name) {
+
+    }
+
+    @Override
+    public void drop_database(String db_name) {
+
+    }
 }

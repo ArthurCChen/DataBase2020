@@ -26,12 +26,13 @@ public class ReferenceInterface implements Physical2LogicalInterface {
            // 创建一个名为test的Database
            manager.createDatabase("test");
            // 将Manager当前指向的Database调整为test
-           manager.useDatabase("test");
+
 //        //
 //        manager.getCurrentDatabase().drop("test");
        }catch (Exception e){
-           e.printStackTrace();
+//           e.printStackTrace();
        }
+        manager.useDatabase("test");
     }
 
     static public ReferenceInterface getInstance(){
@@ -48,6 +49,7 @@ public class ReferenceInterface implements Physical2LogicalInterface {
     public boolean create_table(String table_name, ArrayList<Column> columns, int transaction_id) {
         try{
             manager.getCurrentDatabase().create(table_name, columns);
+//            manager.persistMeta();
             return true;
         }catch (Exception e){
             return false;
@@ -59,6 +61,7 @@ public class ReferenceInterface implements Physical2LogicalInterface {
     public boolean drop_table(String table_name, int transaction_id) {
         try {
             manager.getCurrentDatabase().drop(table_name);
+//            manager.persistMeta();
             return true;
         }catch (Exception e){
             return false;

@@ -71,6 +71,19 @@ public class Manager {
     }
   }
 
+  public void persistMeta(){
+    try{
+      lock.writeLock().lock();;
+      persist();
+      for(Database database: databases.values()){
+        database.quit();
+      }
+    }finally {
+      lock.writeLock().unlock();
+    }
+  }
+
+
   public void exit(){
     try{
       lock.writeLock().lock();;
@@ -122,7 +135,7 @@ public class Manager {
 
 
 
-  private void deleteDatabase(String databaseName) throws Exception{
+  public void deleteDatabase(String databaseName) throws Exception{
     // TODO
     try{
       lock.writeLock().lock();
