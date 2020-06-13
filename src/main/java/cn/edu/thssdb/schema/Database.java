@@ -88,15 +88,14 @@ public class Database {
 
   private void recoverCreate(String tableName, RowDesc desc, TableInfo info) throws Exception{
     // TODO
-      this.gId ++;
 //      tablename2Desc.put(tableName, desc);
 //      tablename2Info.put(tableName, info);
     File diskFile = new File(
             Global.synthFilePath(path, databaseName, String.format("%s.db", tableName)));
-    Table table = new Table(gId, tableName, desc, diskFile, info);
+    Table table = new Table(name2Id.get(tableName), tableName, desc, diskFile, info);
 
 
-    idTableMap.put(gId, table);
+    idTableMap.put(name2Id.get(tableName), table);
   }
 
   public void drop(String tableName) throws Exception{
@@ -155,6 +154,8 @@ public class Database {
       oos.writeObject(name2Id);
       oos.close();
       fos.close();
+
+      deleteRedunctant();
     }catch (Exception e){
       //TODO
     }
@@ -182,10 +183,28 @@ public class Database {
         recoverCreate(name, desc, info);
       }
 
-
+      this.deleteRedunctant();
     }catch (Exception e){
       //TODO
       e.printStackTrace();
+    }
+  }
+
+  /**
+   * 作用: 初始化时删除冗余的db
+   */
+  private void deleteRedunctant() {
+    String root = Global.synthFilePath(path, databaseName);
+    File dir = new File(root);
+    File[] files=dir.listFiles();
+    for(int i=0;i<files.length;i++) {
+      String fileName = files[i].getName();
+      String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);
+      String name = fileName.substring(0, fileName.lastIndexOf("."));
+
+      if(!suffix.equals(Global.META_SUFFIX) && !tablename2Info.containsKey(name)){
+        files[i].delete();
+      }
     }
   }
 
