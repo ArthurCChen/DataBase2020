@@ -16,6 +16,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.thrift.TApplicationException;
 import org.apache.thrift.TException;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.util.Date;
 
 public class IServiceHandler implements IService.Iface {
@@ -61,13 +64,43 @@ public class IServiceHandler implements IService.Iface {
     ConnectResp resp = new ConnectResp();
     resp.setSessionId(0);
     resp.setStatus(new Status(Global.SUCCESS_CODE).setMsg("success"));
+
+    //手动执行一次start transaction
+    SQLLexer lexer = new SQLLexer(CharStreams.fromString(Global.START_TRANSACTION));
+    CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+    SQLParser parser = new SQLParser(tokenStream);
+    parser.removeErrorListeners();
+    parser.addErrorListener(buffer);
+    ParseTree tree = parser.parse();
+    SQLBaseVisitorImpl visitor = new SQLBaseVisitorImpl();
+    visitor.auto_commit = false;
+    executor.reset();
+    visitor.bindQueryManager(executor, buffer);
+    visitor.bind_resp(this.resp);
+    visitor.visit(tree);
+
     return resp;
   }
 
   @Override
   public DisconnectResp disconnect(DisconnectReq req) throws TException {
+    //手动执行一次commit
+    SQLLexer lexer = new SQLLexer(CharStreams.fromString(Global.COMMIT));
+    CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+    SQLParser parser = new SQLParser(tokenStream);
+    parser.removeErrorListeners();
+    parser.addErrorListener(buffer);
+    ParseTree tree = parser.parse();
+    SQLBaseVisitorImpl visitor = new SQLBaseVisitorImpl();
+    visitor.auto_commit = false;
+    executor.reset();
+    visitor.bindQueryManager(executor, buffer);
+    visitor.bind_resp(this.resp);
+    visitor.visit(tree);
+
     DisconnectResp resp = new DisconnectResp();
     resp.setStatus(new Status(Global.SUCCESS_CODE).setMsg("success"));
+
     return resp;
   }
 
@@ -88,7 +121,6 @@ public class IServiceHandler implements IService.Iface {
     resp.setIsAbort(false);
     resp.setHasResult(false);
 
-
     SQLLexer lexer = new SQLLexer(CharStreams.fromString(req.statement));
     CommonTokenStream tokenStream = new CommonTokenStream(lexer);
     SQLParser parser = new SQLParser(tokenStream);
@@ -101,8 +133,6 @@ public class IServiceHandler implements IService.Iface {
     visitor.bindQueryManager(executor, buffer);
     visitor.bind_resp(this.resp);
     visitor.visit(tree);
-
-
 //    if (!resp.isSetStatus()) {
 //      try {
 //        resp.wait(timeout);
@@ -124,4 +154,38 @@ public class IServiceHandler implements IService.Iface {
 //    resp.setHasResult(false);
 //    resp.setStatus(new Status(Global.SUCCESS_CODE).setMsg("success"));
   }
+
+  //not used
+  @Override
+  public TransactionResp transaction(TransactionReq req) throws TException {
+    String cmd = req.getStatement();
+    TransactionResp resp = new TransactionResp();
+
+    // subject to change when executing
+    resp.setIsAbort(false);
+
+    SQLLexer lexer = new SQLLexer(CharStreams.fromString(req.statement));
+    CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+    SQLParser parser = new SQLParser(tokenStream);
+    parser.removeErrorListeners();
+    parser.addErrorListener(buffer);
+    ParseTree tree = parser.parse();
+    SQLBaseVisitorImpl visitor = new SQLBaseVisitorImpl();
+    visitor.auto_commit = false;
+    executor.reset();
+    visitor.bindQueryManager(executor, buffer);
+    visitor.bind_resp(this.resp);
+    visitor.visit(tree);
+
+    String error_code = buffer.get();
+    if (!error_code.equals("")) {
+      resp.setStatus(new Status(Global.FAILURE_CODE).setMsg(error_code));
+    }
+    else {
+      resp.setStatus(new Status(Global.SUCCESS_CODE).setMsg("ok"));
+    }
+    return resp;
+  }
 }
+
+

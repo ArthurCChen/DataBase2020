@@ -112,8 +112,9 @@ public class Client {
   }
 
   private static void createTable(long sessionId) throws TException {
+    //已修改助教群里说的小问题
     String[] statements = {
-        "create table department (dept_name String(20), building String(15), budget Long, primary key(dept_name));",
+        "create table department (dept_name String(20), building String(15), budget Double, primary key(dept_name));",
         "create table course (course_id String(8), title String(50), dept_name String(20), credits Int, primary key(course_id));",
         "create table instructor (i_id String(5), i_name String(20) not null, dept_name String(20), salary Float, primary key(i_id));",
         "create table student (s_id String(5), s_name String(20) not null, dept_name String(20), tot_cred Int, primary key(s_id));",

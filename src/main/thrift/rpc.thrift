@@ -45,9 +45,20 @@ struct ExecuteStatementResp{
   5: optional list<list<string>> rowList
 }
 
+struct TransactionReq {
+  1: required i64 sessionId
+  2: required string statement
+}
+
+struct TransactionResp {
+  1: required Status status
+  2: required bool isAbort
+}
+
 service IService {
   GetTimeResp getTime(1: GetTimeReq req);
   ConnectResp connect(1: ConnectReq req);
   DisconnectResp disconnect(1: DisconnectReq req);
   ExecuteStatementResp executeStatement(1: ExecuteStatementReq req);
+  TransactionResp transaction(1: TransactionReq req);
 }

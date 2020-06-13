@@ -104,7 +104,8 @@ public class QueryManager implements QueryManagerInterface {
 
     private void finish_task() {
         stacked_tasks -= 1;
-        resp.notify();
+        // chen notified it for debug 11:24Jun13
+//        resp.notify();
     }
 
     // to simplify the code

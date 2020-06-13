@@ -23,6 +23,10 @@ public class Global {
   public static String DEFAULT_SERVER_HOST = "127.0.0.1";
   public static int DEFAULT_SERVER_PORT = 6667;
 
+  public static final String ROLLBACK = "rollback;";
+  public static final String START_TRANSACTION = "start transaction;";
+  public static final String COMMIT = "commit;";
+
   public static String CLI_PREFIX = "ThssDB>";
   public static final String SHOW_TIME = "show time;";
   public static final String QUIT = "quit;";
