@@ -37,12 +37,13 @@ public class BufferPool {
         }
 
         PageId evict(){
+            int queueSize = idQueue.size();
             int cnt = 0;
             for( ; !idQueue.isEmpty(); cnt ++){
                 // 使用dirty来当作pinned与否的标志
                 if(pageMap.get(idQueue.getFirst()).isDirty()) {
                     //TODO: 当dirty的过多时,会发生无穷循环
-                    if(cnt > idQueue.size() * 2){
+                    if(cnt > queueSize * 2){
                         throw new BufferException("all buffer is pinned");
                     }
                     continue;
