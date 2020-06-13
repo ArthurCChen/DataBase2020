@@ -1,6 +1,7 @@
 package cn.edu.thssdb.memory_db;
 
 import cn.edu.thssdb.adapter.LogicalTable;
+import cn.edu.thssdb.adapter.ReferenceInterface;
 import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Entry;
 import cn.edu.thssdb.schema.Row;
@@ -25,7 +26,7 @@ public class TransactionManager implements Physical2LogicalInterface {
     int max_transaction_id;
 
     public TransactionManager() {
-        storage_manager = new MDBManager();
+        storage_manager = ReferenceInterface.getInstance();
         this.transaction_pool = new HashMap<>();
         this.max_transaction_id = 0;
         primary_index_cache = new HashMap<>();

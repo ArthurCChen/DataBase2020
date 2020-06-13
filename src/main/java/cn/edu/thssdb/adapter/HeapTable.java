@@ -92,12 +92,17 @@ public class HeapTable implements LogicalTable {
 
     //TODO
     @Override
-    public void unlock() {
+    public void unlock( boolean isCommit) {
         if (lock_state > 0) {
             lock_state -= 1;
         }
         else {
             lock_state = 0;
+            if(isCommit){
+                table.flush();
+            }else{
+                table.discard();
+            }
         }
     }
 
