@@ -1,6 +1,7 @@
 package cn.edu.thssdb.storage.Heap;
 
 
+import cn.edu.thssdb.index.BPlusTree;
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.RowDesc;
 import cn.edu.thssdb.storage.FileHandler;
@@ -23,7 +24,7 @@ public class HeapFile implements FileHandler {
     private int id;
     private RowDesc tupleDesc;
     private boolean hasPrimaryKeyConstraint=true;
-
+    private BPlusTree<ColumnValue, HeapIndexEntry>
 
     public HeapFile(int id, File file, RowDesc tupleDesc){
         this.id = id;
