@@ -98,6 +98,7 @@ public class HeapTable implements LogicalTable {
         int lock_state = lockStatasMap.get(table.tid);
         if (lock_state == 1) {
             lock_state = -1;
+            lockStatasMap.replace(table.tid, lock_state);
             return true;
         }
         return false;
@@ -118,6 +119,7 @@ public class HeapTable implements LogicalTable {
                 table.discard();
             }
         }
+        lockStatasMap.replace(table.tid, lock_state);
     }
 
     @Override
