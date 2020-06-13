@@ -14,7 +14,7 @@ public class Row implements Serializable {
   protected ArrayList<Entry> entries;
   private RowDesc rowDesc;
   private PageId pageId;
-  private int rowId;
+  private short pageOffset = -1;
 
   public Row(Entry[] entries) {
     this.entries = new ArrayList<>(Arrays.asList(entries));
@@ -88,12 +88,12 @@ public class Row implements Serializable {
     return entries;
   }
 
-  public void setRowId(int rowId) {
-    this.rowId = rowId;
+  public void setPageOffset(short pageOffset) {
+    this.pageOffset = pageOffset;
   }
 
-  public int getRowId() {
-    return rowId;
+  public short getPageOffset() {
+    return pageOffset;
   }
 
   public void setPageId(PageId pageId) {

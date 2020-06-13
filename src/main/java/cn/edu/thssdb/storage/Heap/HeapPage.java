@@ -35,7 +35,7 @@ public class HeapPage implements Page {
 
         rows = new Row[numSlots];
         try{
-            for(int i =0; i < rows.length; i ++)
+            for(short i =0; i < rows.length; i ++)
                 rows[i] = readNextRow(dis, i);
         }catch(Exception e){
             e.printStackTrace();
@@ -68,7 +68,7 @@ public class HeapPage implements Page {
         return this.header.get(i);
     }
 
-    private Row readNextRow(DataInputStream dis, int slotId) throws Exception{
+    private Row readNextRow(DataInputStream dis, short slotId) throws Exception{
         if (!isSlotUsed(slotId)){
             for(int i = 0; i < td.getByteSize(); i ++){
                 try{
@@ -87,7 +87,7 @@ public class HeapPage implements Page {
             vals.add(td.get(i).parse(dis));
         }
         Row row = new Row(td, attrs, vals);
-        row.setRowId(slotId);
+        row.setPageOffset(slotId);
         row.setPageId(pid);
         return row;
     }
@@ -159,8 +159,20 @@ public class HeapPage implements Page {
         return new byte[len]; //all 0
     }
 
+    public void updateRow(Row t){
+        int tupleNumber = t.getPageOffset();
+
+        if (t.getPageId() != pid) {
+            throw new InternalException("pid not match");
+        } else if (!isSlotUsed(tupleNumber)) {
+            throw new InternalException("slot not in use");
+        } else {
+            rows[tupleNumber] = t;
+        }
+    }
+
     public void deleteRow(Row t){
-        int tupleNumber = t.getRowId();
+        int tupleNumber = t.getPageOffset();
 
         if (t.getPageId() != pid) {
             throw new InternalException("pid not match");
@@ -186,15 +198,17 @@ public class HeapPage implements Page {
         if (!this.td.equals(t.getRowDesc())) {
             throw new InternalException("tupledesc is mismatch");
         }
-        int i = this.nextEmptySlotNum();
+        short i = this.nextEmptySlotNum();
         rows[i] = t;
         markSlotUsed(i, true);
-        t.setRowId(i);
+        t.setPageOffset(i);
         t.setPageId(pid);
     }
 
-    public int nextEmptySlotNum() {
-        for (int i=0; i<this.numSlots; i++) {
+
+
+    public short nextEmptySlotNum() {
+        for (short i=0; i<this.numSlots; i++) {
             if (!isSlotUsed(i)){
                 return i;
             }

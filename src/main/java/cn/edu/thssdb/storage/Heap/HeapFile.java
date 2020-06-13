@@ -152,6 +152,10 @@ public class HeapFile implements FileHandler {
         heapPage.insertRow(t);
         affectedPages.add(heapPage);
 
+        HeapIndexEntry heapIndexEntry = new HeapIndexEntry(t.getPrimaryValue(), t.getPageId().getPageNumber(), t.getPageOffset());
+        primaryIndex.put(t.getPrimaryValue(), heapIndexEntry);
+        //利用日志保存当前添加了哪些行
+
         return affectedPages;
     }
 
@@ -174,29 +178,39 @@ public class HeapFile implements FileHandler {
         return null;
     }
 
+    private void checkRowOffset(Row t){
+        if(t.getPageOffset() < 0){
+            HeapIndexEntry entry = primaryIndex.get(t.getPrimaryValue());
+            t.setPageOffset(entry.offset);
+            t.setPageId(new HeapPageId(tid, entry.pageNumber));
+        }
+    }
 
     public ArrayList<Page> deleteRow(Row t) throws  Exception {
+
         ArrayList<Page> affectedPages = new ArrayList<>();
         PageId pageId = t.getPageId();
         HeapPage page = (HeapPage) Global.gBufferPool().getPage(pageId);
         page.deleteRow(t);
         affectedPages.add(page);
+
+        //利用日志保存当前删除了哪些行
+        primaryIndex.remove(t.getPrimaryValue());
+
         return affectedPages;
     }
 
     @Override
-    public ArrayList<Page> updateRow(Row t) throws  Exception{
-        throw new InternalException("updateRow ot implemented");
-        //        ArrayList<Page> affectedPages = new ArrayList<>();
-//        try {
-//            PageId pageId = t.getPageId();
-//            HeapPage page = (HeapPage) Global.gBufferPool().getPage(pageId);
-//            page.deleteRow(t);
-//            affectedPages.add(page);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return affectedPages;
+    public ArrayList<Page> updateRow(Row t) throws  Exception {
+        ArrayList<Page> affectedPages = new ArrayList<>();
+        PageId pageId = t.getPageId();
+        HeapPage page = (HeapPage) Global.gBufferPool().getPage(pageId);
+        page.updateRow(t);
+        affectedPages.add(page);
+
+        //日志
+
+        return affectedPages;
     }
 
     public FileIterator iterator() {
