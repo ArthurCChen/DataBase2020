@@ -83,6 +83,19 @@ public class Database {
     }
   }
 
+  private void recoverCreate(String tableName, RowDesc desc, TableInfo info) throws Exception{
+    // TODO
+      this.gId ++;
+//      tablename2Desc.put(tableName, desc);
+//      tablename2Info.put(tableName, info);
+    File diskFile = new File(
+            Global.synthFilePath(path, databaseName, String.format("%s.db", tableName)));
+    Table table = new Table(gId, tableName, desc, diskFile, info);
+    name2Id.put(tableName, gId);
+
+    idTableMap.put(gId, table);
+  }
+
   public void drop(String tableName) throws Exception{
 
     Table table = this.getTable(tableName);
@@ -152,10 +165,11 @@ public class Database {
       for(String name: tablename2Desc.keySet()){
         RowDesc desc = tablename2Desc.get(name);
         TableInfo info = tablename2Info.get(name);
-        create(name, desc, info);
+        recoverCreate(name, desc, info);
       }
     }catch (Exception e){
       //TODO
+      e.printStackTrace();
     }
   }
 
