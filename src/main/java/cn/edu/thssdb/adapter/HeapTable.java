@@ -1,11 +1,13 @@
 package cn.edu.thssdb.adapter;
 
+import cn.edu.thssdb.exception.FlushIOException;
 import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Entry;
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.Table;
 import cn.edu.thssdb.storage.FileIterator;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Spliterator;
@@ -99,7 +101,11 @@ public class HeapTable implements LogicalTable {
         else {
             lock_state = 0;
             if(isCommit){
-                table.flush();
+                try {
+                    table.flush();
+                }catch(IOException e){
+                    throw new FlushIOException();
+                }
             }else{
                 table.discard();
             }

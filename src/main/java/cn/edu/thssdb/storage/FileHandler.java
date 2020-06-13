@@ -3,12 +3,15 @@ package cn.edu.thssdb.storage;
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.RowDesc;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 public interface FileHandler {
     Page readPage(PageId id);
 
     void writePage(Page p);
+
+    public void persistIndex() throws IOException;
 
     ArrayList<Page> insertRow(Row row) throws  Exception;
 

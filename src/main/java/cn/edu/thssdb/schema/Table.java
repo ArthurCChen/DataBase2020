@@ -133,8 +133,9 @@ public class Table  {
         return null;
     }
 
-    public void flush(){
+    public void flush() throws IOException{
         Global.gBufferPool().flushPagesOfTable(tid);
+        fileHandler.persistIndex();
     }
 
     public void discard(){
