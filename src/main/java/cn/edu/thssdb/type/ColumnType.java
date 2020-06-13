@@ -84,7 +84,7 @@ public enum ColumnType implements Serializable {
   }, STRING(){
     @Override
     public int getBytes() {
-      return Integer.BYTES;
+      return Integer.BYTES + 1;
     }
 
     @Override
