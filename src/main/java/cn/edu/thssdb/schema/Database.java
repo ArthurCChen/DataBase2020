@@ -69,7 +69,7 @@ public class Database {
       File diskFile = new File(
               Global.synthFilePath(path, databaseName, String.format(Global.DATA_FORMAT, tableName)));
       File indexFile = new File(
-              Global.synthFilePath(path, databaseName, String.format(Global.INDEX_FORMATA, tableName)));
+              Global.synthFilePath(path, databaseName, String.format(Global.INDEX_FORMAT, tableName)));
       try{
         diskFile.createNewFile();
         indexFile.createNewFile();
@@ -94,8 +94,10 @@ public class Database {
 //      tablename2Desc.put(tableName, desc);
 //      tablename2Info.put(tableName, info);
     File diskFile = new File(
-            Global.synthFilePath(path, databaseName, String.format("%s.db", tableName)));
-    Table table = new Table(name2Id.get(tableName), tableName, desc, diskFile, info);
+            Global.synthFilePath(path, databaseName, String.format(Global.DATA_FORMAT, tableName)));
+    File indexFile = new File(
+            Global.synthFilePath(path, databaseName, String.format(Global.INDEX_FORMAT, tableName)));
+    Table table = new Table(name2Id.get(tableName), tableName, desc, diskFile, indexFile, info);
 
 
     idTableMap.put(name2Id.get(tableName), table);
