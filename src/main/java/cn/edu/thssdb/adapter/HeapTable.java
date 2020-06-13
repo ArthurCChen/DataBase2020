@@ -22,7 +22,9 @@ public class HeapTable implements LogicalTable {
         this.table = table;
         if(lockStatasMap == null)
             lockStatasMap = new HashMap<>();
-        lockStatasMap.put(table.tid, 0);
+        if(!lockStatasMap.containsKey(table.tid)) {
+            lockStatasMap.put(table.tid, 0);
+        }
     }
 
     @Override
