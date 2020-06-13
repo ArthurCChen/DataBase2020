@@ -45,6 +45,7 @@ public class Client {
 
   public static void main(String[] args) {
     commandLine = parseCmd(args);
+
     if (commandLine.hasOption(HELP_ARGS)) {
       showHelp();
       return;
