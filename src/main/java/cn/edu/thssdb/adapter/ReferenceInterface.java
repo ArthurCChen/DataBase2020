@@ -24,7 +24,7 @@ public class ReferenceInterface implements Physical2LogicalInterface {
        try {
            manager.recover();
            // 创建一个名为test的Database
-           manager.createDatabase("test");
+//           manager.createDatabase("test");
            // 将Manager当前指向的Database调整为test
 
 //        //
@@ -32,7 +32,7 @@ public class ReferenceInterface implements Physical2LogicalInterface {
        }catch (Exception e){
 //           e.printStackTrace();
        }
-        manager.useDatabase("test");
+//        manager.useDatabase("test");
     }
 
     static public ReferenceInterface getInstance(){
