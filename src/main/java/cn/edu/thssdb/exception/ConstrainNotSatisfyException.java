@@ -10,7 +10,7 @@ public class ConstrainNotSatisfyException extends RuntimeException{
     }
 
     private boolean satisfy(int option, int cause){
-        if((cause & option) == option)
+        if(cause == option)
             return true;
         return false;
     }
@@ -18,11 +18,14 @@ public class ConstrainNotSatisfyException extends RuntimeException{
     @Override
     public String getMessage() {
         String info = new String("Exception for:");
-        if (satisfy(PRIMARY, cause))
-            info +=  "insert row not satisfy the constraint; ";
-        if ( satisfy(ISNOTNULL, cause))
-            info += "isnotnull not satisfied ; ";
-
-        return info;
+        if (satisfy(PRIMARY, cause)) {
+            info += "insert row not satisfy the constraint; ";
+            return info;
+        }
+        if ( satisfy(ISNOTNULL, cause)) {
+            info += "notnull not satisfied ; ";
+            return info;
+        }
+        return new String("");
     }
 }
