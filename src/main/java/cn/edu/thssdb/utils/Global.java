@@ -49,8 +49,9 @@ public class Global {
   //--------------------------------------------------------
   //--------For Storage usage-------------------------------
   //--------------------------------------------------------
-  public static final int pageSize = 4096 * 16;
-  public static final int bufferChunkSize = 50;
+  public static final int bufferVolume = 100; // 单位 mb
+  public static final int pageSize = 32;
+  public static final int bufferChunkSize = bufferVolume * 1024 * 1024 / pageSize;
 
   //用于转换Object为数组类型
   //https://www.cnblogs.com/xingmangdieyi110/p/11676553.html
