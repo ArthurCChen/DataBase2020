@@ -56,7 +56,7 @@ public class TransactionManager implements Physical2LogicalInterface {
 
     @Override
     public boolean drop_table(String table_name, int transaction_id) {
-        LogicalTable table = storage_manager.get_table(table_name, -1);
+        LogicalTable table = storage_manager.get_table(table_name, transaction_id);
         primary_index_cache.remove(table_name);
         if (table != null) {
             storage_manager.drop_table(table_name, -1);
@@ -75,7 +75,7 @@ public class TransactionManager implements Physical2LogicalInterface {
 
     @Override
     public LogicalTable get_table(String table_name, int transaction_id) {
-        return storage_manager.get_table(table_name, -1);
+        return storage_manager.get_table(table_name, transaction_id);
     }
 
     private int get_primary_index(String table_name) {

@@ -34,6 +34,7 @@ public class Table implements LogicalTable {
     private FileHandler fileHandler;
 //  private Integer id;
     private int lock_state;
+    public int txnId = 0;
 
     private int primaryIndex;
 
@@ -140,6 +141,7 @@ public class Table implements LogicalTable {
     public void flush() throws IOException{
         Global.gBufferPool().flushPagesOfTable(tid);
         fileHandler.persistIndex();
+        
     }
 
     public void discard() throws  IOException{
