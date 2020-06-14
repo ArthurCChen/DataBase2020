@@ -41,18 +41,20 @@ public class BufferPool {
             int cnt = 0;
             for( ; !idQueue.isEmpty(); cnt ++){
                 // 使用dirty来当作pinned与否的标志
-                if(pageMap.get(idQueue.getFirst()).isDirty()) {
+
+
+                PageId id = idQueue.removeFirst();
+                Boolean visited = whetherVisited.remove(id);
+                if(!pageMap.containsKey(id)) //首先判断是否已丢失,若丢失,则不管
+                    continue;
+
+                if(pageMap.get(id).isDirty()) {
                     //TODO: 当dirty的过多时,会发生无穷循环
                     if(cnt > queueSize * 2){
                         throw new BufferException("all buffer is pinned");
                     }
                     continue;
                 }
-
-                PageId id = idQueue.removeFirst();
-                Boolean visited = whetherVisited.remove(id);
-                if(!pageMap.containsKey(id))
-                    continue;
 
                 if(visited){
                     idQueue.addLast(id);
@@ -61,6 +63,7 @@ public class BufferPool {
                     return id;
                 }
             }
+            assert (false);
             return null;
         }
 

@@ -61,38 +61,41 @@ public class Database {
   }
 
   public void create(String tableName, ArrayList<Column> columns, ArrayList<String> primaryNames, TableInfo info) throws Exception{
-    // TODO
+
     if(getTable(tableName) != null){
       throw new Exception("already exist");
 
     }else{
       File diskFile = new File(
-              Global.synthFilePath(path, databaseName, String.format("%s.db", tableName)));
+              Global.synthFilePath(path, databaseName, String.format(Global.DATA_FORMAT, tableName)));
+      File indexFile = new File(
+              Global.synthFilePath(path, databaseName, String.format(Global.INDEX_FORMAT, tableName)));
       try{
         diskFile.createNewFile();
+        indexFile.createNewFile();
       }catch (Exception e){
         e.printStackTrace();
       }
 
     this.gId ++;
       RowDesc desc = new RowDesc(columns, primaryNames);
-      Table table = new Table(gId, tableName, desc, diskFile, info);
+      Table table = new Table(gId, tableName, desc, diskFile, indexFile, info);
     tablename2Desc.put(tableName, desc);
     tablename2Info.put(tableName, info);
     name2Id.put(tableName, gId);
 
     idTableMap.put(gId, table);
-    //TODO return result
+
     }
   }
 
   private void recoverCreate(String tableName, RowDesc desc, TableInfo info) throws Exception{
-    // TODO
-//      tablename2Desc.put(tableName, desc);
-//      tablename2Info.put(tableName, info);
+
     File diskFile = new File(
-            Global.synthFilePath(path, databaseName, String.format("%s.db", tableName)));
-    Table table = new Table(name2Id.get(tableName), tableName, desc, diskFile, info);
+            Global.synthFilePath(path, databaseName, String.format(Global.DATA_FORMAT, tableName)));
+    File indexFile = new File(
+            Global.synthFilePath(path, databaseName, String.format(Global.INDEX_FORMAT, tableName)));
+    Table table = new Table(name2Id.get(tableName), tableName, desc, diskFile, indexFile, info);
 
 
     idTableMap.put(name2Id.get(tableName), table);
@@ -125,9 +128,14 @@ public class Database {
   }
 
 
-  public void dropAll() throws Exception{
-    for(String tableName : this.tablename2Desc.keySet())
-      drop(tableName);
+  private void dropAll(){
+      for (String tableName : this.tablename2Desc.keySet()) {
+        try {
+          drop(tableName);
+        } catch (Exception e) {
+          System.out.println("Warning: has bug in drop database but ignore it");
+        }
+      }
   }
 
   public FileHandler getFileHandler(String tableName){
@@ -166,9 +174,15 @@ public class Database {
     if(!newDatabaseDirectory(root)){
       throw new InternalException("not exist");//TODO throw
     }
-    String databaseScriptFile = Global.synthFilePath(root, String.format(Global.META_FORMAT, databaseName));
+    String metaFileName = Global.synthFilePath(root, String.format(Global.META_FORMAT, databaseName));
+    File metaFile = new File(metaFileName);
     try {
-      FileInputStream fis = new FileInputStream(databaseScriptFile);
+      if(!metaFile.exists())
+        metaFile.createNewFile();
+      if(metaFile.length() == 0)
+        return;//未初始化
+
+      FileInputStream fis = new FileInputStream(metaFileName);
       ObjectInputStream ois = new ObjectInputStream(fis);
       tablename2Desc = (HashMap<String, RowDesc>)ois.readObject();
       tablename2Info = (HashMap<String, TableInfo>) ois.readObject();
@@ -186,7 +200,7 @@ public class Database {
       this.deleteRedunctant();
     }catch (Exception e){
       //TODO
-      e.printStackTrace();
+//      e.printStackTrace();
     }
   }
 
@@ -206,10 +220,6 @@ public class Database {
         files[i].delete();
       }
     }
-  }
-
-  private void recoverFromScript(){
-    //TODO 从记录的sql script建立database的column项
   }
 
   public void quit() {
@@ -234,6 +244,17 @@ public class Database {
 
   public Table getTable(Integer tableId){
     return this.idTableMap.get(tableId);
+  }
+
+  public boolean dropSelf(){
+    dropAll();
+    sync(true);
+    String root = Global.synthFilePath(path, databaseName);
+    File dir = new File(root);
+    for(File subfile: dir.listFiles()){
+      subfile.delete();
+    }
+    return dir.delete();
   }
 
 }

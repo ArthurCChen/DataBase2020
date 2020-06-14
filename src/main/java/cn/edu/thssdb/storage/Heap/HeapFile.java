@@ -1,7 +1,9 @@
 package cn.edu.thssdb.storage.Heap;
 
 
+import cn.edu.thssdb.index.BPlusTree;
 import cn.edu.thssdb.exception.DuplicateKeyException;
+import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.RowDesc;
 import cn.edu.thssdb.storage.FileHandler;
@@ -10,36 +12,83 @@ import cn.edu.thssdb.storage.Page;
 import cn.edu.thssdb.storage.PageId;
 import cn.edu.thssdb.type.ColumnValue;
 import cn.edu.thssdb.utils.Global;
+import javafx.util.Pair;
 import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 public class HeapFile implements FileHandler {
 
     private File file;
-    private int id;
+    private File indexFile;
+    private int tid;
     private RowDesc tupleDesc;
     private boolean hasPrimaryKeyConstraint=true;
+    private BPlusTree<ColumnValue, HeapIndexEntry> primaryIndex;
 
-
-    public HeapFile(int id, File file, RowDesc tupleDesc){
-        this.id = id;
+    public HeapFile(int id, File file, File indexFile, RowDesc tupleDesc) throws IOException{
+        this.tid = id;
+        this.indexFile = indexFile;
         this.file = file;
         this.tupleDesc = tupleDesc;
+        recoverIndex();
     }
 
+    public void recoverIndex() throws IOException{
+
+        primaryIndex = new BPlusTree<ColumnValue, HeapIndexEntry>();
+        FileInputStream fis = new FileInputStream(indexFile);
+        DataInputStream dis = new DataInputStream(fis);
+        while(dis.available() != 0){
+            HeapIndexEntry entry = HeapIndexEntry.parse(dis, tupleDesc.getPrimaryType(), tupleDesc.getPrimaryMaxLen());
+            primaryIndex.put(entry.primary, entry);
+        }
+        dis.close();
+        fis.close();
+    }
+
+    public void persistIndex() throws IOException{
+        FileOutputStream fos = new FileOutputStream(indexFile);
+        DataOutputStream dos = new DataOutputStream(fos);
+        for(Pair<ColumnValue, HeapIndexEntry> entry: primaryIndex){
+            entry.getKey().serialize(dos);
+            dos.writeInt(entry.getValue().pageNumber);
+            dos.writeShort(entry.getValue().offset);
+        }
+        dos.close();
+        fos.close();
+    }
+
+    private Row getRow(int pageNum, short offset) {
+        PageId pid = new HeapPageId(getTid(), pageNum);
+        HeapPage page = (HeapPage) Global.gBufferPool().getPage(pid);
+        Row row = page.getRowByOffset(offset);
+        return row;
+    }
 
     public File getFile() {
         return this.file;
     }
 
 
-    public int getId() {
-        return this.id;
+
+    public void insertIndex(int pageNum, short pageOffset){
+        Row row = getRow(pageNum, pageOffset);
+        HeapIndexEntry entry = new HeapIndexEntry(row.getPrimaryValue(), row.getPageId().getPageNumber(), row.getPageOffset());
+        primaryIndex.put(row.getPrimaryValue(), entry);
+    }
+
+    public void deleteIndex(int pageNum, short pageOffset){
+        Row row = getRow(pageNum, pageOffset);
+        HeapIndexEntry entry = new HeapIndexEntry(row.getPrimaryValue(), row.getPageId().getPageNumber(), row.getPageOffset());
+        primaryIndex.remove(row.getPrimaryValue());
+    }
+
+
+    public int getTid() {
+        return this.tid;
     }
 
 
@@ -86,21 +135,25 @@ public class HeapFile implements FileHandler {
 
 
     public void checkPrimaryKeyViolated(Row t) throws Exception{
-        int tableId = this.getId();
-        int numPages = this.numPages();
-        int primaryKeyIdx = t.getRowDesc().getPrimaryIndex().get(0);
-        ColumnValue pkField = t.getEntries().get(primaryKeyIdx).value;
-        for (int i = 0; i < numPages; i++) {
-            HeapPageId pageId = new HeapPageId(tableId, i);
-            Page page = Global.gBufferPool().getPage(pageId);
-            Iterator<Row> iterator = ((HeapPage)page).iterator();
-            while (iterator.hasNext()) {
-                Row tuple = iterator.next();
-                if (tuple.getColumnValue(primaryKeyIdx).equals(pkField)){
-                    throw new DuplicateKeyException();
-                }
-            }
+        ColumnValue primary = t.getPrimaryValue();
+        if(primaryIndex.contains(primary)) {
+            throw new DuplicateKeyException();
         }
+//        int tableId = this.getTid();
+//        int numPages = this.numPages();
+//        int primaryKeyIdx = t.getRowDesc().getPrimaryIndex().get(0);
+//        ColumnValue pkField = t.getEntries().get(primaryKeyIdx).value;
+//        for (int i = 0; i < numPages; i++) {
+//            HeapPageId pageId = new HeapPageId(tableId, i);
+//            Page page = Global.gBufferPool().getPage(pageId);
+//            Iterator<Row> iterator = ((HeapPage)page).iterator();
+//            while (iterator.hasNext()) {
+//                Row tuple = iterator.next();
+//                if (tuple.getColumnValue(primaryKeyIdx).equals(pkField)){
+//                    throw new Exception("primary key clash");
+//                }
+//            }
+//        }
     }
 
 
@@ -112,13 +165,17 @@ public class HeapFile implements FileHandler {
         }
         HeapPage heapPage = (HeapPage)this.getEmptyPage(0);
         if (heapPage == null) {
-            HeapPageId heapPageId = new HeapPageId(this.getId(), this.numPages());
+            HeapPageId heapPageId = new HeapPageId(this.getTid(), this.numPages());
             heapPage = new HeapPage(heapPageId, HeapPage.createEmptyPageData(), tupleDesc);
             this.writePage(heapPage);
             heapPage = (HeapPage) Global.gBufferPool().getPage(heapPageId);
         }
         heapPage.insertRow(t);
         affectedPages.add(heapPage);
+
+        HeapIndexEntry heapIndexEntry = new HeapIndexEntry(t.getPrimaryValue(), t.getPageId().getPageNumber(), t.getPageOffset());
+        primaryIndex.put(t.getPrimaryValue(), heapIndexEntry);
+        //利用日志保存当前添加了哪些行
 
         return affectedPages;
     }
@@ -127,7 +184,7 @@ public class HeapFile implements FileHandler {
     public Page getEmptyPage(int start)
             throws Exception {
         try {
-            int tableId = this.getId();
+            int tableId = this.getTid();
             int numPages = this.numPages();
             for (int i = start; i < numPages; i++) {
                 HeapPageId pageId = new HeapPageId(tableId, i);
@@ -142,29 +199,39 @@ public class HeapFile implements FileHandler {
         return null;
     }
 
+    private void checkRowOffset(Row t){
+        if(t.getPageOffset() < 0){
+            HeapIndexEntry entry = primaryIndex.get(t.getPrimaryValue());
+            t.setPageOffset(entry.offset);
+            t.setPageId(new HeapPageId(tid, entry.pageNumber));
+        }
+    }
 
     public ArrayList<Page> deleteRow(Row t) throws  Exception {
+
         ArrayList<Page> affectedPages = new ArrayList<>();
         PageId pageId = t.getPageId();
         HeapPage page = (HeapPage) Global.gBufferPool().getPage(pageId);
         page.deleteRow(t);
         affectedPages.add(page);
+
+        //利用日志保存当前删除了哪些行
+        primaryIndex.remove(t.getPrimaryValue());
+
         return affectedPages;
     }
 
     @Override
-    public ArrayList<Page> updateRow(Row t) throws  Exception{
-        throw new InternalException("updateRow ot implemented");
-        //        ArrayList<Page> affectedPages = new ArrayList<>();
-//        try {
-//            PageId pageId = t.getPageId();
-//            HeapPage page = (HeapPage) Global.gBufferPool().getPage(pageId);
-//            page.deleteRow(t);
-//            affectedPages.add(page);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return affectedPages;
+    public ArrayList<Page> updateRow(Row t) throws  Exception {
+        ArrayList<Page> affectedPages = new ArrayList<>();
+        PageId pageId = t.getPageId();
+        HeapPage page = (HeapPage) Global.gBufferPool().getPage(pageId);
+        page.updateRow(t);
+        affectedPages.add(page);
+
+        //日志
+
+        return affectedPages;
     }
 
     public FileIterator iterator() {

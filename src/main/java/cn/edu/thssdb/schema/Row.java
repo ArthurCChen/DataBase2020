@@ -15,7 +15,7 @@ public class Row implements Serializable {
   protected ArrayList<Entry> entries;
   private RowDesc rowDesc;
   private PageId pageId;
-  private int rowId;
+  private short pageOffset = -1;
 
   public Row(Entry[] entries) {
     this.entries = new ArrayList<>(Arrays.asList(entries));
@@ -23,6 +23,10 @@ public class Row implements Serializable {
 
   public Row(ArrayList<Entry> entries) {
     this.entries = entries;
+  }
+
+  public ColumnValue getPrimaryValue(){
+    return (entries.get(rowDesc.getPrimaryIndex().get(0))).value;
   }
 
   private Row(RowDesc desc){
@@ -75,10 +79,10 @@ public class Row implements Serializable {
           ColumnValue val = ValueFactory.getValue(hashMap.get(attr), desc.get(i).getType(), desc.get(i).getMaxLength());
           setValue(i, val);
         }else if(item.getPrimary() == Column.PRIMARY || item.isNotNull()){
-          if(item.getPrimary() == Column.PRIMARY )
-            throw new Exception("SemanticError: not satisfy primary key constraint.");
-          if(item.isNotNull())
-            throw new Exception("SemanticError: not satisfy not null constraint.");
+          if( item.getPrimary() == Column.PRIMARY)
+            throw new ConstrainNotSatisfyException(ConstrainNotSatisfyException.PRIMARY );
+          if( item.isNotNull())
+            throw new ConstrainNotSatisfyException(ConstrainNotSatisfyException.ISNOTNULL );
         }
       }
     }
@@ -88,12 +92,12 @@ public class Row implements Serializable {
     return entries;
   }
 
-  public void setRowId(int rowId) {
-    this.rowId = rowId;
+  public void setPageOffset(short pageOffset) {
+    this.pageOffset = pageOffset;
   }
 
-  public int getRowId() {
-    return rowId;
+  public short getPageOffset() {
+    return pageOffset;
   }
 
   public void setPageId(PageId pageId) {

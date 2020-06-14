@@ -104,10 +104,6 @@ public class IServiceHandler implements IService.Iface {
     // subject to change when executing
     resp.setIsAbort(false);
     resp.setHasResult(false);
-    if (req.statement.contains("create database") || req.statement.contains("use test")) {
-      resp.setStatus(new Status(Global.SUCCESS_CODE).setMsg("ok"));
-      return resp;
-    }
     execute(req.statement, req.sessionId);
 
     QueryManager manager = executor.get(req.sessionId);

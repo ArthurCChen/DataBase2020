@@ -12,7 +12,7 @@ public enum ColumnType implements Serializable {
     }
 
     @Override
-    public ColumnValue parse(DataInputStream dis, int maxLen) throws Exception {
+    public ColumnValue parse(DataInputStream dis, int maxLen) throws IOException {
       try{
         return new IntValue(dis.readInt(), dis.readBoolean());
       } catch (IOException e){
@@ -31,7 +31,7 @@ public enum ColumnType implements Serializable {
     }
 
     @Override
-    public ColumnValue parse(DataInputStream dis, int maxLen) throws Exception {
+    public ColumnValue parse(DataInputStream dis, int maxLen) throws IOException {
       try{
         return new LongValue(dis.readLong(), dis.readBoolean());
       } catch (IOException e){
@@ -50,7 +50,7 @@ public enum ColumnType implements Serializable {
     }
 
     @Override
-    public ColumnValue parse(DataInputStream dis, int maxLen) throws Exception {
+    public ColumnValue parse(DataInputStream dis, int maxLen) throws IOException {
       try{
         return new FloatValue(dis.readFloat(), dis.readBoolean());
       } catch (IOException e){
@@ -69,7 +69,7 @@ public enum ColumnType implements Serializable {
     }
 
     @Override
-    public ColumnValue parse(DataInputStream dis, int maxLen) throws Exception {
+    public ColumnValue parse(DataInputStream dis, int maxLen) throws IOException {
       try{
         return new DoubleValue(dis.readDouble(), dis.readBoolean());
       } catch (IOException e){
@@ -88,7 +88,7 @@ public enum ColumnType implements Serializable {
     }
 
     @Override
-    public ColumnValue parse(DataInputStream dis, int maxLen) throws Exception {
+    public ColumnValue parse(DataInputStream dis, int maxLen) throws IOException {
       try{
         int len = dis.readInt();
         byte s[] = new byte[len];
@@ -109,7 +109,7 @@ public enum ColumnType implements Serializable {
 
   public abstract  int getBytes();
 
-  public abstract  ColumnValue parse (DataInputStream dis, int maxLen) throws  Exception;
+  public abstract  ColumnValue parse (DataInputStream dis, int maxLen) throws  IOException;
 
   public abstract Object getDefault();
 

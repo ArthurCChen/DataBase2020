@@ -1,16 +1,20 @@
 package cn.edu.thssdb.schema;
 
+import cn.edu.thssdb.adapter.HeapTableIterator;
+import cn.edu.thssdb.adapter.LogicalTable;
 import cn.edu.thssdb.storage.FileHandler;
 import cn.edu.thssdb.storage.FileIterator;
 import cn.edu.thssdb.storage.Heap.HeapFile;
 import cn.edu.thssdb.utils.Global;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class Table  {
+public class Table implements LogicalTable {
     ReentrantReadWriteLock lock;
 
     RowDesc desc;
@@ -29,6 +33,8 @@ public class Table  {
     //  public BPlusTree<Entry, Row> index;
     private FileHandler fileHandler;
 //  private Integer id;
+    private int lock_state;
+    public int txnId = 0;
 
     private int primaryIndex;
 
@@ -53,7 +59,8 @@ public class Table  {
             Integer id,
             String name,
             RowDesc desc,
-            File diskFile){
+            File diskFile,
+            File indexFile) throws IOException {
         // TODO
         this.tid = id;
         this.lock = new ReentrantReadWriteLock();
@@ -62,7 +69,7 @@ public class Table  {
         for(int i = 0; i < desc.getColumnSize(); i ++){
             columnIndex.put(desc.get(i).getName(), i);
         }
-        this.fileHandler = new HeapFile(id, diskFile, desc);
+        this.fileHandler = new HeapFile(id, diskFile, indexFile, desc);
         this.tableName = name;
         this.diskFile = diskFile;
         this.tableInfo = new TableInfo(0, 0);
@@ -73,9 +80,10 @@ public class Table  {
             String name,
             RowDesc desc,
             File diskFile,
+            File indexFile,
             TableInfo tableInfo
-            ){
-        this(id, name, desc, diskFile);
+            ) throws IOException{
+        this(id, name, desc, diskFile, indexFile);
         this.tableInfo = tableInfo;
         // TODO
     }
@@ -130,11 +138,112 @@ public class Table  {
         return null;
     }
 
-    public void flush(){
+    public void flush() throws IOException{
         Global.gBufferPool().flushPagesOfTable(tid);
+        fileHandler.persistIndex();
+        
     }
 
-    public void discard(){
+    public void discard() throws  IOException{
         Global.gBufferPool().discardPagesOfTables(tid);
+        ((HeapFile)fileHandler).recoverIndex();
+    }
+
+    @Override
+    public boolean insert(Row row) {
+        return this.insertRow(row);
+    }
+
+    @Override
+    public boolean delete(Entry entry) {
+        try{
+            // 通过iterator遍历,来完成删除对应的操作
+            boolean success = false;
+            FileIterator iter = this.getIterator();
+            ArrayList<Row> rows = new ArrayList<>();
+            while(iter.hasNext()){
+                Row row = iter.next();
+                if(row.matchValue(this.getTableMeta().getPrimaryNames().get(0), entry.value)){
+                    //table调用index在文件中删去row
+                    success = this.deleteRow(row);
+                }
+            }
+            iter.close();
+            return success;
+        }catch (Exception e){
+            return false;
+        }
+    }
+
+    @Override
+    public boolean shared_lock() {
+        if (this.lock_state >= 0) {
+            this.lock_state += 1;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean exclusive_lock() {
+        if (this.lock_state == 0) {
+            this.lock_state = -1;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean is_share_locked() {
+        return lock_state > 0;
+    }
+
+    @Override
+    public boolean is_exclusive_locked() {
+        return lock_state == -1;
+    }
+
+    @Override
+    public boolean upgrade_lock() {
+        // there is only one shared lock
+        // need to assume the caller is the owner of the shared lock
+        if (lock_state == 1) {
+            lock_state = -1;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void unlock(boolean isCommit) {
+        if (lock_state > 0) {
+            lock_state -= 1;
+        }
+        else {
+            lock_state = 0;
+            try {
+                if (isCommit)
+                    flush();
+                else
+                    discard();
+            }catch(Exception e){
+
+            }
+        }
+    }
+
+    @Override
+    public ArrayList<Column> get_columns() {
+        return this.getTableMeta().getColumns();
+    }
+
+    @Override
+    public String get_name() {
+        return this.tableName;
+    }
+
+    @Override
+    public Iterator<Row> iterator() {
+        return new HeapTableIterator(this.getIterator());
     }
 }

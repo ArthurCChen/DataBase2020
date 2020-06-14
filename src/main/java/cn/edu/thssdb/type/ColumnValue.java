@@ -4,10 +4,13 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 
-public interface ColumnValue extends Serializable {
+public interface ColumnValue extends Serializable, Comparable<ColumnValue> {
     void serialize(DataOutputStream dos) throws IOException;
 
     public ColumnType getType();
 
-    Comparable getValue();
+    public Comparable getValue();
+
+    public int getMaxLen();
+
 }

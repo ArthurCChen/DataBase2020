@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Global {
-  public static int fanout = 129;
+  public static int fanout = 8;//8 is the best fallout for our task
 
   public static int SUCCESS_CODE = 0;
   public static int FAILURE_CODE = -1;
@@ -24,7 +24,7 @@ public class Global {
   public static int DEFAULT_SERVER_PORT = 6667;
 
   public static final String ROLLBACK = "rollback;";
-  public static final String START_TRANSACTION = "start transaction;";
+  public static final String START_TRANSACTION = "begin transaction;";
   public static final String COMMIT = "commit;";
 
   public static String CLI_PREFIX = "ThssDB>";
@@ -34,8 +34,10 @@ public class Global {
 
   public static final String S_URL_INTERNAL = "jdbc:default:connection";
   public static final String FILE_SEPARATOR = File.separator;
-  public static final String DATA_FORMAT = "%s.data";
+  public static final String DATA_FORMAT = "%s.db";
   public static final String META_FORMAT = "%s.meta";
+  public static  final String INDEX_FORMAT = "%s.myi";
+  public static final String WAL_FORMAT = "%s.wal";
   public static final String META_SUFFIX = "meta";
   public static final String SCRIPT_FORMAT = "%s.script";
   public static final String LOG_FORMAT = "%s.log";
@@ -47,8 +49,9 @@ public class Global {
   //--------------------------------------------------------
   //--------For Storage usage-------------------------------
   //--------------------------------------------------------
-  public static final int pageSize = 4096;
-  public static final int bufferChunkSize = 50;
+  public static final int bufferVolume = 100; // 单位 mb
+  public static final int pageSize = 4096 * 8; //至少为128,再小就不够了
+  public static final int bufferChunkSize = bufferVolume * 1024 * 1024 / pageSize;
 
   //用于转换Object为数组类型
   //https://www.cnblogs.com/xingmangdieyi110/p/11676553.html

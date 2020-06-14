@@ -29,6 +29,7 @@ public class TransactionManager implements Physical2LogicalInterface {
 
     public TransactionManager() {
         storage_manager = ReferenceInterface.getInstance();
+//        storage_manager = new MDBManager();
         this.transaction_pool = new HashMap<>();
         this.max_transaction_id = 0;
         primary_index_cache = new HashMap<>();
@@ -42,7 +43,6 @@ public class TransactionManager implements Physical2LogicalInterface {
             this.transaction_pool.get(transaction_id).add((commit) -> {
                 if (commit) {
                     Manager.getInstance().getCurrentDatabase().sync(true);
-                    System.out.println("table " + table_name + " created in transaction " + transaction_id);
                 }
                 else {
                     // when abort, remove the table
@@ -56,19 +56,17 @@ public class TransactionManager implements Physical2LogicalInterface {
 
     @Override
     public boolean drop_table(String table_name, int transaction_id) {
-        LogicalTable table = storage_manager.get_table(table_name, -1);
+        LogicalTable table = storage_manager.get_table(table_name, transaction_id);
         primary_index_cache.remove(table_name);
         if (table != null) {
             storage_manager.drop_table(table_name, -1);
             this.transaction_pool.get(transaction_id).add((success) -> {
                 if (success) {
                     Manager.getInstance().getCurrentDatabase().sync(true);
-                    System.out.println("drop table " + table_name);
                 }
                 else {
                     // when abort, add the table back again
                     Manager.getInstance().getCurrentDatabase().sync(false);
-//                    storage_manager.create_table(table_name, table.get_columns(), -1);
                 }
             });
         }
@@ -77,7 +75,7 @@ public class TransactionManager implements Physical2LogicalInterface {
 
     @Override
     public LogicalTable get_table(String table_name, int transaction_id) {
-        return storage_manager.get_table(table_name, -1);
+        return storage_manager.get_table(table_name, transaction_id);
     }
 
     private int get_primary_index(String table_name) {
@@ -98,10 +96,7 @@ public class TransactionManager implements Physical2LogicalInterface {
         boolean success_insert = storage_manager.insert_row(table_name, row, -1);
         if (success_insert) {
             this.transaction_pool.get(transaction_id).add((success) -> {
-                if (success) {
-                    System.out.println("insert a row: " + row + " to table: " + table_name);
-                }
-                else {
+                if (!success) {
                     int primary_index = get_primary_index(table_name);
                     storage_manager.delete_row(table_name, row.getEntries().get(primary_index), -1);
                 }
@@ -126,10 +121,7 @@ public class TransactionManager implements Physical2LogicalInterface {
             boolean delete_success = storage_manager.delete_row(table_name, primary_key, -1);
             if (delete_success) {
                 this.transaction_pool.get(transaction_id).add((success) -> {
-                    if (success) {
-                        System.out.println("delete a row with primary key: " + primary_key + " from table: " + table_name);
-                    }
-                    else {
+                    if (!success) {
                         // add the row back
                         storage_manager.insert_row(table_name, to_be_delete, -1);
                     }
