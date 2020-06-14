@@ -49,7 +49,7 @@ public class Global {
   //--------------------------------------------------------
   //--------For Storage usage-------------------------------
   //--------------------------------------------------------
-  public static final int pageSize = 4096 * 64;
+  public static final int pageSize = 4096 * 16;
   public static final int bufferChunkSize = 50;
 
   //用于转换Object为数组类型
