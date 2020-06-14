@@ -3,6 +3,7 @@ package cn.edu.thssdb.storage.Heap;
 
 import cn.edu.thssdb.index.BPlusTree;
 import cn.edu.thssdb.exception.DuplicateKeyException;
+import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.RowDesc;
 import cn.edu.thssdb.storage.FileHandler;

@@ -106,8 +106,12 @@ public class HeapTable implements LogicalTable {
                 }catch(IOException e){
                     throw new FlushIOException();
                 }
-            }else{
-                table.discard();
+            }else {
+                try {
+                    table.discard();
+                } catch(IOException e){
+                    throw new FlushIOException();
+                }
             }
         }
     }

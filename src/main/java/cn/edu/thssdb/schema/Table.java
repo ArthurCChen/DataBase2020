@@ -138,7 +138,8 @@ public class Table  {
         fileHandler.persistIndex();
     }
 
-    public void discard(){
+    public void discard() throws  IOException{
         Global.gBufferPool().discardPagesOfTables(tid);
+        ((HeapFile)fileHandler).recoverIndex();
     }
 }
