@@ -32,23 +32,27 @@ public class WALManager {
     }
 
     public void start(int txnId){
-        this.recoveryList.add(new RecoveryInfo(txnId, WALType.START_TXN));
+        this.recoveryList.add(new RecoveryInfo(txnId,WALType.START_TXN));
     }
 
     public void abort(int txnId){
-        this.recoveryList.add(new RecoveryInfo(txnId, WALType.ABORT_TXN));
+        this.recoveryList.add(new RecoveryInfo(txnId,WALType.ABORT_TXN));
     }
 
     public void commit(int txnId){
         this.recoveryList.add(new RecoveryInfo(txnId, WALType.COMMIT_TXN));
     }
 
-    public void insert(int txnId, int pageNum, short pageOffset){
-        this.recoveryList.add(new RecoveryInfo(txnId, WALType.INSERT_ROW, pageNum, pageOffset));
+    public void insert(int txnId, int pageNum, short pageOffset, int tid){
+        this.recoveryList.add(new RecoveryInfo(txnId, WALType.INSERT_ROW, tid, pageNum, pageOffset));
     }
 
-    public void delete(int txnId, int pageNum, short pageOffset){
-        this.recoveryList.add(new RecoveryInfo(txnId, WALType.DELETE_ROW, pageNum, pageOffset));
+    public void delete(int txnId, int pageNum, short pageOffset, int tid){
+        this.recoveryList.add(new RecoveryInfo(txnId, WALType.DELETE_ROW, tid, pageNum, pageOffset));
+    }
+
+    public void checkpoint(int txnId){
+        this.recoveryList.add(new RecoveryInfo(txnId, WALType.CHECKPOINT));
     }
 
 
