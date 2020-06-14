@@ -31,7 +31,7 @@ sql_stmt :
     | rollback;
 
 start_transaction :
-    K_START K_TRANSACTION ;
+    K_BEGIN K_TRANSACTION ;
 
 commit :
     K_COMMIT ;
@@ -237,7 +237,7 @@ K_USER : U S E R;
 K_VALUES : V A L U E S;
 K_VIEW : V I E W;
 K_WHERE : W H E R E;
-K_START : S T A R T;
+K_BEGIN : B E G I N;
 K_TRANSACTION : T R A N S A C T I O N;
 K_COMMIT : C O M M I T;
 K_ROLLBACK : R O L L B A C K;

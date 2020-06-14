@@ -1,5 +1,6 @@
 package cn.edu.thssdb.type;
 
+import cn.edu.thssdb.exception.StringTooLongException;
 import cn.edu.thssdb.utils.Global;
 
 import java.io.DataOutputStream;
@@ -54,6 +55,8 @@ public class StringValue implements ColumnValue{
         if(s.length() > maxLen)
             throw new IOException();
         int overflow = maxLen - s.length();
+        if(overflow < 0 )
+            throw new IOException("input string too long");
         dos.writeInt(s.length());
         dos.writeBytes(s);
         while(overflow -- > 0)

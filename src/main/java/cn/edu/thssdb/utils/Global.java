@@ -24,7 +24,7 @@ public class Global {
   public static int DEFAULT_SERVER_PORT = 6667;
 
   public static final String ROLLBACK = "rollback;";
-  public static final String START_TRANSACTION = "start transaction;";
+  public static final String START_TRANSACTION = "begin transaction;";
   public static final String COMMIT = "commit;";
 
   public static String CLI_PREFIX = "ThssDB>";
@@ -49,7 +49,7 @@ public class Global {
   //--------------------------------------------------------
   //--------For Storage usage-------------------------------
   //--------------------------------------------------------
-  public static final int pageSize = 4096 * 16;
+  public static final int pageSize = 4096 * 64;
   public static final int bufferChunkSize = 50;
 
   //用于转换Object为数组类型

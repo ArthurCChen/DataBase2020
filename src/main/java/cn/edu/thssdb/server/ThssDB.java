@@ -4,8 +4,11 @@ import cn.edu.thssdb.rpc.thrift.IService;
 import cn.edu.thssdb.schema.Manager;
 import cn.edu.thssdb.service.IServiceHandler;
 import cn.edu.thssdb.utils.Global;
+import org.apache.thrift.server.THsHaServer;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TSimpleServer;
+import org.apache.thrift.transport.TFramedTransport;
+import org.apache.thrift.transport.TNonblockingServerSocket;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
@@ -17,7 +20,7 @@ public class ThssDB {
 
   private static IServiceHandler handler;
   private static IService.Processor processor;
-  private static TServerSocket transport;
+  private static TNonblockingServerSocket transport;
   private static TServer server;
 
   private Manager manager;
@@ -40,8 +43,11 @@ public class ThssDB {
 
   private static void setUp(IService.Processor processor) {
     try {
-      transport = new TServerSocket(Global.DEFAULT_SERVER_PORT);
-      server = new TSimpleServer(new TServer.Args(transport).processor(processor));
+      TNonblockingServerSocket transport = new TNonblockingServerSocket(Global.DEFAULT_SERVER_PORT);
+      THsHaServer.Args args = new THsHaServer.Args(transport);
+      args.processor(processor);
+      args.transportFactory(new TFramedTransport.Factory());
+      TServer server = new THsHaServer(args);
       logger.info("Starting ThssDB ...");
       server.serve();
     } catch (TTransportException e) {

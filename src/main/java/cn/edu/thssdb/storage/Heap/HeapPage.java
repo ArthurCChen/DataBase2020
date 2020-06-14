@@ -29,8 +29,8 @@ public class HeapPage implements Page {
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data));
 
         byte[] header_in = new byte[getHeaderSize()];
-        for(int i = 0; i < header_in.length; i ++)
-            header_in[i] = dis.readByte();
+        if(dis.read(header_in, 0, header_in.length) < header_in.length)
+            throw new IOException("pageSize is too small");
         header = BitSet.valueOf(header_in);
 
         rows = new Row[numSlots];
@@ -49,7 +49,7 @@ public class HeapPage implements Page {
 
     private int getNumTuples() {
         return (int) Math.floor(
-                (Global.pageSize * 8.0) / (this.td.getByteSize() * 8 + 1)
+                (Global.pageSize * 8.0) / (this.td.getByteSize() * 8.0 + 1.0)
         );
     }
 
@@ -70,11 +70,12 @@ public class HeapPage implements Page {
 
     private Row readNextRow(DataInputStream dis, short slotId) throws Exception{
         if (!isSlotUsed(slotId)){
+
             for(int i = 0; i < td.getByteSize(); i ++){
                 try{
                     dis.readByte();
                 }catch(IOException e){
-
+                    throw new Exception("no such row");
                 }
             }
             return null;

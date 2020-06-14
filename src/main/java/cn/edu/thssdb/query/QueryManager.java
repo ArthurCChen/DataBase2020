@@ -104,8 +104,10 @@ public class QueryManager implements QueryManagerInterface {
 
     private void finish_task() {
         stacked_tasks -= 1;
-        // chen notified it for debug 11:24Jun13
-//        resp.notify();
+    }
+
+    public boolean task_clear() {
+        return stacked_tasks == 0;
     }
 
     // to simplify the code
@@ -172,6 +174,7 @@ public class QueryManager implements QueryManagerInterface {
         if (current_transaction_id != -1) {
             storage.commit(current_transaction_id);
             current_transaction_id = -1;
+            TaskQueue.get_task_queue().flush();
             // as we are implementing Rigorous 2PL, release locks after transaction finish
             clear_locks(true);
         }
@@ -330,7 +333,7 @@ public class QueryManager implements QueryManagerInterface {
                 try {
                     Row row = new Row(rowDesc, names, entry);
                     if (!storage.insert_row(tableName, row, current_transaction_id)) {
-                        handle_error("SemanticError: fail to insert row " + row + " into table " + tableName + ".");
+                        handle_error("SemanticError: fail to insert row " + row + " into table " + tableName + ", it already exists.");
                         break;
                     }
                 } catch (Exception e) {
@@ -526,7 +529,8 @@ public class QueryManager implements QueryManagerInterface {
         try {
             Manager.getInstance().createDatabase(db_name);
         } catch (Exception e) {
-            handle_error("SemanticError: database already exists.");
+            System.out.println(e.getMessage());
+//            handle_error("SemanticError: database already exists.");
         }
     }
 

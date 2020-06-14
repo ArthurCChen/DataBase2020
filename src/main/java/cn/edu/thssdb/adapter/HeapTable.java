@@ -9,18 +9,24 @@ import cn.edu.thssdb.storage.FileIterator;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Spliterator;
 
 public class HeapTable implements LogicalTable {
 
     Table table ;
-    private int lock_state;
+//    private int lock_state;
+    static private HashMap<Integer, Integer> lockStatasMap = null;
 
     public HeapTable(Table table)
     {
         this.table = table;
-        this.lock_state = 0;
+        if(lockStatasMap == null)
+            lockStatasMap = new HashMap<>();
+        if (!lockStatasMap.containsKey(table.tid)) {
+            lockStatasMap.put(table.tid, 0);
+        }
     }
 
     @Override
@@ -53,8 +59,10 @@ public class HeapTable implements LogicalTable {
     //TODO
     @Override
     public boolean shared_lock() {
-        if (this.lock_state >= 0) {
-            this.lock_state += 1;
+        int lock_state = lockStatasMap.get(table.tid);
+        if (lock_state >= 0) {
+            lock_state += 1;
+            lockStatasMap.replace(table.tid, lock_state);
             return true;
         }
         return false;
@@ -63,8 +71,10 @@ public class HeapTable implements LogicalTable {
     //TODO
     @Override
     public boolean exclusive_lock() {
-        if (this.lock_state == 0) {
-            this.lock_state = -1;
+        int lock_state = lockStatasMap.get(table.tid);
+        if (lock_state == 0) {
+            lock_state = -1;
+            lockStatasMap.replace(table.tid, lock_state);
             return true;
         }
         return false;
@@ -73,18 +83,21 @@ public class HeapTable implements LogicalTable {
     //TODO
     @Override
     public boolean is_share_locked() {
+        int lock_state = lockStatasMap.get(table.tid);
         return lock_state > 0;
     }
 
     //TODO
     @Override
     public boolean is_exclusive_locked() {
+        int lock_state = lockStatasMap.get(table.tid);
         return lock_state == -1;
     }
 
     //TODO
     @Override
     public boolean upgrade_lock() {
+        int lock_state = lockStatasMap.get(table.tid);
         if (lock_state == 1) {
             lock_state = -1;
             return true;
@@ -95,6 +108,7 @@ public class HeapTable implements LogicalTable {
     //TODO
     @Override
     public void unlock( boolean isCommit) {
+        int lock_state = lockStatasMap.get(table.tid);
         if (lock_state > 0) {
             lock_state -= 1;
         }
