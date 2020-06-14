@@ -167,7 +167,12 @@ public class Database {
       throw new InternalException("not exist");//TODO throw
     }
     String databaseScriptFile = Global.synthFilePath(root, String.format(Global.META_FORMAT, databaseName));
+    File scriptFile = new File(databaseScriptFile);
     try {
+      if(!scriptFile.exists())
+        scriptFile.createNewFile();
+      if (scriptFile.length() == 0)
+        return; //这时它是空的
       FileInputStream fis = new FileInputStream(databaseScriptFile);
       ObjectInputStream ois = new ObjectInputStream(fis);
       tablename2Desc = (HashMap<String, RowDesc>)ois.readObject();
