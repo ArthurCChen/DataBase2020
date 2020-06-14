@@ -2,7 +2,6 @@ package cn.edu.thssdb.schema;
 
 import cn.edu.thssdb.adapter.HeapTableIterator;
 import cn.edu.thssdb.adapter.LogicalTable;
-import cn.edu.thssdb.exception.FlushIOException;
 import cn.edu.thssdb.storage.FileHandler;
 import cn.edu.thssdb.storage.FileIterator;
 import cn.edu.thssdb.storage.Heap.HeapFile;
@@ -222,19 +221,6 @@ public class Table implements LogicalTable {
         }
         else {
             lock_state = 0;
-            if(isCommit){
-                try {
-                    flush();
-                }catch(IOException e){
-                    throw new FlushIOException();
-                }
-            }else {
-                try {
-                    discard();
-                } catch(IOException e){
-                    throw new FlushIOException();
-                }
-            }
         }
     }
 
