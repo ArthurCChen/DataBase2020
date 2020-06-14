@@ -39,21 +39,26 @@ public class HeapFile implements FileHandler {
     public void recoverIndex() throws IOException{
 
         primaryIndex = new BPlusTree<ColumnValue, HeapIndexEntry>();
-        DataInputStream dis = new DataInputStream(new FileInputStream(indexFile));
+        FileInputStream fis = new FileInputStream(indexFile);
+        DataInputStream dis = new DataInputStream(fis);
         while(dis.available() != 0){
             HeapIndexEntry entry = HeapIndexEntry.parse(dis, tupleDesc.getPrimaryType(), tupleDesc.getPrimaryMaxLen());
             primaryIndex.put(entry.primary, entry);
         }
+        dis.close();
+        fis.close();
     }
 
     public void persistIndex() throws IOException{
-
-        DataOutputStream dos = new DataOutputStream(new FileOutputStream(indexFile));
+        FileOutputStream fos = new FileOutputStream(indexFile);
+        DataOutputStream dos = new DataOutputStream(fos);
         for(Pair<ColumnValue, HeapIndexEntry> entry: primaryIndex){
             entry.getKey().serialize(dos);
             dos.writeInt(entry.getValue().pageNumber);
             dos.writeShort(entry.getValue().offset);
         }
+        dos.close();
+        fos.close();
     }
 
     private Row getRow(int pageNum, short offset) {

@@ -138,6 +138,7 @@ public class HeapPage implements Page {
             int zerolen = Global.pageSize - (headBuffer.length + td.getByteSize() * rows.length); //- numSlots * td.getSize();
             paddingZero(dos, zerolen);
             dos.flush();
+            dos.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

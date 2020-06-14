@@ -61,7 +61,7 @@ public class Database {
   }
 
   public void create(String tableName, ArrayList<Column> columns, ArrayList<String> primaryNames, TableInfo info) throws Exception{
-    // TODO
+
     if(getTable(tableName) != null){
       throw new Exception("already exist");
 
@@ -85,14 +85,12 @@ public class Database {
     name2Id.put(tableName, gId);
 
     idTableMap.put(gId, table);
-    //TODO return result
+
     }
   }
 
   private void recoverCreate(String tableName, RowDesc desc, TableInfo info) throws Exception{
-    // TODO
-//      tablename2Desc.put(tableName, desc);
-//      tablename2Info.put(tableName, info);
+
     File diskFile = new File(
             Global.synthFilePath(path, databaseName, String.format(Global.DATA_FORMAT, tableName)));
     File indexFile = new File(
@@ -202,7 +200,7 @@ public class Database {
       this.deleteRedunctant();
     }catch (Exception e){
       //TODO
-      e.printStackTrace();
+//      e.printStackTrace();
     }
   }
 

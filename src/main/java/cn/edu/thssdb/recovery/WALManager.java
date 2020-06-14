@@ -53,14 +53,18 @@ public class WALManager {
 
 
     public void persist() throws IOException{
-        DataOutputStream dos = new DataOutputStream(new FileOutputStream(walFile));
+        FileOutputStream fos = new FileOutputStream(walFile);
+        DataOutputStream dos = new DataOutputStream(fos);
         for(RecoveryInfo info : recoveryList){
             info.serialize(dos);
         }
+        dos.close();
+        fos.close();
     }
 
     public void recover() throws IOException{
-        DataInputStream dis = new DataInputStream(new FileInputStream(walFile));
+        FileInputStream fis = new FileInputStream(walFile);
+        DataInputStream dis = new DataInputStream(fis);
         while(dis.available() != 0){
             this.recoveryList.add(RecoveryInfo.parse(dis));
         }
@@ -69,7 +73,8 @@ public class WALManager {
         analyze();
         
         redo();
-
+        dis.close();
+        fis.close();
         //由于abort掉的日志存了但是磁盘文件并不会存储,所以不需要通过redo恢复日志
         //若完成checkpoint后,将会起作用
         //undo();
