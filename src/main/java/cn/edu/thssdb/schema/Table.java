@@ -221,6 +221,14 @@ public class Table implements LogicalTable {
         }
         else {
             lock_state = 0;
+            try {
+                if (isCommit)
+                    flush();
+                else
+                    discard();
+            }catch(Exception e){
+
+            }
         }
     }
 
