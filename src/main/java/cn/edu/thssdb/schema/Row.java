@@ -82,7 +82,7 @@ public class Row implements Serializable {
           if( item.getPrimary() == Column.PRIMARY)
             throw new ConstrainNotSatisfyException(ConstrainNotSatisfyException.PRIMARY );
           if( item.isNotNull())
-            throw new ConstrainNotSatisfyException(ConstrainNotSatisfyException.ISNOTNULL );s
+            throw new ConstrainNotSatisfyException(ConstrainNotSatisfyException.ISNOTNULL );
         }
       }
     }
